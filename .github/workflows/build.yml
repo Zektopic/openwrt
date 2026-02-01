@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set lower case owner name
         id: lower_owner
@@ -92,34 +92,34 @@ jobs:
 
     steps:
       - name: Checkout master directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: openwrt
 
       - name: Checkout packages feed
         if: inputs.include_feeds == true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: openwrt/packages
           path: openwrt/feeds/packages
 
       - name: Checkout luci feed
         if: inputs.include_feeds == true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: openwrt/luci
           path: openwrt/feeds/luci
 
       - name: Checkout routing feed
         if: inputs.include_feeds == true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: openwrt/routing
           path: openwrt/feeds/routing
 
       - name: Checkout telephony feed
         if: inputs.include_feeds == true
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: openwrt/telephony
           path: openwrt/feeds/telephony
@@ -196,13 +196,13 @@ jobs:
       - name: Cache external toolchain/sdk
         if: inputs.build_toolchain == false
         id: cache-external-toolchain
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: openwrt/${{ env.TOOLCHAIN_FILE }}
           key: ${{ env.TOOLCHAIN_FILE }}-${{ steps.parse-toolchain.outputs.toolchain-type }}-${{ env.TOOLCHAIN_SHA256 }}
 
       - name: Cache ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: openwrt/.ccache
           key: ccache-kernel-${{ env.TARGET }}/${{ env.SUBTARGET }}-${{ needs.setup_build.outputs.ccache_hash }}
@@ -355,7 +355,7 @@ jobs:
 
       - name: Upload logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TARGET }}-${{ env.SUBTARGET }}-logs
           path: "openwrt/logs"
