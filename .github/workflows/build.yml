@@ -330,28 +330,28 @@ jobs:
       - name: Build tools
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make tools/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make tools/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build toolchain
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make toolchain/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make toolchain/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build Kernel
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make target/compile -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make target/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build Kernel Kmods
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make package/linux/compile -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make package/linux/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build everything
         if: inputs.build_full == true
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Upload logs
         if: failure()
