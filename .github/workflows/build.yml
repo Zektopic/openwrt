@@ -124,7 +124,7 @@ jobs:
 
       - name: Pull Docker image
         run: |
-          docker pull ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }}
+          sudo docker pull ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }}
       - name: Fix permission
         run: |
           chmod -R 777 openwrt
@@ -139,7 +139,7 @@ jobs:
       - name: Update & Install feeds
         if: inputs.include_feeds == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           ./scripts/feeds update -a
           ./scripts/feeds install -a
@@ -222,7 +222,7 @@ jobs:
 
       - name: Extract prebuilt tools
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           ./scripts/ext-tools.sh --tools /tools.tar
           INNER
@@ -231,7 +231,7 @@ jobs:
       - name: Configure testing kernel
         if: inputs.testing == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_TESTING_KERNEL=y >> .config
 
@@ -240,7 +240,7 @@ jobs:
       - name: Configure all kernel modules
         if: inputs.build_all_kmods == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_ALL_KMODS=y >> .config
 
@@ -249,7 +249,7 @@ jobs:
       - name: Configure all modules
         if: inputs.build_all_modules == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_ALL=y >> .config
 
@@ -258,7 +258,7 @@ jobs:
       - name: Configure all boards
         if: inputs.build_all_boards == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_TARGET_MULTI_PROFILE=y >> .config
           echo CONFIG_TARGET_PER_DEVICE_ROOTFS=y >> .config
@@ -269,7 +269,7 @@ jobs:
       - name: Configure external toolchain
         if: inputs.build_toolchain == false && steps.parse-toolchain.outputs.toolchain-type == 'external_toolchain'
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_DEVEL=y >> .config
           echo CONFIG_AUTOREMOVE=y >> .config
@@ -285,7 +285,7 @@ jobs:
       - name: Adapt external sdk to external toolchain format
         if: inputs.build_toolchain == false && steps.parse-toolchain.outputs.toolchain-type == 'external_sdk' && steps.cache-external-toolchain.outputs.cache-hit != 'true'
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           TOOLCHAIN_DIR=${{ env.TOOLCHAIN_FILE }}/staging_dir/$(ls ${{ env.TOOLCHAIN_FILE }}/staging_dir | grep toolchain)
           TOOLCHAIN_BIN=$TOOLCHAIN_DIR/bin
@@ -315,7 +315,7 @@ jobs:
       - name: Configure external toolchain with sdk
         if: inputs.build_toolchain == false && steps.parse-toolchain.outputs.toolchain-type == 'external_sdk'
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_DEVEL=y >> .config
           echo CONFIG_AUTOREMOVE=y >> .config
@@ -331,7 +331,7 @@ jobs:
       - name: Configure internal toolchain
         if: inputs.build_toolchain == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           echo CONFIG_DEVEL=y >> .config
           echo CONFIG_AUTOREMOVE=y >> .config
@@ -346,7 +346,7 @@ jobs:
           EOF
       - name: Show configuration
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           ./scripts/diffconfig.sh
           INNER
@@ -354,7 +354,7 @@ jobs:
 
       - name: Build tools
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           make tools/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
           INNER
@@ -362,7 +362,7 @@ jobs:
 
       - name: Build toolchain
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           make toolchain/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
           INNER
@@ -370,7 +370,7 @@ jobs:
 
       - name: Build Kernel
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           make target/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
           INNER
@@ -378,7 +378,7 @@ jobs:
 
       - name: Build Kernel Kmods
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           make package/linux/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
           INNER
@@ -387,7 +387,7 @@ jobs:
       - name: Build everything
         if: inputs.build_full == true
         run: |
-          docker run -i --rm -v $GITHUB_WORKSPACE/openwrt:/openwrt -w /openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
           su buildbot -c "sh -e" <<'INNER'
           make -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
           INNER
