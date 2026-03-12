@@ -5,6 +5,7 @@ import re
 import struct
 import subprocess
 import zlib
+from concurrent.futures import ThreadPoolExecutor
 
 
 def main():
@@ -33,9 +34,8 @@ def main():
     hw_info = ';'.join(hw_id_list + model_list)
 
     image = open(args.input_file, 'rb').read()
-    image_enc = []
-    for i in range(0, len(image), encryption_block_size):
-        chunk = image[i:i + encryption_block_size]
+
+    def encrypt_chunk(chunk):
         chunk += b'\x00' * ((-len(chunk)) % 16)  # pad to AES block size (16)
         res = subprocess.run([
             args.openssl_bin,
@@ -47,8 +47,11 @@ def main():
             '-iv', args.iv
         ],
             check=True, input=chunk, stdout=subprocess.PIPE)
-        image_enc.append(res.stdout)
-    image_enc = b''.join(image_enc)
+        return res.stdout
+
+    chunks = [image[i:i + encryption_block_size] for i in range(0, len(image), encryption_block_size)]
+    with ThreadPoolExecutor() as executor:
+        image_enc = b''.join(executor.map(encrypt_chunk, chunks))
 
     image_with_header = struct.pack(
         '>32s32s64s64sIBBB13s200s100s12sII',
