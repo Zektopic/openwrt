@@ -476,6 +476,16 @@ static int npf_parse_format_spec(char const *format, npf_format_spec_t *out_spec
 #if NANOPRINTF_USE_WRITEBACK_FORMAT_SPECIFIERS == 1
     case 'n':
       // todo: reject string if flags or width or precision exist
+      if (out_spec->prepend) { return 0; }
+#if NANOPRINTF_USE_ALT_FORM_FLAG == 1
+      if (out_spec->alt_form) { return 0; }
+#endif
+#if NANOPRINTF_USE_FIELD_WIDTH_FORMAT_SPECIFIERS == 1
+      if (out_spec->field_width_opt != NPF_FMT_SPEC_OPT_NONE || out_spec->left_justified || out_spec->leading_zero_pad) { return 0; }
+#endif
+#if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
+      if (out_spec->prec_opt != NPF_FMT_SPEC_OPT_NONE) { return 0; }
+#endif
       out_spec->conv_spec = NPF_FMT_SPEC_CONV_WRITEBACK;
 #if NANOPRINTF_USE_PRECISION_FORMAT_SPECIFIERS == 1
       out_spec->prec_opt = NPF_FMT_SPEC_OPT_NONE;
