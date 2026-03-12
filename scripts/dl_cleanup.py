@@ -176,10 +176,17 @@ class Entry:
     def getPath(self):
         return (self.directory + "/" + self.filename).replace("//", "/")
 
+    builddir_subdirs_cache = {}
+
     def getBuildPaths(self):
+        if self.builddir not in Entry.builddir_subdirs_cache:
+            Entry.builddir_subdirs_cache[self.builddir] = [
+                subdir.path for subdir in os.scandir(self.builddir)
+            ]
+
         paths = []
-        for subdir in os.scandir(self.builddir):
-            package_build_dir = os.path.join(subdir.path, self.filenoext)
+        for subdir_path in Entry.builddir_subdirs_cache[self.builddir]:
+            package_build_dir = os.path.join(subdir_path, self.filenoext)
             if os.path.exists(package_build_dir):
                 paths.append(package_build_dir)
         return paths
