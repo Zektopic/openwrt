@@ -316,7 +316,7 @@ class DownloadGitHubTarball(object):
     def _hash_check(self, f):
         with open(f, 'rb') as fin:
             while True:
-                d = fin.read(4096)
+                d = fin.read(1048576)
                 if not d:
                     break
                 self.hasher.update(d)
@@ -385,7 +385,7 @@ class DownloadGitHubTarball(object):
         resp = self._make_request(url)
         with open(path, 'wb') as fout:
             while True:
-                d = resp.read(4096)
+                d = resp.read(1048576)
                 if not d:
                     break
                 fout.write(d)
