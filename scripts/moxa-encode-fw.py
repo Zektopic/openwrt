@@ -76,27 +76,23 @@ def main():
     parser.add_argument('-b', '--buildid', required=True, type=lambda x: int(x,0), help="Build id of firmware")
     args = parser.parse_args()
 
-    with open(args.input, 'rb') as input_file:
-        firmware = bytearray(input_file.read())
-
     offsets = []
-    pos_input = 0
     pos_output = 0
     firmware_seg = bytearray()
 
-    for partition in partitions:
-        part_data = firmware[pos_input:pos_input + partition.size]
+    with open(args.input, 'rb') as input_file:
+        for partition in partitions:
+            part_data = input_file.read(partition.size)
 
-        # just to make sure that no partition is empty
-        if len(part_data) == 0:
-            part_data = bytearray([0x00])
+            # just to make sure that no partition is empty
+            if len(part_data) == 0:
+                part_data = bytearray([0x00])
 
-        header = add_file_header(part_data, partition.name, args.buildid)
-        firmware_seg += header
+            header = add_file_header(part_data, partition.name, args.buildid)
+            firmware_seg += header
 
-        offsets.append(pos_output)
-        pos_input += partition.size
-        pos_output += len(header)
+            offsets.append(pos_output)
+            pos_output += len(header)
 
     moxa_firmware = add_fw_header(firmware_seg, args.magic, args.hwid, args.buildid, offsets)
 
