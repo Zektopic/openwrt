@@ -404,7 +404,8 @@ class DownloadGitHubTarball(object):
             'User-Agent': 'OpenWrt',
         }
         req = urllib.request.Request(url, headers=headers)
-        sslcontext = ssl._create_unverified_context()
+        # Verify SSL certificates to prevent MITM attacks
+        sslcontext = ssl.create_default_context()
         fileobj = urllib.request.urlopen(req, context=sslcontext)
         return fileobj
 
