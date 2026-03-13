@@ -142,15 +142,16 @@ class EntryParseError(Exception):
 
 
 class Entry:
-    def __init__(self, directory, builddir, filename):
+    def __init__(self, directory, builddir, filename, is_dir=None):
         self.directory = directory
         self.filename = filename
         self.builddir = builddir
         self.progname = ""
         self.fileext = ""
         self.filenoext = ""
+        self.is_dir = is_dir if is_dir is not None else os.path.isdir(self.getPath())
 
-        if os.path.isdir(self.getPath()):
+        if self.is_dir:
             self.filenoext = filename
         else:
             for ext in extensions:
@@ -289,7 +290,8 @@ def main(argv):
 
     # Create a directory listing and parse the file names.
     entries = []
-    for filename in os.listdir(directory):
+    for direntry in os.scandir(directory):
+        filename = direntry.name
         if filename == "." or filename == "..":
             continue
         for (name, regex) in blacklist:
@@ -299,7 +301,7 @@ def main(argv):
                 break
         else:
             try:
-                entries.append(Entry(directory, builddir, filename))
+                entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
             except EntryParseError as e:
                 pass
 
@@ -319,7 +321,7 @@ def main(argv):
         versions = progmap[prog]
         for version in versions:
             if lastVersion:
-                if os.path.isdir(lastVersion.getPath()) and not os.path.isdir(version.getPath()):
+                if lastVersion.is_dir and not version.is_dir:
                     continue
             if lastVersion is None or version >= lastVersion:
                 lastVersion = version
