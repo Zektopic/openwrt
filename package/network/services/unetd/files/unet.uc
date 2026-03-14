@@ -332,7 +332,7 @@ const UnetIfaceEdit = editor.new(iface_editor);
 function network_create(ctx, argv, named) {
 	ctx.apply_defaults();
 
-	if (!named.network || index(named.network, "/") >= 0)
+	if (!named.network || match(named.network, /[^a-zA-Z0-9_-]/))
 		return ctx.error("Invalid network name: %s", named.network);
 
 	let pw_file = network_fetch_password(ctx, named, true);
@@ -401,6 +401,10 @@ function network_create(ctx, argv, named) {
 
 function network_delete(ctx, argv) {
 	let name = argv[0];
+
+	if (!name || match(name, /[^a-zA-Z0-9_-]/))
+		return ctx.error("Invalid network name: %s", name);
+
 	let cur = uci.cursor(null, null, "");
 	model.run_hook("unet_delete", name);
 	if (!cur.delete("network", name))
@@ -796,6 +800,8 @@ function network_edit(ctx, argv) {
 		network = "unet";
 		if (!get_network_status()[network])
 			return ctx.invalid_argument('no valid network name provided');
+	} else if (match(network, /[^a-zA-Z0-9_-]/)) {
+		return ctx.invalid_argument('Invalid network name');
 	}
 
 	let iface_data = uci.cursor().get_all("network", network);
