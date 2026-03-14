@@ -2,3 +2,7 @@
 **Vulnerability:** `scripts/dl_github_archive.py` created an unverified SSL context (`ssl._create_unverified_context()`) when making requests to the GitHub API, disabling SSL/TLS certificate verification. This left the script vulnerable to Man-in-the-Middle (MITM) attacks.
 **Learning:** This vulnerability existed likely to bypass SSL errors on developer machines with outdated or missing CA certificates.
 **Prevention:** Always use `ssl.create_default_context()` or let the system use its default verified context when making HTTPS requests. Do not disable SSL verification in production scripts, especially when downloading source code archives.
+## 2025-05-18 - [CRITICAL] Fix command injection in unet.uc
+**Vulnerability:** The network name parameter was only checked for forward slashes before being directly substituted into shell strings, leading to command injection and path traversal risks via `system()` calls.
+**Learning:** `ucode` scripts using `system()` with backticks or string concatenation are highly vulnerable to injection if variables are not rigorously validated, especially in user-facing configuration paths.
+**Prevention:** Always use regex matching (e.g., `match(name, /[^a-zA-Z0-9_-]/)`) to strictly whitelist input characters for system parameters before interpolating them into shell commands.

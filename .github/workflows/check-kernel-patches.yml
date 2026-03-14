@@ -26,6 +26,9 @@ jobs:
         run: |
           OWNER_LC=$(echo "${{ github.repository_owner }}" \
             | tr '[:upper:]' '[:lower:]')
+          if ! docker manifest inspect ghcr.io/$OWNER_LC/tools:latest > /dev/null 2>&1; then
+            OWNER_LC=openwrt
+          fi
           echo "owner_lc=$OWNER_LC" >> $GITHUB_OUTPUT
 
       # Per branch tools container tag

@@ -42,6 +42,10 @@ jobs:
         run: |
           OWNER_LC=$(echo "${{ github.repository_owner }}" \
             | tr '[:upper:]' '[:lower:]')
+          # Fallback to openwrt if the container does not exist
+          if ! docker manifest inspect ghcr.io/$OWNER_LC/tools:latest > /dev/null 2>&1; then
+            OWNER_LC=openwrt
+          fi
           echo "owner_lc=$OWNER_LC" >> $GITHUB_OUTPUT
 
       - name: Generate ccache hash
