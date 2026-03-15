@@ -218,11 +218,13 @@ jobs:
 
       - name: Download external toolchain/sdk
         if: inputs.build_toolchain == false && steps.cache-external-toolchain.outputs.cache-hit != 'true'
-        shell: su buildbot -c "sh -e {0}"
-        working-directory: openwrt
         run: |
-          wget -O - https://downloads.cdn.openwrt.org/${{ env.TOOLCHAIN_PATH }}/targets/${{ env.TARGET }}/${{ env.SUBTARGET }}/${{ env.TOOLCHAIN_FILE }}.tar.xz \
+          sudo docker run -i --rm -v $GITHUB_WORKSPACE:/workspace -w /workspace/openwrt -e TARGET=$TARGET -e SUBTARGET=$SUBTARGET -e TOOLCHAIN_FILE=$TOOLCHAIN_FILE -e TOOLCHAIN_PATH=$TOOLCHAIN_PATH -e TOOLCHAIN_SHA256=$TOOLCHAIN_SHA256 ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }} /bin/bash <<'EOF'
+          su buildbot -c "sh -e" <<'INNER'
+          wget -O - https://downloads.cdn.openwrt.org/$TOOLCHAIN_PATH/targets/$TARGET/$SUBTARGET/$TOOLCHAIN_FILE.tar.xz \
             | tar --xz -xf -
+          INNER
+          EOF
 
       - name: Extract prebuilt tools
         run: |
