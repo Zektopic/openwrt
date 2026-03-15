@@ -6,3 +6,7 @@
 **Vulnerability:** The network name parameter was only checked for forward slashes before being directly substituted into shell strings, leading to command injection and path traversal risks via `system()` calls.
 **Learning:** `ucode` scripts using `system()` with backticks or string concatenation are highly vulnerable to injection if variables are not rigorously validated, especially in user-facing configuration paths.
 **Prevention:** Always use regex matching (e.g., `match(name, /[^a-zA-Z0-9_-]/)`) to strictly whitelist input characters for system parameters before interpolating them into shell commands.
+## 2024-05-23 - [CRITICAL] Fix command injection in unet.uc via network_keygen config
+**Vulnerability:** The `network_keygen` function in `unet.uc` constructed shell command strings without validating configuration variables like `config.rounds` and `config.salt`, leading to a command injection vulnerability. An attacker capable of modifying config JSON files could inject arbitrary commands.
+**Learning:** Even internal configuration objects like `config.salt` must be strictly validated before being interpolated into `system()` strings to prevent command injection, especially when restoring configurations from JSON.
+**Prevention:** Use strict regex whitelists (e.g., `match(salt, /[^a-fA-F0-9]/)`) to validate integer and hex inputs before using them in shell commands.

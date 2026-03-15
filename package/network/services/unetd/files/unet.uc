@@ -57,6 +57,9 @@ function network_keygen(pw_file, args, config, out_file, extra_args)
 	let salt = config.salt;
 	let out, output, xorkey;
 
+	if (match(rounds + "", /[^0-9]/) || match(salt + "", /[^a-fA-F0-9]/))
+		return;
+
 	if (!out_file) {
 		output = mkstemp();
 		out_file = "/dev/fd/" + output.fileno();
