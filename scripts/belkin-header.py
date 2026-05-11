@@ -35,8 +35,8 @@ VERSION4 = 2
 COMPANY = "belkin"
 MODULE = "IMG"
 
-def xcrc32(buf):
-    return (0xffffffff - zlib.crc32(buf, 0xffffffff)).to_bytes(4, byteorder='big')
+def xcrc32(crc):
+    return (0xffffffff - crc).to_bytes(4, byteorder='big')
 
 def encode_model(model):
     map = " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
@@ -59,7 +59,7 @@ def encode_model(model):
 
     return code
 
-def create_header(buf, belkin_header, belkin_model):
+def create_header(in_size, in_crc, belkin_header, belkin_model):
     mod = MODULE + "-{:1d}.{:02d}.{:02d}.{:02d}".format(VERSION1, VERSION2, VERSION3, VERSION4)
 
     # Optimization: pack first 32 bytes avoiding manual slicing and byte manipulation
@@ -70,9 +70,9 @@ def create_header(buf, belkin_header, belkin_model):
         int(belkin_header, 0),
         0, # placeholder for header crc
         int(time.time()),
-        len(buf),
+        in_size,
         b_company + b'\x00' * (8 - len(b_company)),
-        xcrc32(buf),
+        xcrc32(in_crc),
         VERSION1, VERSION2, VERSION3, VERSION4
     ))
 
@@ -81,7 +81,7 @@ def create_header(buf, belkin_header, belkin_model):
     head.extend(encode_model(belkin_model))
     head.extend(bytes([0x00] * (64 - len(head))))
 
-    head[4:8] = xcrc32(head)
+    head[4:8] = xcrc32(zlib.crc32(head, 0xffffffff))
 
     return head
 
@@ -92,7 +92,18 @@ parser.add_argument('belkin_header')
 parser.add_argument('belkin_model')
 args = parser.parse_args()
 
-buf = bytearray(args.source.read())
-head = create_header(buf, args.belkin_header, args.belkin_model)
+import shutil
+
+in_size = 0
+in_crc = 0xffffffff
+while True:
+    chunk = args.source.read(65536)
+    if not chunk:
+        break
+    in_size += len(chunk)
+    in_crc = zlib.crc32(chunk, in_crc)
+
+head = create_header(in_size, in_crc, args.belkin_header, args.belkin_model)
 args.dest.write(head)
-args.dest.write(buf)
+args.source.seek(0)
+shutil.copyfileobj(args.source, args.dest)
