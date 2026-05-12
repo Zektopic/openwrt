@@ -88,3 +88,7 @@
 ## $(date +%Y-%m-%d) - [Python Binary Header Construction: Combine `struct.pack` calls]
 **Learning:** Constructing binary headers by executing multiple sequential `struct.pack()` and `file.write()` calls is inefficient in Python. Consolidating them into a single `struct.pack()` with a compound format string significantly reduces function call and interpreter overhead.
 **Action:** When generating fixed-size binary headers, group all fields into a single format string (e.g., `!I20s16sBBBBII10s2x`) and pass the corresponding arguments to a single `struct.pack()` call, then perform a single `file.write()`.
+
+## 2026-05-12 - [Optimize belkin-header.py Memory Footprint]
+**Learning:** Reading the entire input file into memory via `buf = bytearray(args.source.read())` to append a header causes massive memory allocations on large firmware files, making the script O(N) in memory complexity.
+**Action:** Calculate the CRC32 checksum in a streamed 64KB chunk loop, then construct the header, and finally stream the input file to the output via `shutil.copyfileobj()`, preserving O(1) memory overhead.
