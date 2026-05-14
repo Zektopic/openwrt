@@ -110,7 +110,6 @@ jobs:
           echo CONFIG_ALL_KMODS=y >> .config
           echo CONFIG_DEVEL=y >> .config
           echo CONFIG_AUTOREMOVE=y >> .config
-          echo CONFIG_CCACHE=y >> .config
 
           echo "CONFIG_TARGET_${{ env.TARGET }}=y" >> .config
           echo "CONFIG_TARGET_${{ env.TARGET }}_${{ env.SUBTARGET }}=y" >> .config
