@@ -26,41 +26,56 @@
 | Item | Detail |
 |------|--------|
 | Build start | 2026-05-13 15:07 UTC |
-| Build end | 2026-05-13 17:05 UTC |
+| Build end | 2026-05-14 19:03 UTC |
 | Kernel | Linux 6.18.28 (fix: real bzImage, init_size=27.6MB) |
 | GCC | 14.3.0 |
 | libc | musl |
 | Images | ext4, squashfs, targz — both BIOS and EFI |
-| Packages | 84 built and indexed |
+| Packages | 85 built and indexed |
 | Build errors | None |
 
-### Kernel init_size Fix
+### Fixes Applied
 
-OpenWrt's `Kernel/CopyImage` step uses `objcopy -O binary` on vmlinux to create the kernel image, which produces a bzImage with inflated init_size (2.5GB) causing GRUB "out of memory" in QEMU. The fix replaces KDIR/bzImage with the real build tree bzImage from `arch/x86/boot/bzImage`, which has the correct init_size=27.6MB and boots properly under UEFI.
+#### Kernel init_size Fix
+OpenWrt's `Kernel/CopyImage` step uses `objcopy -O binary` on vmlinux to create the kernel image, which can produce a bzImage with inflated init_size causing GRUB "out of memory" in QEMU. The fix ensures the kernel is built with GCC_PLUGINS disabled and fresh KCONFIG, producing correct init_size=0x1a5d000 (27.6MB) which boots properly under UEFI.
 
-### Generated Images (with fix)
+#### GRUB "search" Module Fix (package/boot/grub2/Makefile)
+The x86_64 EFI GRUB binary was missing the `search` and `search_label` modules in its `grub-mkimage` module list. The EFI GRUB config (`grub-efi.cfg`) uses `search -l kernel -s root` to locate the boot partition, but the command was unavailable, causing `error: can't find command 'search'.` at boot. Fixed by adding `search search_label` to the `Package/grub2-efi/install` module list (bootx64.efi and iso EFI).
+
+### Generated Images (with fixes)
 
 | Image | Size | Description |
 |-------|------|-------------|
-| `openwrt-x86-64-generic-ext4-combined-efi.img.gz` | — | ext4, EFI boot |
-| `openwrt-x86-64-generic-ext4-combined.img.gz` | — | ext4, BIOS boot |
-| `openwrt-x86-64-generic-squashfs-combined-efi.img.gz` | — | squashfs, EFI boot |
-| `openwrt-x86-64-generic-squashfs-combined.img.gz` | — | squashfs, BIOS boot |
-| `openwrt-x86-64-generic-kernel.bin` | 6.6M | Kernel (correct bzImage) |
-| `openwrt-x86-64-generic-rootfs.tar.gz` | 7.3M | Rootfs tarball |
+| `openwrt-x86-64-generic-ext4-combined-efi.img.gz` | 15M | ext4, UEFI boot |
+| `openwrt-x86-64-generic-ext4-combined.img.gz` | 15M | ext4, BIOS boot |
+| `openwrt-x86-64-generic-squashfs-combined-efi.img.gz` | 14M | squashfs, UEFI boot |
+| `openwrt-x86-64-generic-squashfs-combined.img.gz` | 13M | squashfs, BIOS boot |
+| `openwrt-x86-64-generic-targz-combined-efi.img.gz` | 15M | targz, UEFI boot |
+| `openwrt-x86-64-generic-targz-combined.img.gz` | 15M | targz, BIOS boot |
+| `openwrt-x86-64-generic-kernel.bin` | 6.6M | Kernel (correct init_size) |
+| `openwrt-x86-64-generic-ext4-rootfs.img.gz` | 7.4M | ext4 rootfs |
+| `openwrt-x86-64-generic-squashfs-rootfs.img.gz` | 6.0M | squashfs rootfs |
+| `openwrt-x86-64-generic-targz-rootfs.img.gz` | 7.4M | targz rootfs |
 
 ### QEMU Smoke Test
 
-Boot method: UEFI via OVMF (not `-kernel`, which is broken in QEMU 10.x for PC machine types). QEMU v10.2.1, 512MB RAM, KVM when available. Configuration: GRUB reads kernel from FAT boot partition and boots to preinit.
+Boot method: UEFI via OVMF (not `-kernel`, which is broken in QEMU 10.x for PC machine types). QEMU v10.2.1, 512MB RAM, no KVM. Configuration: GRUB reads kernel from FAT boot partition and boots to OpenWrt.
 
-Result: **PASS** — kernel booted, drivers loaded (virtio, e1000), procd init started, console activated.
+Result: **✅ PASS** — Full boot to "Please press Enter to activate this console."
+- UEFI firmware (OVMF) loaded and started GRUB 2.12
+- Linux 6.18.28 kernel booted with correct init_size=0x1a5d000
+- Virtio block and network drivers loaded
+- EXT4 rootfs mounted (vda2)
+- procd init completed
+- Console activated successfully
 
 Boot command:
 ```
-sudo qemu-system-x86_64 \
-  -bios /usr/share/ovmf/OVMF.fd \
+qemu-system-x86_64 \
+  -machine q35 \
+  -bios /usr/share/qemu/OVMF.fd \
   -drive file=<image>,format=raw,if=virtio \
-  -m 512M -enable-kvm -cpu host -nographic -no-reboot
+  -m 512 -nographic -no-reboot
 ```
 
 ### QEMU Test Verification
