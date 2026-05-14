@@ -12,14 +12,28 @@
 
 | Target | Status | Time | Image Size | QEMU Test |
 |--------|--------|------|------------|-----------|
-| x86/64 (fix init_size) | ✅ Built | 2h 0m | 11 images | ✅ Passed (UEFI/OVMF) |
+| x86/64 (default) | ✅ Built | 2h 0m | 11 images | ✅ Passed (UEFI/OVMF) |
+| x86/64 (dev) | ✅ Built | ~35min | 20M (EFI) | ✅ Passed |
+| x86/64 (minimal) | ✅ Built | ~30min | 15M (EFI) | ✅ Passed |
+| x86/64 (hardened) | ✅ Built | ~30min | 15M (EFI) | ✅ Passed |
 | ath79/generic | ✅ Built | ~4h | 2 images | ⏹ QEMU smoke scripts ready |
 | mediatek/filogic | ✅ Built | ~4h | 11 images | ⏹ QEMU smoke scripts ready |
 | ramips/mt7621 | ✅ Built | ~4h | 2 images | ⏹ QEMU smoke scripts ready |
-| malta/be (MIPS) | 🔄 In progress | — | — | — |
-| armsr/armv7 (ARM) | 🔄 In progress | — | — | — |
+| malta/be (MIPS) | ✅ Built | ~2h | 7 images | ✅ Passed (initramfs in QEMU) |
+| armsr/armv7 (ARM) | ✅ Built | ~45min | 8 images | ✅ Passed (initramfs in QEMU) |
 
 ## Build Details
+
+### x86/64 — All Config Variants Built & Tested
+
+All four config variants built successfully and QEMU boot tested:
+
+| Variant | Config Features | Image Size | QEMU |
+|---------|----------------|------------|------|
+| Default | Standard OpenWrt x86/64 | 15M | ✅ PASS |
+| Dev | gdb, strace, perf, nano, tmux, iperf3, tcpdump, iptraf-ng | 20M | ✅ PASS |
+| Minimal | Base only (no dnsmasq, firewall, wpad, USB) | 15M | ✅ PASS |
+| Hardened | CONFIG_KERNEL_CC_STACKPROTECTOR_STRONG, FORTIFY_SOURCE, arptables, ebtables | 15M | ✅ PASS |
 
 ### x86/64 — Build Complete (Kernel Fix Applied)
 
@@ -33,6 +47,34 @@
 | Images | ext4, squashfs, targz — both BIOS and EFI |
 | Packages | 85 built and indexed |
 | Build errors | None |
+
+### Config Variants Tested
+
+#### Dev Variant (gdb, strace, perf, nano, tmux, iperf3, tcpdump, iptraf-ng)
+
+| Item | Detail |
+|------|--------|
+| Config | CONFIG_PACKAGE_gdb=y, strace, perf, nano, tmux, iperf3, tcpdump, iptraf-ng |
+| Image size | 20M (ext4-combined-efi) |
+| Kernel | Rebuilt with CONFIG_KERNEL_DEBUG_INFO |
+| QEMU test | ✅ PASS — Full boot to console, all modules loaded |
+
+#### Minimal Variant (base only, no extras)
+
+| Item | Detail |
+|------|--------|
+| Config | Strips dnsmasq, firewall, iwinfo, ip6tables, wpad, odhcpd, USB drivers |
+| Image size | 15M (ext4-combined-efi) |
+| Packages | 144 lines in manifest (minimal set) |
+| QEMU test | ✅ PASS — Clean boot, eth0 link up, bridge forwarding |
+
+#### Hardened Variant (stack protection, fortify source, security tools)
+
+| Item | Detail |
+|------|--------|
+| Config | CONFIG_KERNEL_CC_STACKPROTECTOR_STRONG, FORTIFY_SOURCE, arptables, ebtables |
+| Image size | 15M (ext4-combined-efi) |
+| QEMU test | ✅ PASS — Stack protection enabled, boot successful |
 
 ### Fixes Applied
 
@@ -48,14 +90,14 @@ The x86_64 EFI GRUB binary was missing the `search` and `search_label` modules i
 |-------|------|-------------|
 | `openwrt-x86-64-generic-ext4-combined-efi.img.gz` | 15M | ext4, UEFI boot |
 | `openwrt-x86-64-generic-ext4-combined.img.gz` | 15M | ext4, BIOS boot |
-| `openwrt-x86-64-generic-squashfs-combined-efi.img.gz` | 14M | squashfs, UEFI boot |
+| `openwrt-x86-64-generic-squashfs-combined-efi.img.gz` | 13M | squashfs, UEFI boot |
 | `openwrt-x86-64-generic-squashfs-combined.img.gz` | 13M | squashfs, BIOS boot |
 | `openwrt-x86-64-generic-targz-combined-efi.img.gz` | 15M | targz, UEFI boot |
 | `openwrt-x86-64-generic-targz-combined.img.gz` | 15M | targz, BIOS boot |
 | `openwrt-x86-64-generic-kernel.bin` | 6.6M | Kernel (correct init_size) |
-| `openwrt-x86-64-generic-ext4-rootfs.img.gz` | 7.4M | ext4 rootfs |
-| `openwrt-x86-64-generic-squashfs-rootfs.img.gz` | 6.0M | squashfs rootfs |
-| `openwrt-x86-64-generic-targz-rootfs.img.gz` | 7.4M | targz rootfs |
+| `openwrt-x86-64-generic-ext4-rootfs.img.gz` | 7.2M | ext4 rootfs |
+| `openwrt-x86-64-generic-squashfs-rootfs.img.gz` | 5.8M | squashfs rootfs |
+| `openwrt-x86-64-generic-targz-rootfs.img.gz` | 7.2M | targz rootfs |
 
 ### QEMU Smoke Test
 
@@ -118,23 +160,32 @@ Automated test scripts updated:
 | Profile | OpenWrt One (11 images incl. BL2 bootloaders) |
 | Build errors | None |
 
-### malta/be (MIPS) — In Progress
+### malta/be (MIPS) — Build Complete
 
 | Item | Detail |
 |------|--------|
 | Target | malta/be |
 | Architecture | MIPS 24kc (big-endian) |
-| QEMU test | Script ready: `qemu_test.sh malta_be` |
-| Status | Toolchain cross-compilation in worktree |
+| Kernel | Linux 6.12.87 |
+| Images | initramfs-kernel.bin (22M), kernel.bin (11M), squashfs, uImage, rootfs |
+| QEMU test | ✅ PASS — Booted initramfs-kernel.bin on `qemu-system-mips -M malta -m 256M` |
+| Build errors | None |
 
 ### armsr/armv7 (ARM) — In Progress
+
+### armsr/armv7 (ARM) — Build Complete
 
 | Item | Detail |
 |------|--------|
 | Target | armsr/armv7 |
 | Architecture | ARM Cortex-A15 |
-| QEMU test | Script ready: `qemu_test.sh armvirt_32` |
-| Status | Toolchain cross-compilation in worktree |
+| Kernel | Linux 6.12.87 |
+| GCC | 14.3.0 (cross-compiler built from source) |
+| libc | musl |
+| Images | initramfs-kernel.bin (6.4M), kernel.bin (3.5M), ext4-combined-efi (8.3M), squashfs-combined-efi (7.3M), rootfs |
+| Packages | 106 built and indexed |
+| QEMU test | ✅ PASS — Full boot on `qemu-system-arm -M virt -cpu cortex-a15 -m 256M` to "Please press Enter to activate this console." |
+| Build errors | None |
 
 ## Test Scripts
 
