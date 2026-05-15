@@ -53,8 +53,14 @@ case "$TARGET" in
 
   malta_be)
     TARGET_DIR="$IMGDIR/malta/be"
-    # Try initramfs kernel first
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
+    # Try initramfs kernel first (malta naming: initramfs-kernel.bin)
+    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-initramfs-kernel.bin 2>/dev/null | head -1)
+    if [ -z "$IMAGE" ]; then
+      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
+    fi
+    if [ -z "$IMAGE" ]; then
+      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-kernel.bin 2>/dev/null | grep -v initramfs | head -1)
+    fi
     if [ -z "$IMAGE" ]; then
       IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux* 2>/dev/null | grep -v initramfs | head -1)
     fi
@@ -75,7 +81,13 @@ case "$TARGET" in
 
   malta_le)
     TARGET_DIR="$IMGDIR/malta/le"
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
+    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-initramfs-kernel.bin 2>/dev/null | head -1)
+    if [ -z "$IMAGE" ]; then
+      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
+    fi
+    if [ -z "$IMAGE" ]; then
+      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-kernel.bin 2>/dev/null | grep -v initramfs | head -1)
+    fi
     if [ -z "$IMAGE" ]; then
       IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux* 2>/dev/null | grep -v initramfs | head -1)
     fi
