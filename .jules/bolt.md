@@ -85,7 +85,7 @@
 **Learning:** Checking for intersections between two collections inside a loop using nested loops or helper functions creates an O(N*M) bottleneck, which is particularly evident in firmware selection tools.
 **Action:** Pre-convert the static or command-line-provided parameters into `set` objects once at the script's entry point, and use the `set.isdisjoint()` method inside the loop to achieve O(min(N, M)) time complexity. Replace list aggregations in the cleanup loop with a set using `.add()` to ensure O(1) lookup.
 
-## $(date +%Y-%m-%d) - [Python Binary Header Construction: Combine `struct.pack` calls]
+## 2026-05-16 - [Python Binary Header Construction: Combine `struct.pack` calls]
 **Learning:** Constructing binary headers by executing multiple sequential `struct.pack()` and `file.write()` calls is inefficient in Python. Consolidating them into a single `struct.pack()` with a compound format string significantly reduces function call and interpreter overhead.
 **Action:** When generating fixed-size binary headers, group all fields into a single format string (e.g., `!I20s16sBBBBII10s2x`) and pass the corresponding arguments to a single `struct.pack()` call, then perform a single `file.write()`.
 
@@ -96,3 +96,6 @@
 ## 2024-05-31 - [Python Chunked Streaming in tplink-mkimage-2022]
 **Learning:** In firmware image manipulation tools like `scripts/tplink-mkimage-2022.py`, reading entire image sections into memory via `.read(section['size'])` and storing them in variables before writing causes massive O(N) memory overhead and potential OOM errors for multi-megabyte firmware components like the rootfs.
 **Action:** Use a chunked reading approach (`while bytes_left > 0: chunk = f.read(min(65536, bytes_left))`) or `shutil.copyfileobj()` when transferring binary payload sections directly between input and output files to maintain strictly O(1) memory overhead.
+## 2026-05-16 - [Optimize memory usage in moxa-encode-fw.py]
+**Learning:** Using Python's native big-integer XOR on entire large binaries (e.g. `int.from_bytes(data) ^ int.from_bytes(repeated)`) is faster than byte-by-byte loops, but forces the entire firmware image into memory as a massive integer, creating massive memory allocations and impacting performance for multi-megabyte files. Additionally, sequentially appending strings or headers to a `bytearray` inside loops using `+=` leads to O(N^2) memory reallocation behavior.
+**Action:** Always chunk large payload manipulations. For bitwise operations, chunk the input (e.g., 44KB parts) before converting to int and XORing. For string or header accumulation, append components to a list and join them together at the end using `b''.join(parts)`.

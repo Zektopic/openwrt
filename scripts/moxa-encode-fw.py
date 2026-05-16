@@ -15,13 +15,24 @@ def xor(data: bytes) -> bytes:
 
     passphrase = b"Seek AGREEMENT for the date of completion.\0"
     plen = len(passphrase)
-    q, r = divmod(len(data), plen)
-    repeated = passphrase * q + passphrase[:r]
 
-    # Optimization: using Python's native big-integer XOR is ~8-10x faster
-    # than iterating byte-by-byte with a generator
-    xored = int.from_bytes(data, 'little') ^ int.from_bytes(repeated, 'little')
-    return bytearray(xored.to_bytes(len(data), 'little'))
+    # Optimization: Chunk the big-integer XOR to avoid huge memory allocations.
+    # A single big-int for a large firmware can consume massive memory and time.
+    chunk_size = plen * 1024  # 44KB chunks
+    repeated_chunk = passphrase * 1024
+
+    out = bytearray()
+    for i in range(0, len(data), chunk_size):
+        chunk = data[i:i+chunk_size]
+        if len(chunk) == chunk_size:
+            rep = repeated_chunk
+        else:
+            q, r = divmod(len(chunk), plen)
+            rep = passphrase * q + passphrase[:r]
+
+        xored = int.from_bytes(chunk, 'little') ^ int.from_bytes(rep, 'little')
+        out.extend(xored.to_bytes(len(chunk), 'little'))
+    return out
 
 
 def add_fw_header(data: bytes, magic: int, hwid: int, build_id: int,
@@ -86,7 +97,11 @@ def main():
 
     offsets = []
     pos_output = 0
-    firmware_seg = bytearray()
+
+    # Optimization: Use a list to collect parts and join them at the end,
+    # rather than repeated bytearray += concatenation which has O(N^2) behavior
+    # and unnecessary allocations.
+    firmware_parts = []
 
     with open(args.input, 'rb') as input_file:
         for partition in partitions:
@@ -97,10 +112,12 @@ def main():
                 part_data = bytearray([0x00])
 
             header = add_file_header(part_data, partition.name, args.buildid)
-            firmware_seg += header
+            firmware_parts.append(header)
 
             offsets.append(pos_output)
             pos_output += len(header)
+
+    firmware_seg = b''.join(firmware_parts)
 
     moxa_firmware = add_fw_header(firmware_seg, args.magic, args.hwid, args.buildid, offsets)
 
