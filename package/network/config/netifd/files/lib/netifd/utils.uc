@@ -48,6 +48,9 @@ export function handler_load(path, cb)
 	for (let script in glob(path + "/*.sh")) {
 		script = basename(script);
 
+		if (match(script, /[^a-zA-Z0-9_.-]/))
+			continue;
+
 		let f = mkstemp();
 		let prev_dir = realpath(".");
 		chdir(path);
