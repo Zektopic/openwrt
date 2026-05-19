@@ -1,7 +1,0 @@
-netifd: Fix command injection vulnerability in utils.uc
-
-Added a regex validation check for the `script` variable in `handler_load`
-to prevent shell command injection when `system()` executes the dynamically
-interpolated script filename.
-
-Signed-off-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
