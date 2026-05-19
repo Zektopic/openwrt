@@ -99,3 +99,6 @@
 ## 2026-05-16 - [Optimize memory usage in moxa-encode-fw.py]
 **Learning:** Using Python's native big-integer XOR on entire large binaries (e.g. `int.from_bytes(data) ^ int.from_bytes(repeated)`) is faster than byte-by-byte loops, but forces the entire firmware image into memory as a massive integer, creating massive memory allocations and impacting performance for multi-megabyte files. Additionally, sequentially appending strings or headers to a `bytearray` inside loops using `+=` leads to O(N^2) memory reallocation behavior.
 **Action:** Always chunk large payload manipulations. For bitwise operations, chunk the input (e.g., 44KB parts) before converting to int and XORing. For string or header accumulation, append components to a list and join them together at the end using `b''.join(parts)`.
+## 2026-05-19 - [Optimize bytearray operations in Python scripts]
+**Learning:** Using Python loops and bitwise operations to manipulate bytearrays is extremely slow compared to native C-based slice assignments and the `struct` module.
+**Action:** Use slice assignments for bulk memory moves/clears and `struct.pack_into`/`struct.unpack_from` instead of manual bitwise packing/unpacking and for-loops to manipulate byte arrays.
