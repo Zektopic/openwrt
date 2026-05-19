@@ -7,12 +7,13 @@
 
 import math
 import sys
+import struct
 
 FLASH_BLOCK_SIZE = 64 * 1024
 
 
 def read_field(data, offset):
-    return data[offset + 3] | data[offset + 2] << 8 | data[offset + 1] << 16 | data[offset] << 24
+    return struct.unpack_from('>I', data, offset)[0]
 
 
 if __name__ == '__main__':
@@ -68,21 +69,14 @@ if __name__ == '__main__':
     assert new_dt_strings - str_off >= 256
 
     # Move the string table to the new offset
-    for i in range(0, 256):
-        data[new_dt_strings + i] = data[str_off + i]
-        data[str_off + i] = 0
+    data[new_dt_strings:new_dt_strings + 256] = data[str_off:str_off + 256]
+    data[str_off:str_off + 256] = b'\x00' * 256
 
     # Update the string offset in the header
-    data[0xc] = (new_dt_strings >> 24) & 0xFF
-    data[0xd] = (new_dt_strings >> 16) & 0xFF
-    data[0xe] = (new_dt_strings >> 8) & 0xFF
-    data[0xf] = new_dt_strings & 0xFF
+    struct.pack_into(">I", data, 0xc, new_dt_strings)
 
     # Update the file length in the header
-    data[0x4] = (new_image_len >> 24) & 0xFF
-    data[0x5] = (new_image_len >> 16) & 0xFF
-    data[0x6] = (new_image_len >> 8) & 0xFF
-    data[0x7] = new_image_len & 0xFF
+    struct.pack_into(">I", data, 0x4, new_image_len)
 
     # Write the new file
     with open(sys.argv[1] + '.new', 'wb') as f:
