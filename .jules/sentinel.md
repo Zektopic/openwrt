@@ -97,3 +97,8 @@
 **Vulnerability:** Command injection via unvalidated variables passed to `fs.popen()` using template literals.
 **Learning:** In OpenWrt `ucode` scripts, `fs.popen()` strictly requires a string argument and does not support arrays, meaning shell metacharacters in interpolated variables are evaluated by the shell.
 **Prevention:** Strictly validate any external or dynamic variables used in `fs.popen()` strings with regex allowlists (e.g., `match(var + "", /[^a-zA-Z0-9_.-]/)`) before execution.
+
+## 2024-05-27 - Command Injection in netifd utils
+**Vulnerability:** In `package/network/config/netifd/files/lib/netifd/utils.uc`, the `handler_load` function iterates over `.sh` scripts in a directory and uses their `basename` to execute them via a string interpolated `system()` call (`system("./${script} ...")`). If an attacker could place a maliciously named file in the parsed directory (e.g., `$(touch \/tmp\/pwned).sh`), it would result in arbitrary command execution.
+**Learning:** In `ucode` scripts, `system()` with a string argument is executed by the shell (`/bin/sh -c`). When using variables derived from filenames or external sources within these string templates, failure to sanitize allows shell metacharacter injection.
+**Prevention:** To protect `system()` or `fs.popen()` when string interpolation is unavoidable, always strictly validate variables using regex allowlists (e.g., `if (match(script, /[^a-zA-Z0-9_.-]/)) continue;`) to ensure only safe characters are evaluated by the shell.
