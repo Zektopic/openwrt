@@ -9,7 +9,7 @@
 	#size-cells = <1>;
 
 	chosen {
-		bootargs = "console=ttyS0,115200n8";
+		bootargs = "console=ttyATH0,115200n8";
 	};
 
 	cpus {
@@ -42,7 +42,7 @@
 			};
 
 			uart: uart@18020000 {
-				compatible = "ns16550a";
+				compatible = "qca,ar9330-uart";
 				reg = <0x18020000 0x20>;
 
 				interrupts = <3>;
