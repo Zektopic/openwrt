@@ -187,6 +187,52 @@ Automated test scripts updated:
 | QEMU test | ✅ PASS — Full boot on `qemu-system-arm -M virt -cpu cortex-a15 -m 256M` to "Please press Enter to activate this console." |
 | Build errors | None |
 
+## TL-WR810N v2 — Build Complete (cheap-repeater-25.12)
+
+| Item | Detail |
+|------|--------|
+| Branch | `zektopic-cheap-repeater-25.12` |
+| Build start | 2026-05-19 11:34 UTC |
+| Build end | 2026-05-19 12:41 UTC |
+| Duration | ~1h 7min (toolchain + kernel + packages) |
+| Target | ath79/generic (QCA9533, MIPS 24kc) |
+| Kernel | Linux 6.12.87 |
+| GCC | 14.3.0 (cross-compiled from source) |
+| libc | musl 1.2.5 |
+| Image size | 6.2 MB (sysupgrade), 7.8 MB (factory), 5.9 MB (initramfs) |
+| Flash limit | 8 MB (SPI NOR, verified via DTS partition layout) |
+| Build errors | None |
+| Package count | 85 (including kmod-ath9k, wpad-basic-mbedtls, firewall4) |
+
+### Images Generated
+
+| Image | Size | Description |
+|-------|------|-------------|
+| `openwrt-ath79-generic-tplink_tl-wr810n-v2-squashfs-sysupgrade.bin` | 6.2 MB | Flashable sysupgrade (TP-Link header + LZMA kernel + squashfs) |
+| `openwrt-ath79-generic-tplink_tl-wr810n-v2-squashfs-factory.bin` | 7.8 MB | Initial flash from stock firmware |
+| `openwrt-ath79-generic-tplink_tl-wr810n-v2-initramfs-kernel.bin` | 5.9 MB | Recovery/initramfs kernel |
+
+### Image Verification
+
+| Check | Result |
+|-------|--------|
+| TP-Link header (HWID 0x8100002, layout 8Mlzma) | ✅ Verified via hexdump |
+| Squashfs at offset 0x2a63ec | ✅ Magic `hsqs` confirmed |
+| Unsquashfs integrity | ✅ Extracted cleanly |
+| Package manifest | ✅ 85 packages listed |
+| SHA256 checksum | ✅ `8bdbd04f51ff2e5c14eea99ffcbbba99c6274aa1e471c707b938ce5c958fb4a6` |
+| Signed with usign/ucert | ✅ Image signatures generated |
+
+### Repeater Use Case Packages
+
+The firmware includes everything needed for a WiFi repeater:
+- `kmod-ath9k` — 2.4GHz WiFi driver for QCA9530
+- `wpad-basic-mbedtls` — WPA2/WPA3 authentication (AP + client)
+- `dnsmasq` — DHCP server
+- `firewall4` + `nftables` — NAT/firewall for bridged routing
+- `dropbear` — SSH access
+- `swconfig` — VLAN configuration
+
 ## Test Scripts
 
 | Script | Purpose |

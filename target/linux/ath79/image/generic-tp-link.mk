@@ -814,6 +814,7 @@ define Device/tplink_tl-wr810n-v2
   DEVICE_MODEL := TL-WR810N
   DEVICE_VARIANT := v2
   TPLINK_HWID := 0x8100002
+  IMAGE_SIZE := 7936k
   SUPPORTED_DEVICES += tl-wr810n-v2
 endef
 TARGET_DEVICES += tplink_tl-wr810n-v2
