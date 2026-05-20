@@ -102,3 +102,6 @@
 ## 2026-05-19 - [Optimize bytearray operations in Python scripts]
 **Learning:** Using Python loops and bitwise operations to manipulate bytearrays is extremely slow compared to native C-based slice assignments and the `struct` module.
 **Action:** Use slice assignments for bulk memory moves/clears and `struct.pack_into`/`struct.unpack_from` instead of manual bitwise packing/unpacking and for-loops to manipulate byte arrays.
+## 2024-05-24 - [Avoid `email.parser` for large package indexes]
+**Learning:** `email.parser.Parser` performs full RFC 822/2822 compliance checks which adds massive overhead. When parsing tens of thousands of machine-generated opkg package index blocks with predictable `Key: Value` line formats, standard string splitting and `.startswith()` checks provide a ~14x speedup.
+**Action:** When extracting a few specific headers from a trusted and uniform block format instead of parsing arbitrary emails, avoid `email.parser.Parser` and use fast native python string operations instead. Make sure to use `.strip()` when parsing values to correctly handle `\r\n` line endings.
