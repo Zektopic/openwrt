@@ -8,7 +8,6 @@
 """
 
 import datetime
-import email.parser
 import json
 import uuid
 
@@ -96,31 +95,36 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         "libs": "library"
     }
 
-    parser: email.parser.Parser = email.parser.Parser()
     chunks: list[str] = text.strip().split("\n\n")
     for chunk in chunks:
         element: dict = {}
-        package: dict = parser.parsestr(chunk, headersonly=True)
+        package: dict = {}
+        # Optimization: use basic string splitting instead of email.parser
+        # which performs full RFC 822/2822 compliance checks and adds massive overhead.
+        for line in chunk.splitlines():
+            idx = line.find(': ')
+            if idx != -1:
+                package[line[:idx].lower()] = line[idx+2:].strip()
 
         # required
-        if 'Package' in package:
-            name: str = package['Package']
+        if 'package' in package:
+            name: str = package['package']
             element.update({"name": name})
             if installed:
                 if name not in installed:
                     continue
 
-        if 'Version' in package:
-            element.update({"version": package['Version']})
+        if 'version' in package:
+            element.update({"version": package['version']})
 
-        if 'CPE-ID' in package:
-            element.update({"cpe": package['CPE-ID']})
+        if 'cpe-id' in package:
+            element.update({"cpe": package['cpe-id']})
 
         # required
-        if 'Section' in package:
+        if 'section' in package:
             type_category: str = ''
-            if type_allowed.get(package['Section']):
-                type_category = type_allowed.get(package['Section'])
+            if type_allowed.get(package['section']):
+                type_category = type_allowed.get(package['section'])
             if type_category:
                 element.update({"type": type_category})
             else:
