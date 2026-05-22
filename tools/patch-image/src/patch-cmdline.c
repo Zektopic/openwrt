@@ -71,12 +71,12 @@ int main(int argc, char **argv)
 	}
 
 	memset(p, 0, CMDLINE_MAX - 8);
-	strcpy(p, argv[2]);
+	strncpy(p, argv[2], CMDLINE_MAX - 9);
 	msync(p, CMDLINE_MAX, MS_SYNC|MS_INVALIDATE);
 	ret = 0;
 
 err3:
-	munmap((void *) ptr, len);
+	munmap((void *) ptr, search_space + CMDLINE_MAX);
 err2:
 	if (fd > 0)
 		close(fd);

@@ -129,24 +129,28 @@ t_changepw(pwname, diff)
   FILE * passfp;
   FILE * bakfp;
 
+  size_t alloc_size;
+
   if(pwname == NULL)
     pwname = DEFAULT_PASSWD;
 
   if((passfp = fopen(pwname, "rb")) == NULL || fstat(fileno(passfp), &st) < 0)
     return -1;
 
-  if((bakfile = malloc(strlen(pwname) + 5)) == NULL) {
+  alloc_size = strlen(pwname) + 5;
+
+  if((bakfile = malloc(alloc_size)) == NULL) {
     fclose(passfp);
     return -1;
   }
-  else if((bakfile2 = malloc(strlen(pwname) + 5)) == NULL) {
+  else if((bakfile2 = malloc(alloc_size)) == NULL) {
     fclose(passfp);
     free(bakfile);
     return -1;
   }
 
-  sprintf(bakfile, "%s.bak", pwname);
-  sprintf(bakfile2, "%s.sav", pwname);
+  snprintf(bakfile, alloc_size, "%s.bak", pwname);
+  snprintf(bakfile2, alloc_size, "%s.sav", pwname);
 
   if((bakfp = fopen(bakfile2, "wb")) == NULL &&
      (unlink(bakfile2) < 0 || (bakfp = fopen(bakfile2, "wb")) == NULL)) {

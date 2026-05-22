@@ -108,3 +108,7 @@
 ## 2024-05-14 - Python String Concatenation Optimization
 **Learning:** In Python, string concatenation within a loop using the `+=` operator involves creating a new string object and copying contents on each iteration because strings are immutable. This leads to O(N^2) performance degradation over many iterations.
 **Action:** Replace `+=` string concatenation inside loops with `list.append()` to collect the string parts, followed by `''.join(list)` outside the loop. This ensures an O(N) linear time complexity and avoids unnecessary allocations, providing significant performance speedups.
+
+## 2026-05-22 - [Python String Splitting Memory Overhead]
+**Learning:** When parsing tens of thousands of blocks in a massive text file, using `.split()` to chunk the entire string creates an intermediate list containing all chunk strings simultaneously, leading to massive memory bloat (O(N) memory overhead in addition to the original string).
+**Action:** Use a streaming approach with `.find()` inside a `while` loop to extract and process chunks sequentially. This maintains strictly O(1) extra memory overhead and improves performance.

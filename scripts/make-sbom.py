@@ -95,16 +95,27 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         "libs": "library"
     }
 
-    chunks: list[str] = text.strip().split("\n\n")
-    for chunk in chunks:
+    # Optimization: use string find to locate chunks instead of splitting the entire text
+    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings
+    # while preserving exact dictionary-based parsing for robustness.
+    start = 0
+    text_len = len(text)
+
+    while start < text_len:
+        end = text.find("\n\n", start)
+        if end == -1:
+            end = text_len
+
         element: dict = {}
         package: dict = {}
-        # Optimization: use basic string splitting instead of email.parser
-        # which performs full RFC 822/2822 compliance checks and adds massive overhead.
-        for line in chunk.splitlines():
+        for line in text[start:end].splitlines():
             idx = line.find(': ')
             if idx != -1:
                 package[line[:idx].lower()] = line[idx+2:].strip()
+
+        start = end + 2
+        while start < text_len and text[start] == '\n':
+            start += 1
 
         # required
         if 'package' in package:
