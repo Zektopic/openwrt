@@ -106,3 +106,11 @@
 **Vulnerability:** A `strcpy` copied `argv[2]` into a buffer bounded by `CMDLINE_MAX` leading to buffer overflow, and an error path `munmap` passed the wrong length (`len` instead of `search_space + CMDLINE_MAX`).
 **Learning:** Even when there is length checking logic (`len + 9 > CMDLINE_MAX`), `strcpy` should not be used as it does not inherently limit the bounds of the destination buffer based on size limit. Also, mmap cleanup sizes must match the original mmap size to avoid leaks and memory corruption.
 **Prevention:** Always use bounded copy functions like `strncpy` or `strscpy`, making sure the buffer size includes room for null termination, and carefully double-check `munmap` sizes against their matching `mmap` allocation.
+## 2024-05-24 - Buffer Overflow via `sprintf` in tinysrp/tphrase.c
+**Vulnerability:** A buffer overflow vulnerability existed because `sprintf` was used to write to dynamically allocated buffers (`bakfile` and `bakfile2`) without bounds checking. While the buffer size was mathematically exact (`strlen(pwname) + 5`), `sprintf` is inherently unsafe and flagged by security scanners.
+**Learning:** `sprintf` lacks bounds checking, making it an anti-pattern even when buffer sizes are "known" to be correct, as subsequent changes to the formatting string or length calculation could easily introduce overflows.
+**Prevention:** Always use bounded string formatting functions like `snprintf` instead of `sprintf`. Calculate and reuse the allocation size variable for both the buffer allocation and the `snprintf` bounds check to ensure consistency and prevent off-by-one errors.
+## 2026-05-22 - [Fix buffer overflow risk in AR8327 LED driver]
+**Vulnerability:** Unbounded `strcpy` used for copying dynamic string into flexible array member without reusing precalculated length.
+**Learning:** In kernel modules, `strcpy` should be replaced with `strscpy`, and size variables should be precalculated to avoid TOCTOU races between allocation and copying.
+**Prevention:** Use `strscpy` with a precalculated length variable instead of `strcpy` and `strlen`.

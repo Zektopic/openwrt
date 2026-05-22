@@ -307,6 +307,7 @@ ar8327_led_create(struct ar8xxx_priv *priv,
 {
 	struct ar8327_data *data = priv->chip_data;
 	struct ar8327_led *aled;
+	size_t name_len;
 	int ret;
 
 	if (!IS_ENABLED(CONFIG_AR8216_PHY_LEDS))
@@ -318,7 +319,8 @@ ar8327_led_create(struct ar8xxx_priv *priv,
 	if (led_info->led_num >= AR8327_NUM_LEDS)
 		return -EINVAL;
 
-	aled = kzalloc(struct_size(aled, name, strlen(led_info->name) + 1),
+	name_len = strlen(led_info->name) + 1;
+	aled = kzalloc(struct_size(aled, name, name_len),
 		       GFP_KERNEL);
 	if (!aled)
 		return -ENOMEM;
@@ -332,7 +334,7 @@ ar8327_led_create(struct ar8xxx_priv *priv,
 	if (aled->mode == AR8327_LED_MODE_HW)
 		aled->enable_hw_mode = true;
 
-	strcpy(aled->name, led_info->name);
+	strscpy(aled->name, led_info->name, name_len);
 
 	aled->cdev.name = aled->name;
 	aled->cdev.brightness_set = ar8327_led_set_brightness;
