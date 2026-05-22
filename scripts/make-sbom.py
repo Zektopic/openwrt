@@ -125,30 +125,30 @@ def get_opkg_sbom(text: str, installed: set) -> list:
                 if name not in installed:
                     continue
 
-            if 'version' in package:
-                element.update({"version": package['version']})
+        if 'version' in package:
+            element.update({"version": package['version']})
 
-            if 'cpe-id' in package:
-                element.update({"cpe": package['cpe-id']})
+        if 'cpe-id' in package:
+            element.update({"cpe": package['cpe-id']})
 
-            # required
-            if 'section' in package:
-                type_category: str = ''
-                if type_allowed.get(package['section']):
-                    type_category = type_allowed.get(package['section'])
-                if type_category:
-                    element.update({"type": type_category})
-                else:
-                    element.update({"type": "application"})
+        # required
+        if 'section' in package:
+            type_category: str = ''
+            if type_allowed.get(package['section']):
+                type_category = type_allowed.get(package['section'])
+            if type_category:
+                element.update({"type": type_category})
+            else:
+                element.update({"type": "application"})
 
-            if 'license' in package:
-                licenses: list = []
-                for license in package["license"].split():
-                    licenses.append({"license": {"name": license}})
-                element.update({"licenses": licenses})
+        if 'license' in package:
+            licenses: list = []
+            for license in package["license"].split():
+                licenses.append({"license": {"name": license}})
+            element.update({"licenses": licenses})
 
-            if element:
-                components.append(element)
+        if element:
+            components.append(element)
 
     return components
 
