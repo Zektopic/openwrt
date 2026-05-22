@@ -305,8 +305,12 @@ void usage(char *name){
 
 int main (int argc,char **argv){
 	struct fb_fix_screeninfo fix;
-	struct fb_var_screeninfo var;
-	struct fb_cmap cmap;
+	struct fb_var_screeninfo var, orig_var;
+	struct fb_cmap cmap, orig_cmap;
+	unsigned short orig_cmap_red[256];
+	unsigned short orig_cmap_green[256];
+	unsigned short orig_cmap_blue[256];
+	unsigned short orig_cmap_transp[256];
 	struct rect r;
 	int fbd;
 	unsigned char *pfb;
@@ -375,14 +379,29 @@ int main (int argc,char **argv){
 		perror ("Error getting var screeninfo");
 		return 1;
 	}
+
+	orig_var = var;
+
+	orig_cmap.start = 0;
+	orig_cmap.len = 256;
+	orig_cmap.red = orig_cmap_red;
+	orig_cmap.green = orig_cmap_green;
+	orig_cmap.blue = orig_cmap_blue;
+	orig_cmap.transp = orig_cmap_transp;
+	ioctl(fbd, FBIOGETCMAP, &orig_cmap);
+
 	stat = ioctl (fbd, FBIOPUT_VSCREENINFO,&var);
 	if (stat<0){
 		perror ("Error setting mode");
+		ioctl(fbd, FBIOPUT_VSCREENINFO, &orig_var);
+		ioctl(fbd, FBIOPUTCMAP, &orig_cmap);
 		return 1;
 	}
 	pfb = mmap (0, fix.smem_len, PROT_READ|PROT_WRITE, MAP_SHARED, fbd, 0);
 	if (pfb == MAP_FAILED){
 		perror ("Error mmap'ing framebuffer device");
+		ioctl(fbd, FBIOPUT_VSCREENINFO, &orig_var);
+		ioctl(fbd, FBIOPUTCMAP, &orig_cmap);
 		return 1;
 	}
 
@@ -439,8 +458,14 @@ int main (int argc,char **argv){
 	stat = munmap (pfb,fix.smem_len);
 	if (stat<0){
 		perror ("Error munmap'ing framebuffer device");
+		ioctl(fbd, FBIOPUT_VSCREENINFO, &orig_var);
+		ioctl(fbd, FBIOPUTCMAP, &orig_cmap);
 		return 1;
 	}
+
+	ioctl(fbd, FBIOPUT_VSCREENINFO, &orig_var);
+	ioctl(fbd, FBIOPUTCMAP, &orig_cmap);
+
 	close (fbd);
 	return 0;
 }
