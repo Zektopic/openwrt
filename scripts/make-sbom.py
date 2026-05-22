@@ -95,49 +95,61 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         "libs": "library"
     }
 
-    chunks: list[str] = text.strip().split("\n\n")
-    for chunk in chunks:
-        element: dict = {}
-        package: dict = {}
-        # Optimization: use basic string splitting instead of email.parser
-        # which performs full RFC 822/2822 compliance checks and adds massive overhead.
-        for line in chunk.splitlines():
-            idx = line.find(': ')
-            if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
+    # Optimization: use string find instead of splitting all lines
+    # which avoids allocating an intermediate string list and
+    # provides another speedup on large index files.
+    start = 0
+    text_len = len(text)
 
-        # required
-        if 'package' in package:
-            name: str = package['package']
-            element.update({"name": name})
-            if installed:
-                if name not in installed:
-                    continue
+    while start < text_len:
+        end = text.find("\n\n", start)
+        if end == -1:
+            end = text_len
 
-        if 'version' in package:
-            element.update({"version": package['version']})
+        p_idx = text.find("Package: ", start, end)
+        if p_idx == start or (p_idx > start and text[p_idx-1] == '\n'):
+            p_end = text.find("\n", p_idx, end)
+            name = text[p_idx+9:p_end if p_end != -1 else end].strip()
 
-        if 'cpe-id' in package:
-            element.update({"cpe": package['cpe-id']})
+            if not installed or name in installed:
+                element: dict = {"name": name}
 
-        # required
-        if 'section' in package:
-            type_category: str = ''
-            if type_allowed.get(package['section']):
-                type_category = type_allowed.get(package['section'])
-            if type_category:
-                element.update({"type": type_category})
-            else:
-                element.update({"type": "application"})
+                v_idx = text.find("\nVersion: ", start, end)
+                if v_idx != -1:
+                    v_end = text.find("\n", v_idx + 1, end)
+                    element["version"] = text[v_idx+10:v_end if v_end != -1 else end].strip()
 
-        if 'license' in package:
-            licenses: list = []
-            for license in package["license"].split():
-                licenses.append({"license": {"name": license}})
-            element.update({"licenses": licenses})
+                cpe_idx = text.find("\nCPE-ID: ", start, end)
+                if cpe_idx != -1:
+                    c_end = text.find("\n", cpe_idx + 1, end)
+                    element["cpe"] = text[cpe_idx+9:c_end if c_end != -1 else end].strip()
 
-        if element:
-            components.append(element)
+                sec_idx = text.find("\nSection: ", start, end)
+                type_category = ''
+                if sec_idx != -1:
+                    s_end = text.find("\n", sec_idx + 1, end)
+                    section = text[sec_idx+10:s_end if s_end != -1 else end].strip()
+                    type_category = type_allowed.get(section, '')
+
+                if type_category:
+                    element["type"] = type_category
+                else:
+                    element["type"] = "application"
+
+                lic_idx = text.find("\nLicense: ", start, end)
+                if lic_idx != -1:
+                    l_end = text.find("\n", lic_idx + 1, end)
+                    license_str = text[lic_idx+10:l_end if l_end != -1 else end].strip()
+                    licenses: list = []
+                    for license in license_str.split():
+                        licenses.append({"license": {"name": license}})
+                    element["licenses"] = licenses
+
+                components.append(element)
+
+        start = end + 2
+        while start < text_len and text[start] == '\n':
+            start += 1
 
     return components
 

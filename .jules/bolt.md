@@ -105,3 +105,8 @@
 ## 2024-05-24 - [Avoid `email.parser` for large package indexes]
 **Learning:** `email.parser.Parser` performs full RFC 822/2822 compliance checks which adds massive overhead. When parsing tens of thousands of machine-generated opkg package index blocks with predictable `Key: Value` line formats, standard string splitting and `.startswith()` checks provide a ~14x speedup.
 **Action:** When extracting a few specific headers from a trusted and uniform block format instead of parsing arbitrary emails, avoid `email.parser.Parser` and use fast native python string operations instead. Make sure to use `.strip()` when parsing values to correctly handle `\r\n` line endings.
+## 2026-05-22 - [Python String Splitting Overhead in SBOM Parsing]
+**Learning:** When parsing tens of thousands of machine-generated opkg package index blocks with predictable `Key: Value` line formats, repeatedly splitting strings on delimiters (e.g. `split('
+
+')` or `splitlines()`) creates massive intermediate string lists and adds significant memory allocation and processing overhead.
+**Action:** Use native string finding (`str.find()` inside a `while` loop) to process strings dynamically instead of allocating lists of splits. This approach is significantly faster and memory-efficient for parsing large structured indices.
