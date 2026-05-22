@@ -88,27 +88,28 @@ def create_header(size, crc, belkin_header, belkin_model):
 
     return head
 
-parser = argparse.ArgumentParser(description='Generate Belkin header.')
-parser.add_argument('source', type=argparse.FileType('r+b'))
-parser.add_argument('dest', type=argparse.FileType('wb'))
-parser.add_argument('belkin_header')
-parser.add_argument('belkin_model')
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate Belkin header.')
+    parser.add_argument('source', type=argparse.FileType('r+b'))
+    parser.add_argument('dest', type=argparse.FileType('wb'))
+    parser.add_argument('belkin_header')
+    parser.add_argument('belkin_model')
+    args = parser.parse_args()
 
-# Optimization: stream the file reading in chunks instead of loading the whole
-# thing into memory, reducing memory usage from O(N) to O(1) for large files
-args.dest.write(b'\x00' * 64)
+    # Optimization: stream the file reading in chunks instead of loading the whole
+    # thing into memory, reducing memory usage from O(N) to O(1) for large files
+    args.dest.write(b'\x00' * 64)
 
-crc = 0xffffffff
-size = 0
-while True:
-    chunk = args.source.read(65536)
-    if not chunk:
-        break
-    size += len(chunk)
-    crc = zlib.crc32(chunk, crc)
-    args.dest.write(chunk)
+    crc = 0xffffffff
+    size = 0
+    while True:
+        chunk = args.source.read(65536)
+        if not chunk:
+            break
+        size += len(chunk)
+        crc = zlib.crc32(chunk, crc)
+        args.dest.write(chunk)
 
-head = create_header(size, crc, args.belkin_header, args.belkin_model)
-args.dest.seek(0)
-args.dest.write(head)
+    head = create_header(size, crc, args.belkin_header, args.belkin_model)
+    args.dest.seek(0)
+    args.dest.write(head)
