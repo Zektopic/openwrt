@@ -41,9 +41,7 @@ struct fw_v1 {
 	uint32_t	kernel_len;	/* kernel data length */
 	uint32_t	rootfs_ofs;	/* rootfs data offset */
 	uint32_t	rootfs_len;	/* rootfs data length */
-	uint32_t	boot_ofs;	/* bootloader data offset */
-	uint32_t	boot_len;	/* bootloader data length */
-	uint8_t		pad[360];
+	uint8_t		pad[368];
 } __attribute__ ((packed));
 
 struct fw_v2 {
@@ -63,8 +61,7 @@ struct fw_v2 {
 	uint32_t	kernel_len;	/* 0x78: kernel data length */
 	uint32_t	rootfs_ofs;	/* 0x7c: rootfs data offset */
 	uint32_t	rootfs_len;	/* 0x80: rootfs data length */
-	uint32_t	boot_ofs;	/* 0x84: FIXME: seems to be unused */
-	uint32_t	boot_len;	/* 0x88: FIXME: seems to be unused */
+	uint8_t		pad1[8];	/* 0x84: unused */
 	uint16_t	unk4;		/* 0x8c: 0x55aa */
 	uint8_t		sver_hi;	/* 0x8e */
 	uint8_t		sver_lo;	/* 0x8f */
