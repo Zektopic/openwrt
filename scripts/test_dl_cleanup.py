@@ -1,0 +1,81 @@
+import unittest
+import re
+import sys
+import os
+import importlib.util
+from unittest.mock import Mock
+
+class TestDlCleanupParseVerYmdGitShasum(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Load the module using importlib to handle any script execution environment cleanly
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dl_cleanup.py')
+        spec = importlib.util.spec_from_file_location("dl_cleanup", script_path)
+        cls.dl_cleanup = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.dl_cleanup)
+
+    def setUp(self):
+        # Extract the specific regex used for parseVer_ymd_GIT_SHASUM
+        self.regex = None
+        for regex, func in self.dl_cleanup.versionRegex:
+            if func.__name__ == 'parseVer_ymd_GIT_SHASUM':
+                self.regex = regex
+                break
+        self.assertIsNotNone(self.regex, "Regex for parseVer_ymd_GIT_SHASUM not found")
+
+    def test_valid_format_with_hyphens(self):
+        """Test extraction with standard YYYY-MM-DD format."""
+        filename = "openwrt-package-2023-10-25-abcdef1234567890"
+        match = self.regex.search(filename)
+        self.assertIsNotNone(match)
+
+        progname, progversion = self.dl_cleanup.parseVer_ymd_GIT_SHASUM(match, filename)
+
+        self.assertEqual(progname, "openwrt-package")
+        expected_version = (2023 << 64) | (10 << 48) | (25 << 32)
+        self.assertEqual(progversion, expected_version)
+
+    def test_valid_format_without_hyphens(self):
+        """Test extraction with YYYYMMDD format without internal hyphens."""
+        filename = "another_pkg_20231025-abcdef"
+        match = self.regex.search(filename)
+        self.assertIsNotNone(match)
+
+        progname, progversion = self.dl_cleanup.parseVer_ymd_GIT_SHASUM(match, filename)
+
+        self.assertEqual(progname, "another_pkg")
+        expected_version = (2023 << 64) | (10 << 48) | (25 << 32)
+        self.assertEqual(progversion, expected_version)
+
+    def test_malformed_string_regex_rejection(self):
+        """Test that malformed version strings do not match the regex, gracefully bypassing."""
+        # Non-numeric year
+        self.assertIsNone(self.regex.search("pkg-YYYY-10-25-abcdef"))
+        # Invalid month length
+        self.assertIsNone(self.regex.search("pkg-2023-1-25-abcdef"))
+        # Missing trailing hyphen before the SHASUM component (required by regex '(\d\d)-')
+        self.assertIsNone(self.regex.search("pkg-2023-10-25"))
+
+    def test_malformed_match_object_value_error(self):
+        """Test parseVer_ymd_GIT_SHASUM gracefully fails if group contains non-int data."""
+        mock_match = Mock()
+        # group(1) = progname, group(2) = year, group(3) = month, group(4) = day
+        mock_match.group.side_effect = lambda idx: {1: "pkg", 2: "notint", 3: "10", 4: "25"}[idx]
+
+        with self.assertRaises(ValueError):
+            self.dl_cleanup.parseVer_ymd_GIT_SHASUM(mock_match, "dummy_path")
+
+    def test_malformed_match_object_index_error(self):
+        """Test parseVer_ymd_GIT_SHASUM gracefully fails if match has missing groups."""
+        mock_match = Mock()
+        def side_effect(idx):
+            if idx > 2:
+                raise IndexError("No such group")
+            return {1: "pkg", 2: "2023"}[idx]
+        mock_match.group.side_effect = side_effect
+
+        with self.assertRaises(IndexError):
+            self.dl_cleanup.parseVer_ymd_GIT_SHASUM(mock_match, "dummy_path")
+
+if __name__ == '__main__':
+    unittest.main()
