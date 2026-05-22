@@ -105,3 +105,6 @@
 ## 2024-05-24 - [Avoid `email.parser` for large package indexes]
 **Learning:** `email.parser.Parser` performs full RFC 822/2822 compliance checks which adds massive overhead. When parsing tens of thousands of machine-generated opkg package index blocks with predictable `Key: Value` line formats, standard string splitting and `.startswith()` checks provide a ~14x speedup.
 **Action:** When extracting a few specific headers from a trusted and uniform block format instead of parsing arbitrary emails, avoid `email.parser.Parser` and use fast native python string operations instead. Make sure to use `.strip()` when parsing values to correctly handle `\r\n` line endings.
+## 2024-05-14 - Python String Concatenation Optimization
+**Learning:** In Python, string concatenation within a loop using the `+=` operator involves creating a new string object and copying contents on each iteration because strings are immutable. This leads to O(N^2) performance degradation over many iterations.
+**Action:** Replace `+=` string concatenation inside loops with `list.append()` to collect the string parts, followed by `''.join(list)` outside the loop. This ensures an O(N) linear time complexity and avoids unnecessary allocations, providing significant performance speedups.
