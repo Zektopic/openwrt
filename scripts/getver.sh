@@ -25,7 +25,7 @@ try_git() {
 		;;
 	*-*-*)  # ISO date format - for approximating when packages were removed or renamed
 		GET_REV="$(git log -n 1 --format="%h" --until "$GET_REV")"
-		;&  # FALLTHROUGH
+		;;
 	*)
 		BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 		ORIGIN="$(git rev-parse --verify --symbolic-full-name ${BRANCH}@{u} 2>/dev/null)"
