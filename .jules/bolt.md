@@ -112,3 +112,7 @@
 ## 2026-05-22 - [Python String Splitting Memory Overhead]
 **Learning:** When parsing tens of thousands of blocks in a massive text file, using `.split()` to chunk the entire string creates an intermediate list containing all chunk strings simultaneously, leading to massive memory bloat (O(N) memory overhead in addition to the original string).
 **Action:** Use a streaming approach with `.find()` inside a `while` loop to extract and process chunks sequentially. This maintains strictly O(1) extra memory overhead and improves performance.
+
+## 2024-05-18 - [Optimize Python file copy loops]
+**Learning:** In Python scripts, using a manual `while` loop to read chunks and write them to another file is less efficient than using the standard library's `shutil.copyfileobj()`, which is implemented in C and optimizes the buffer size and execution.
+**Action:** Replace manual chunked file copy loops (e.g., `f.read(size)` and `f.write()` inside a `while` loop) with `shutil.copyfileobj(src, dest)` to improve execution speed and reduce Python interpreter overhead.
