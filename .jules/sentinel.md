@@ -114,3 +114,8 @@
 **Vulnerability:** Unbounded `strcpy` used for copying dynamic string into flexible array member without reusing precalculated length.
 **Learning:** In kernel modules, `strcpy` should be replaced with `strscpy`, and size variables should be precalculated to avoid TOCTOU races between allocation and copying.
 **Prevention:** Use `strscpy` with a precalculated length variable instead of `strcpy` and `strlen`.
+
+## 2024-05-25 - Prevent Command Injection via fs.popen()
+**Vulnerability:** A shell command injection vulnerability existed where attacker-controllable variables (e.g. `num_global_macaddr`, `mbssid`) read from potentially unvalidated configuration sources were interpolated into a shell string executed by `fs.popen()`.
+**Learning:** `fs.popen()` executes a shell implicitly and requires strict validation of any interpolated variables. In `ucode`, while `system()` can take an array, `fs.popen()` must take a string.
+**Prevention:** Strictly validate any external input bound for `fs.popen()` interpolation using regex (e.g., `match(var + "", /[^0-9]/)`) to ensure malicious shell tokens are rejected.
