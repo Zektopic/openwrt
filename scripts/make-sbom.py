@@ -108,10 +108,20 @@ def get_opkg_sbom(text: str, installed: set) -> list:
 
         element: dict = {}
         package: dict = {}
-        for line in text[start:end].splitlines():
-            idx = line.find(': ')
+
+        # Optimization: use native string parsing to build the dictionary without
+        # allocating intermediate lists via splitlines().
+        line_start = start
+        while line_start < end:
+            line_end = text.find('\n', line_start, end)
+            if line_end == -1:
+                line_end = end
+
+            idx = text.find(': ', line_start, line_end)
             if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
+                package[text[line_start:idx].lower()] = text[idx+2:line_end].strip()
+
+            line_start = line_end + 1
 
         start = end + 2
         while start < text_len and text[start] == '\n':
@@ -151,7 +161,6 @@ def get_opkg_sbom(text: str, installed: set) -> list:
             components.append(element)
 
     return components
-
 
 if __name__ == "__main__":
     import sys
