@@ -112,3 +112,7 @@
 ## 2026-05-22 - [Python String Splitting Memory Overhead]
 **Learning:** When parsing tens of thousands of blocks in a massive text file, using `.split()` to chunk the entire string creates an intermediate list containing all chunk strings simultaneously, leading to massive memory bloat (O(N) memory overhead in addition to the original string).
 **Action:** Use a streaming approach with `.find()` inside a `while` loop to extract and process chunks sequentially. This maintains strictly O(1) extra memory overhead and improves performance.
+
+## 2026-06-05 - [Python `splitlines()` Memory Overhead on String Slices]
+**Learning:** In Python, applying `.splitlines()` on string slices (e.g., `text[start:end].splitlines()`) to parse block-based formats (like opkg lists) can create a massive intermediate list of strings, especially when done in a tight loop across tens of thousands of chunks. This leads to unnecessary memory allocations and bloat.
+**Action:** Use a nested `while` loop with `.find('\n', line_start, end)` to identify lines sequentially without allocating intermediate lists of strings. This significantly improves parsing speed and reduces memory overhead to strictly O(1).

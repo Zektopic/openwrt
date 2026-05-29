@@ -108,10 +108,18 @@ def get_opkg_sbom(text: str, installed: set) -> list:
 
         element: dict = {}
         package: dict = {}
-        for line in text[start:end].splitlines():
-            idx = line.find(': ')
+
+        line_start = start
+        while line_start < end:
+            line_end = text.find('\n', line_start, end)
+            if line_end == -1:
+                line_end = end
+            idx = text.find(': ', line_start, line_end)
             if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
+                key = text[line_start:idx].lower()
+                val = text[idx+2:line_end].strip()
+                package[key] = val
+            line_start = line_end + 1
 
         start = end + 2
         while start < text_len and text[start] == '\n':
