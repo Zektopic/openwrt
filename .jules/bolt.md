@@ -112,3 +112,6 @@
 ## 2026-05-22 - [Python String Splitting Memory Overhead]
 **Learning:** When parsing tens of thousands of blocks in a massive text file, using `.split()` to chunk the entire string creates an intermediate list containing all chunk strings simultaneously, leading to massive memory bloat (O(N) memory overhead in addition to the original string).
 **Action:** Use a streaming approach with `.find()` inside a `while` loop to extract and process chunks sequentially. This maintains strictly O(1) extra memory overhead and improves performance.
+## 2024-05-30 - Optimize opkg index parsing in make-sbom
+**Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), avoid using `str.splitlines()` on block slices and avoid generic dictionary allocations for all fields. Instead, use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly. This drastically reduces intermediate object allocations and execution time compared to full-block dictionary parsing.
+**Action:** Apply targeted `str.find()` parsing for known, structured, machine-generated text formats rather than fully parsing blocks into dicts when only a subset of fields is needed.
