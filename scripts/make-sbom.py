@@ -95,9 +95,9 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         "libs": "library"
     }
 
-    # Optimization: use string find to locate chunks instead of splitting the entire text
-    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings
-    # while preserving exact dictionary-based parsing for robustness.
+    # Optimization: use string find instead of splitting all lines
+    # and creating dictionaries for every block. This provides a measurable
+    # speedup on large index files and reduces intermediate memory allocations.
     start = 0
     text_len = len(text)
 
@@ -106,49 +106,55 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         if end == -1:
             end = text_len
 
-        element: dict = {}
-        package: dict = {}
-        for line in text[start:end].splitlines():
-            idx = line.find(': ')
-            if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
+        # Extract only needed fields directly
+        p_idx = text.find("Package: ", start, end)
+        v_idx = text.find("\nVersion: ", start, end)
+        c_idx = text.find("\nCPE-ID: ", start, end)
+        s_idx = text.find("\nSection: ", start, end)
+        l_idx = text.find("\nLicense: ", start, end)
+
+        if p_idx == start or text.startswith("\nPackage: ", max(0, p_idx-1), end):
+            p_end = text.find("\n", p_idx + 9, end)
+            name = text[p_idx+9:p_end if p_end != -1 else end].strip()
+
+            if name:
+                if installed and name not in installed:
+                    pass
+                else:
+                    element: dict = {"name": name}
+
+                    if v_idx != -1:
+                        v_end = text.find("\n", v_idx + 10, end)
+                        element["version"] = text[v_idx+10:v_end if v_end != -1 else end].strip()
+
+                    if c_idx != -1:
+                        c_end = text.find("\n", c_idx + 9, end)
+                        element["cpe"] = text[c_idx+9:c_end if c_end != -1 else end].strip()
+
+                    type_category = "application"
+                    if s_idx != -1:
+                        s_end = text.find("\n", s_idx + 10, end)
+                        section = text[s_idx+10:s_end if s_end != -1 else end].strip()
+                        if section in type_allowed:
+                            type_category = type_allowed[section]
+                    element["type"] = type_category
+
+                    if l_idx != -1:
+                        l_end = text.find("\n", l_idx + 10, end)
+                        license_str = text[l_idx+10:l_end if l_end != -1 else end].strip()
+                        licenses = []
+                        for lic in license_str.split():
+                            licenses.append({"license": {"name": lic}})
+                        if licenses:
+                            element["licenses"] = licenses
+
+                    components.append(element)
 
         start = end + 2
+
+        # Skip extra newlines
         while start < text_len and text[start] == '\n':
             start += 1
-
-        # required
-        if 'package' in package:
-            name: str = package['package']
-            element.update({"name": name})
-            if installed:
-                if name not in installed:
-                    continue
-
-        if 'version' in package:
-            element.update({"version": package['version']})
-
-        if 'cpe-id' in package:
-            element.update({"cpe": package['cpe-id']})
-
-        # required
-        if 'section' in package:
-            type_category: str = ''
-            if type_allowed.get(package['section']):
-                type_category = type_allowed.get(package['section'])
-            if type_category:
-                element.update({"type": type_category})
-            else:
-                element.update({"type": "application"})
-
-        if 'license' in package:
-            licenses: list = []
-            for license in package["license"].split():
-                licenses.append({"license": {"name": license}})
-            element.update({"licenses": licenses})
-
-        if element:
-            components.append(element)
 
     return components
 
