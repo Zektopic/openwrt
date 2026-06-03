@@ -106,44 +106,86 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         if end == -1:
             end = text_len
 
-        element: dict = {}
-        package: dict = {}
-        for line in text[start:end].splitlines():
-            idx = line.find(': ')
-            if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
+        # Extract values directly to avoid creating intermediate objects
+        p_idx = text.find("Package: ", start, end)
+        if p_idx == start or (p_idx > start and text[p_idx-1] == '\n'):
+            p_end = text.find("\n", p_idx, end)
+            name = text[p_idx+9:p_end if p_end != -1 else end].strip()
+        else:
+            name = None
+
+        v_idx = text.find("\nVersion: ", start, end)
+        if v_idx != -1:
+            v_end = text.find("\n", v_idx + 1, end)
+            version = text[v_idx+10:v_end if v_end != -1 else end].strip()
+        else:
+            if start == 0 and text.startswith("Version: "):
+                v_end = text.find("\n", 0, end)
+                version = text[9:v_end if v_end != -1 else end].strip()
+            else:
+                version = None
+
+        cpe_idx = text.find("\nCPE-ID: ", start, end)
+        if cpe_idx != -1:
+            cpe_end = text.find("\n", cpe_idx + 1, end)
+            cpe = text[cpe_idx+9:cpe_end if cpe_end != -1 else end].strip()
+        else:
+            if start == 0 and text.startswith("CPE-ID: "):
+                cpe_end = text.find("\n", 0, end)
+                cpe = text[8:cpe_end if cpe_end != -1 else end].strip()
+            else:
+                cpe = None
+
+        sec_idx = text.find("\nSection: ", start, end)
+        if sec_idx != -1:
+            sec_end = text.find("\n", sec_idx + 1, end)
+            section = text[sec_idx+10:sec_end if sec_end != -1 else end].strip()
+        else:
+            if start == 0 and text.startswith("Section: "):
+                sec_end = text.find("\n", 0, end)
+                section = text[9:sec_end if sec_end != -1 else end].strip()
+            else:
+                section = None
+
+        lic_idx = text.find("\nLicense: ", start, end)
+        if lic_idx != -1:
+            lic_end = text.find("\n", lic_idx + 1, end)
+            license_val = text[lic_idx+10:lic_end if lic_end != -1 else end].strip()
+        else:
+            if start == 0 and text.startswith("License: "):
+                lic_end = text.find("\n", 0, end)
+                license_val = text[9:lic_end if lic_end != -1 else end].strip()
+            else:
+                license_val = None
 
         start = end + 2
         while start < text_len and text[start] == '\n':
             start += 1
 
-        # required
-        if 'package' in package:
-            name: str = package['package']
+        element: dict = {}
+        if name:
             element.update({"name": name})
-            if installed:
-                if name not in installed:
-                    continue
+            if installed and name not in installed:
+                continue
 
-        if 'version' in package:
-            element.update({"version": package['version']})
+        if version:
+            element.update({"version": version})
 
-        if 'cpe-id' in package:
-            element.update({"cpe": package['cpe-id']})
+        if cpe:
+            element.update({"cpe": cpe})
 
-        # required
-        if 'section' in package:
+        if section:
             type_category: str = ''
-            if type_allowed.get(package['section']):
-                type_category = type_allowed.get(package['section'])
+            if type_allowed.get(section):
+                type_category = type_allowed.get(section)
             if type_category:
                 element.update({"type": type_category})
             else:
                 element.update({"type": "application"})
 
-        if 'license' in package:
+        if license_val:
             licenses: list = []
-            for license in package["license"].split():
+            for license in license_val.split():
                 licenses.append({"license": {"name": license}})
             element.update({"licenses": licenses})
 
