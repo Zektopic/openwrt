@@ -8,6 +8,7 @@
 #
 import argparse
 import pathlib
+import shutil
 import socket
 import struct
 
@@ -83,8 +84,4 @@ header = struct.pack(
 args.dest_file.write(header)
 
 args.source_file.seek(0)
-while True:
-    buf = args.source_file.read(BUFSIZE)
-    if not buf:
-        break
-    args.dest_file.write(buf)
+shutil.copyfileobj(args.source_file, args.dest_file)
