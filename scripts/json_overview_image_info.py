@@ -85,7 +85,7 @@ if output:
         ],
         stdout=PIPE,
         check=True,
-        env=environ.copy().update({"TOPDIR": Path().cwd()}),
+        env={**environ, "TOPDIR": Path().cwd()},
         universal_newlines=True,
     ).stdout.splitlines()
 
