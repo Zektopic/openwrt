@@ -470,6 +470,44 @@ handle_send_auth(struct ead_packet *pkt, int len, int *nstate)
 	return true;
 }
 
+static void
+ead_exec_command(char *cmd)
+{
+	char *argv[128];
+	int argc = 0;
+	char *p = cmd;
+	char quote = '\0';
+
+	while (*p && argc < 127) {
+		while (*p == ' ' || *p == '\t') p++;
+		if (!*p) break;
+
+		argv[argc++] = p;
+
+		while (*p) {
+			if (!quote && (*p == '\'' || *p == '"')) {
+				quote = *p;
+				memmove(p, p + 1, strlen(p));
+				continue;
+			} else if (quote && *p == quote) {
+				quote = '\0';
+				memmove(p, p + 1, strlen(p));
+				continue;
+			} else if (!quote && (*p == ' ' || *p == '\t')) {
+				*p = '\0';
+				p++;
+				break;
+			}
+			p++;
+		}
+	}
+	argv[argc] = NULL;
+
+	if (argc > 0) {
+		execvp(argv[0], argv);
+	}
+}
+
 static bool
 handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 {
@@ -512,7 +550,7 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(pfd[1], 1);
 				dup2(pfd[1], 2);
 			}
-			system((char *)cmd->data);
+				ead_exec_command((char *)cmd->data);
 			exit(0);
 		} else if (pid > 0) {
 			close(pfd[1]);
@@ -533,7 +571,7 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(fd, 1);
 				dup2(fd, 2);
 			}
-			system((char *)cmd->data);
+				ead_exec_command((char *)cmd->data);
 			exit(0);
 		} else if (pid > 0) {
 			break;
