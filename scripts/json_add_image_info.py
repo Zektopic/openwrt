@@ -18,13 +18,22 @@ if not file_path.is_file():
     exit(0)
 
 
+TITLE_KEYS = []
+for prefix in ["", "ALT0_", "ALT1_", "ALT2_", "ALT3_", "ALT4_", "ALT5_"]:
+    keys = []
+    for var in ["vendor", "model", "variant"]:
+        keys.append((var, "DEVICE_{}{}".format(prefix, var.upper())))
+    TITLE_KEYS.append(keys)
+
+
 def get_titles():
     titles = []
-    for prefix in ["", "ALT0_", "ALT1_", "ALT2_", "ALT3_", "ALT4_", "ALT5_"]:
+    for keys in TITLE_KEYS:
         title = {}
-        for var in ["vendor", "model", "variant"]:
-            if getenv("DEVICE_{}{}".format(prefix, var.upper())):
-                title[var] = getenv("DEVICE_{}{}".format(prefix, var.upper()))
+        for var, env_key in keys:
+            val = getenv(env_key)
+            if val:
+                title[var] = val
 
         if title:
             titles.append(title)
