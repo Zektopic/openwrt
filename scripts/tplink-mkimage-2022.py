@@ -49,7 +49,7 @@ def decode_header(datafile):
         fields = struct.unpack(fmt, entry)
 
         section = {}
-        section['name'] = fields[1].decode("utf-8").rstrip('\0')
+        section['name'] = fields[1].decode("utf-8").rstrip('\0').replace('\0', '')
         section['type'] = fields[0]
         section['offset'] = fields[2]
         section['size'] = fields[3]
@@ -63,9 +63,12 @@ def extract(datafile):
     pretty = pprint.PrettyPrinter(indent=4, sort_dicts=False)
     pretty.pprint(header)
 
-    for section in header['items']:
-        datafile.seek(0x1814 + section['offset'])
-        with open(f"{section['name']}.bin", 'wb') as section_file:
+    # Open all files outside the loop to optimize I/O performance
+    files = {section['name']: open(f"{section['name']}.bin", 'wb') for section in header['items']}
+    try:
+        for section in header['items']:
+            datafile.seek(0x1814 + section['offset'])
+            section_file = files[section['name']]
             bytes_left = section['size']
             while bytes_left > 0:
                 chunk = datafile.read(min(65536, bytes_left))
@@ -73,6 +76,9 @@ def extract(datafile):
                     break
                 section_file.write(chunk)
                 bytes_left -= len(chunk)
+    finally:
+        for f in files.values():
+            f.close()
 
     with open('leftover.bin', 'wb') as extras_file:
         shutil.copyfileobj(datafile, extras_file)
