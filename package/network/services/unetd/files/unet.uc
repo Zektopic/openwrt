@@ -594,6 +594,7 @@ function network_invite(ctx, argv, named)
 	let req = {
 		network,
 		timeout: named.timeout,
+		enroll_info: { network },
 	};
 
 	if (named["access-key"]) {
@@ -614,11 +615,12 @@ function network_invite(ctx, argv, named)
 function network_join_peer_update(model, ctx, msg)
 {
 	let joinreq = ctx.data.enroll;
-	let name = joinreq.name;
 
 	let data = network_handle_enroll_update(model, ctx, msg);
 	if (!data)
 		return;
+
+	let name = data.enroll_meta?.network ?? joinreq.name;
 
 	let iface = {
 		proto: "unet",
