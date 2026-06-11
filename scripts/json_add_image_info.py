@@ -18,19 +18,33 @@ if not file_path.is_file():
     exit(0)
 
 
+# Pre-calculate environment variable keys at the module level
+# Optimization: Avoids redundant string formatting and upper() calls inside the loop
+TITLE_ENV_KEYS_CHUNKED = [
+    [
+        (var, f"DEVICE_{prefix}{var.upper()}")
+        for var in ("vendor", "model", "variant")
+    ]
+    for prefix in ("", "ALT0_", "ALT1_", "ALT2_", "ALT3_", "ALT4_", "ALT5_")
+]
+
+
 def get_titles():
     titles = []
-    for prefix in ["", "ALT0_", "ALT1_", "ALT2_", "ALT3_", "ALT4_", "ALT5_"]:
+    # Cache getenv lookup to avoid repeated globals lookup
+    _getenv = getenv
+    for prefix_vars in TITLE_ENV_KEYS_CHUNKED:
         title = {}
-        for var in ["vendor", "model", "variant"]:
-            if getenv("DEVICE_{}{}".format(prefix, var.upper())):
-                title[var] = getenv("DEVICE_{}{}".format(prefix, var.upper()))
+        for var, env_key in prefix_vars:
+            val = _getenv(env_key)
+            if val:
+                title[var] = val
 
         if title:
             titles.append(title)
 
     if not titles:
-        titles.append({"title": getenv("DEVICE_TITLE")})
+        titles.append({"title": _getenv("DEVICE_TITLE")})
 
     return titles
 
