@@ -77,5 +77,29 @@ class TestDlCleanupParseVerYmdGitShasum(unittest.TestCase):
         with self.assertRaises(IndexError):
             self.dl_cleanup.parseVer_ymd_GIT_SHASUM(mock_match, "dummy_path")
 
+
+class TestDlCleanupParseVer12(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dl_cleanup.py')
+        spec = importlib.util.spec_from_file_location("dl_cleanup", script_path)
+        cls.dl_cleanup = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.dl_cleanup)
+
+    def test_parseVer_12_index_error_on_patchlevel(self):
+        """Test parseVer_12 exception handling when group(4) raises IndexError."""
+        mock_match = Mock()
+        def side_effect(idx):
+            if idx == 4:
+                raise IndexError("No such group")
+            return {1: "prog", 2: "1", 3: "2"}[idx]
+        mock_match.group.side_effect = side_effect
+
+        progname, progversion = self.dl_cleanup.parseVer_12(mock_match, "dummy_path")
+
+        self.assertEqual(progname, "prog")
+        expected_version = (1 << 64) | (2 << 48) | 0
+        self.assertEqual(progversion, expected_version)
+
 if __name__ == '__main__':
     unittest.main()
