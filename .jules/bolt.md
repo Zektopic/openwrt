@@ -122,3 +122,7 @@
 ## 2024-06-11 - Pre-calculate dictionary keys and cache globals for nested loops
 **Learning:** In Python utility scripts (`scripts/json_add_image_info.py`), calling `os.getenv` with dynamically constructed strings inside nested loops (using `str.format()` and `.upper()`) introduces significant CPU overhead.
 **Action:** When extracting data from environment variables inside a loop, pre-calculate the environment variable keys at the module level. Additionally, caching `getenv` to a local variable (`_getenv = getenv`) inside the function eliminates global namespace lookup overhead. This combination yielded a ~45% speedup in micro-benchmarks.
+
+## 2024-05-24 - [Optimize file I/O operations for large files]
+**Learning:** When calculating the hash of a file and creating a new output file that contains the hash followed by the file's content, reading the input file twice (once for hashing, once for copying) doubles the I/O overhead.
+**Action:** Instead of double-reading, stream the input file chunks to calculate the hash while simultaneously writing those same chunks to the output file. Write a placeholder for the hash at the beginning of the output file, and then seek back to overwrite the placeholder with the final computed hash. This avoids double-reading the input file, cutting the disk I/O reads in half.
