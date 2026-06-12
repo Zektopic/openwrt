@@ -159,7 +159,6 @@ static int lq_des_setkey(struct crypto_ablkcipher *tfm, const u8 *key,
 {
         struct des_ctx *dctx = crypto_ablkcipher_ctx(tfm);
 
-        //printk("setkey in %s\n", __FILE__);
 
         dctx->controlr_M = 0;   // des
         dctx->key_length = keylen;
@@ -182,7 +181,6 @@ static int lq_des3_ede_setkey(struct crypto_ablkcipher *tfm, const u8 *in_key,
 {
     struct des_ctx *dctx = crypto_ablkcipher_ctx(tfm);
 
-    //printk("setkey in %s\n", __FILE__);
 
     dctx->controlr_M = keylen/8 + 1;   // des
     dctx->key_length = keylen;
@@ -401,8 +399,6 @@ static int process_next_packet(struct des_container *des_con,  struct ablkcipher
     remain = des_con->bytes_processed;
     chunk_size = src->length;
 
-    //printk("debug ln: %d, func: %s, reqsize: %d, scattersize: %d\n",
-//		__LINE__, __func__, areq->nbytes, chunk_size);
 
     if (remain > DEU_MAX_PACKET_SIZE)
         inc = DEU_MAX_PACKET_SIZE;
@@ -536,7 +532,6 @@ static int des_crypto_thread(void *data)
        continue;
 
 des_done:
-       //printk("debug line - %d, func: %s, qlen: %d\n", __LINE__, __func__, des_queue->list.qlen);
        areq->base.complete(&areq->base, 0);
        lq_sg_complete(des_con);
 
@@ -596,8 +591,6 @@ static int lq_queue_mgr(struct des_ctx *ctx, struct ablkcipher_request *areq,
     des_con->arequest = (*areq);
     remain = nbytes;
 
-    //printk("debug - Line: %d, func: %s, reqsize: %d, scattersize: %d\n",
-	//	__LINE__, __func__, nbytes, chunk_bytes);
 
     if (remain > DEU_MAX_PACKET_SIZE)
         inc = DEU_MAX_PACKET_SIZE;
@@ -889,7 +882,6 @@ int __init lqdeu_async_des_init (void)
 
      for (i = 0; i < ARRAY_SIZE(des_drivers_alg); i++) {
          ret = crypto_register_alg(&des_drivers_alg[i].alg);
-	 //printk("driver: %s\n", des_drivers_alg[i].alg.cra_name);
          if (ret)
              goto des_err;
      }
