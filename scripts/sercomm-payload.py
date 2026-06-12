@@ -16,21 +16,23 @@ def create_output(args):
 	else:
 		pid_bytes = bytes.fromhex(args.pid)
 
-	# Optimization: compute SHA256 in 64K chunks to avoid O(N) memory overhead for large files
+	# Optimization: stream the input file to compute SHA256 and write to output
+	# simultaneously to avoid double-reading the input file and minimize I/O overhead.
 	sha256 = hashlib.sha256()
-	with open(args.input_file, 'rb') as in_f:
-		while True:
-			chunk = in_f.read(65536)
-			if not chunk:
-				break
-			sha256.update(chunk)
-
-	# Optimization: stream the file contents with shutil.copyfileobj
 	with open(args.output_file, 'wb') as out_f:
 		out_f.write(pid_bytes)
-		out_f.write(sha256.digest())
+		# Write a placeholder for the SHA256 hash
+		out_f.write(b'\x00' * 32)
 		with open(args.input_file, 'rb') as in_f:
-			shutil.copyfileobj(in_f, out_f)
+			while True:
+				chunk = in_f.read(65536)
+				if not chunk:
+					break
+				sha256.update(chunk)
+				out_f.write(chunk)
+		# Overwrite the placeholder with the computed SHA256 hash
+		out_f.seek(len(pid_bytes))
+		out_f.write(sha256.digest())
 
 def main():
 	global args
