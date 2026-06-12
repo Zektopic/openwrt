@@ -151,10 +151,6 @@ static int aes_set_key (struct crypto_tfm *tfm, const u8 *in_key, unsigned int k
 {
     struct aes_ctx *ctx = crypto_tfm_ctx(tfm);
 
-    //printk("set_key in %s\n", __FILE__);
-
-    //aes_chip_init();
-
     if (key_len != 16 && key_len != 24 && key_len != 32) {
         return -EINVAL;
     }
@@ -345,8 +341,6 @@ void ifx_deu_aes (void *ctx_arg, u8 *out_arg, const u8 *in_arg,
 static int ctr_rfc3686_aes_set_key (struct crypto_tfm *tfm, const uint8_t *in_key, unsigned int key_len)
 {
     struct aes_ctx *ctx = crypto_tfm_ctx(tfm);
-
-    //printk("ctr_rfc3686_aes_set_key in %s\n", __FILE__);
 
     memcpy(ctx->nonce, in_key + (key_len - CTR_RFC3686_NONCE_SIZE),
            CTR_RFC3686_NONCE_SIZE);
@@ -1335,7 +1329,6 @@ static void aes_cbcmac_transform(struct shash_desc *desc, u8 const *in)
 
     if ( ((mctx->dbn)+1) > AES_CBCMAC_DBN_TEMP_SIZE )
     {
-        //printk("aes_cbcmac_DBN_TEMP_SIZE exceeded\n");
         aes_cbcmac_final_impl(desc, (u8 *)mctx->hash, false);
     }
 
@@ -1439,9 +1432,6 @@ static int aes_cbcmac_final_impl(struct shash_desc *desc, u8 *out, bool hash_fin
     aes->controlr.O = 1; //0 ECB 1 CBC 2 OFB 3 CFB 4 CTR
 
     //aes->controlr.F = 128; //default; only for CFB and OFB modes; change only for customer-specific apps
-
-    //printk("\ndbn = %d\n", mctx->dbn);
-
     if (mctx->started) {
         aes->IV3R = DEU_ENDIAN_SWAP(*(u32 *) mctx->hash);
         aes->IV2R = DEU_ENDIAN_SWAP(*((u32 *) mctx->hash + 1));
