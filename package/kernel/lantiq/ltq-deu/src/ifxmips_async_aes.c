@@ -414,8 +414,6 @@ static int process_next_packet(struct aes_container *aes_con, struct ablkcipher_
 
     nbytes = aes_con->nbytes;
 
-    //printk("debug - Line: %d, func: %s, reqsize: %d, scattersize: %d\n",
-    //          __LINE__, __func__, nbytes, chunk_size);
 
     cipher = crypto_ablkcipher_reqtfm(areq);
     ctx = crypto_ablkcipher_ctx(cipher);
@@ -502,7 +500,6 @@ static int aes_crypto_thread (void *data)
             spin_unlock_irqrestore(&aes_queue->lock, queue_flag);
 	    return 0;
 	}
-        //printk("debug ln: %d, bytes proc: %d\n", __LINE__, aes_con->bytes_processed);
         spin_unlock_irqrestore(&aes_queue->lock, queue_flag);
 
         if (!aes_con) {
@@ -535,7 +532,6 @@ static int aes_crypto_thread (void *data)
 	continue;
 
 aes_done:
-        //printk("debug line - %d, func: %s, qlen: %d\n", __LINE__, __func__, aes_queue->list.qlen);
         areq->base.complete(&areq->base, 0);
         lq_sg_complete(aes_con);
 
@@ -594,8 +590,6 @@ static int lq_aes_queue_mgr(struct aes_ctx *ctx, struct ablkcipher_request *areq
     aes_con->arequest = *(areq);
     remain = nbytes;
 
-    //printk("debug - Line: %d, func: %s, reqsize: %d, scattersize: %d\n",
-    //        __LINE__, __func__, nbytes, chunk_bytes);
 
     if (remain > DEU_MAX_PACKET_SIZE)
        inc = DEU_MAX_PACKET_SIZE;
