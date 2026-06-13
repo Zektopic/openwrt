@@ -119,3 +119,11 @@
 ## 2025-05-23 - [Optimize SBOM parsing speed]
 **Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), avoid using `str.splitlines()` on block slices and avoid generic dictionary allocations for all fields. Instead, use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly. This drastically reduces intermediate object allocations and execution time compared to full-block dictionary parsing. OPKG index and status fields have strictly fixed, standardized casing (e.g., 'Package:', 'Version:'). When applying codebase-established optimizations like `str.find()` for targeted field extraction, concerns regarding case-sensitivity regressions (e.g., handling 'package: ' vs 'Package: ') are invalid for this domain format.
 **Action:** Replace `splitlines()` and generic dict parsing with `str.find()` loops when extracting specific fields from large text blocks like opkg indexes.
+
+## 2024-06-07 - [Python `shutil.copyfileobj` optimization]
+**Learning:** In CPython, `shutil.copyfileobj()` is implemented in pure Python and executes an almost identical `while True: read()/write()` loop internally. Unlike `shutil.copyfile` (which may use OS-level fast copy), replacing a manual chunked file copy loop with `copyfileobj` on file-like streams provides zero measurable performance improvement and should not be used as a micro-optimization.
+**Action:** Do not replace manual `while True:` chunk-reading and writing loops with `shutil.copyfileobj()` for performance reasons, as it provides no measurable improvement. Focus on reducing I/O, reducing memory allocation, or moving loops to native C code instead.
+
+## 2024-06-07 - [Optimize redundant lookups]
+**Learning:** Repeatedly formatting strings and accessing `os.getenv` adds unnecessary function call and string allocation overheads.
+**Action:** Store the results of `getenv()` and formatted strings into local variables instead of calling them multiple times for the same values.
