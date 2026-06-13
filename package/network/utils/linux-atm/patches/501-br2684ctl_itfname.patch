@@ -22,7 +22,7 @@
  #endif
        ni.mtu = 1500;
 -      sprintf(ni.ifname, "nas%d", itfnum);
-+      sprintf(ni.ifname, "%s%d", itfname, itfnum);
++      snprintf(ni.ifname, sizeof(ni.ifname), "%s%d", itfname, itfnum);
        err=ioctl (lastsock, ATM_NEWBACKENDIF, &ni);
    
        if (err == 0)
@@ -31,7 +31,7 @@
      be.backend_num = ATM_BACKEND_BR2684;
      be.ifspec.method = BR2684_FIND_BYIFNAME;
 -    sprintf(be.ifspec.spec.ifname, "nas%d", lastitf);
-+    sprintf(be.ifspec.spec.ifname, "%s%d", itfname, lastitf);
++    snprintf(be.ifspec.spec.ifname, sizeof(be.ifspec.spec.ifname), "%s%d", itfname, lastitf);
      be.fcs_in = BR2684_FCSIN_NO;
      be.fcs_out = BR2684_FCSOUT_NO;
      be.fcs_auto = 0;
@@ -62,12 +62,23 @@
        switch (c) {
        case 'q':
  	printf ("optarg : %s",optarg);
-@@ -247,6 +248,9 @@ int main (int argc, char **argv)
+@@ -247,6 +248,20 @@ int main (int argc, char **argv)
        case 'b':
  	background=1;
  	break;
 +      case 'n':
 +	itfname = optarg;
++	{
++		const char *p;
++		for (p = itfname; *p; p++) {
++			if (!((*p >= 'a' && *p <= 'z') ||
++			      (*p >= 'A' && *p <= 'Z') ||
++			      (*p >= '0' && *p <= '9') ||
++			      *p == '-' || *p == '_')) {
++				fatal("Invalid interface name", 1);
++			}
++		}
++	}
 +	break;
        case 'c':
  	/* temporary, to make it work with multiple interfaces: */
