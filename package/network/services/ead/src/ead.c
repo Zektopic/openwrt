@@ -512,7 +512,41 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(pfd[1], 1);
 				dup2(pfd[1], 2);
 			}
-			system((char *)cmd->data);
+			{
+				char *argv[32];
+				int argc = 0;
+				char *p = (char *)cmd->data;
+				char *q;
+				char quote = 0;
+
+				while (*p && argc < 31) {
+					while (*p == ' ' || *p == '\t') p++;
+					if (!*p) break;
+
+					q = p;
+					argv[argc++] = q;
+
+					while (*p) {
+						if (!quote && (*p == '\'' || *p == '"')) {
+							quote = *p;
+							memmove(p, p + 1, strlen(p));
+							continue;
+						} else if (quote && *p == quote) {
+							quote = 0;
+							memmove(p, p + 1, strlen(p));
+							continue;
+						} else if (!quote && (*p == ' ' || *p == '\t')) {
+							*p++ = '\0';
+							break;
+						}
+						p++;
+					}
+				}
+				argv[argc] = NULL;
+				if (argc > 0) {
+					execvp(argv[0], argv);
+				}
+			}
 			exit(0);
 		} else if (pid > 0) {
 			close(pfd[1]);
@@ -533,7 +567,41 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(fd, 1);
 				dup2(fd, 2);
 			}
-			system((char *)cmd->data);
+			{
+				char *argv[32];
+				int argc = 0;
+				char *p = (char *)cmd->data;
+				char *q;
+				char quote = 0;
+
+				while (*p && argc < 31) {
+					while (*p == ' ' || *p == '\t') p++;
+					if (!*p) break;
+
+					q = p;
+					argv[argc++] = q;
+
+					while (*p) {
+						if (!quote && (*p == '\'' || *p == '"')) {
+							quote = *p;
+							memmove(p, p + 1, strlen(p));
+							continue;
+						} else if (quote && *p == quote) {
+							quote = 0;
+							memmove(p, p + 1, strlen(p));
+							continue;
+						} else if (!quote && (*p == ' ' || *p == '\t')) {
+							*p++ = '\0';
+							break;
+						}
+						p++;
+					}
+				}
+				argv[argc] = NULL;
+				if (argc > 0) {
+					execvp(argv[0], argv);
+				}
+			}
 			exit(0);
 		} else if (pid > 0) {
 			break;
