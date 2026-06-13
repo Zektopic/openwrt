@@ -119,3 +119,7 @@
 **Vulnerability:** A shell command injection vulnerability existed where attacker-controllable variables (e.g. `num_global_macaddr`, `mbssid`) read from potentially unvalidated configuration sources were interpolated into a shell string executed by `fs.popen()`.
 **Learning:** `fs.popen()` executes a shell implicitly and requires strict validation of any interpolated variables. In `ucode`, while `system()` can take an array, `fs.popen()` must take a string.
 **Prevention:** Strictly validate any external input bound for `fs.popen()` interpolation using regex (e.g., `match(var + "", /[^0-9]/)`) to ensure malicious shell tokens are rejected.
+## 2024-06-07 - Buffer Overflow Risk via sprintf in describe_vendor
+**Vulnerability:** In `package/network/config/ltq-vdsl-vr9-app/src/src/dsl_cpe_ubus.c`, the `describe_vendor` function formatted a string using `sprintf(buf, "%s %d.%d", str, value[6], value[7])` into a fixed-size local 64-byte `buf`. If `str` were unexpectedly long, this would cause a stack-based buffer overflow.
+**Learning:** `sprintf` lacks bounds checking and easily introduces memory corruption vulnerabilities when writing to fixed-size buffers, especially when input string lengths are not explicitly validated.
+**Prevention:** Replace all usages of `sprintf` with explicitly bounded string formatting functions like `snprintf(buf, sizeof(buf), ...)`. This ensures the formatted string is safely truncated rather than overflowing the target buffer.
