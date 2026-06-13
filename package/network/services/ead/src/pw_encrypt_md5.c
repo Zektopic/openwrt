@@ -555,7 +555,6 @@ md5_crypt(char passwd[MD5_OUT_BUFSIZE], const unsigned char *pw, const unsigned 
 		__md5_Update(&ctx, final, pl > 16 ? 16 : pl);
 
 	/* Don't leave anything around in vm they could use. */
-//TODO: the above comment seems to be wrong. final is used later.
 	memset(final, 0, sizeof(final));
 
 	/* Then something really weird... */
