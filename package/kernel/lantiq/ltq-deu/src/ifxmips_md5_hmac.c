@@ -101,7 +101,6 @@ static void md5_hmac_transform(struct shash_desc *desc, u32 const *in)
 
     if ( ((mctx->dbn<<4)+1) > MD5_HMAC_DBN_TEMP_SIZE )
     {
-        //printk("MD5_HMAC_DBN_TEMP_SIZE exceeded\n");
         md5_hmac_final_impl(desc, (u8 *)mctx->hash, false);
     }
 
@@ -120,7 +119,6 @@ static int md5_hmac_setkey(struct crypto_shash *tfm, const u8 *key, unsigned int
 {
     struct md5_hmac_ctx *mctx = crypto_shash_ctx(tfm);
     int err;
-    //printk("copying keys to context with length %d\n", keylen);
 
     if (keylen > MAX_HASH_KEYLEN) {
         char *hash_alg_name = "md5";
@@ -156,7 +154,6 @@ static int md5_hmac_setkey_hw(const u8 *key, unsigned int keylen)
     int i, j;
     u32 *in_key = (u32 *)key;
 
-    //printk("\nsetkey keylen: %d\n key: ", keylen);
 
     hash->KIDX |= 0x80000000; // reset all 16 words of the key to '0'
     j = 0;
@@ -280,7 +277,6 @@ static int md5_hmac_final_impl(struct shash_desc *desc, u8 *out, bool hash_final
 
     md5_hmac_setkey_hw(mctx->key, mctx->keylen);
 
-    //printk("\ndbn = %d\n", mctx->dbn);
     if (hash_final) {
        hashs->DBN = mctx->dbn;
     } else {

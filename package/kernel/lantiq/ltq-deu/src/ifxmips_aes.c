@@ -45,7 +45,6 @@
 #include <linux/modeversions>
 #endif
 
-#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/proc_fs.h>
@@ -152,7 +151,6 @@ static int aes_set_key (struct crypto_tfm *tfm, const u8 *in_key, unsigned int k
 {
     struct aes_ctx *ctx = crypto_tfm_ctx(tfm);
 
-    //printk("set_key in %s\n", __FILE__);
 
     //aes_chip_init();
 
@@ -347,7 +345,6 @@ static int ctr_rfc3686_aes_set_key (struct crypto_tfm *tfm, const uint8_t *in_ke
 {
     struct aes_ctx *ctx = crypto_tfm_ctx(tfm);
 
-    //printk("ctr_rfc3686_aes_set_key in %s\n", __FILE__);
 
     memcpy(ctx->nonce, in_key + (key_len - CTR_RFC3686_NONCE_SIZE),
            CTR_RFC3686_NONCE_SIZE);
@@ -1336,7 +1333,6 @@ static void aes_cbcmac_transform(struct shash_desc *desc, u8 const *in)
 
     if ( ((mctx->dbn)+1) > AES_CBCMAC_DBN_TEMP_SIZE )
     {
-        //printk("aes_cbcmac_DBN_TEMP_SIZE exceeded\n");
         aes_cbcmac_final_impl(desc, (u8 *)mctx->hash, false);
     }
 
@@ -1441,7 +1437,6 @@ static int aes_cbcmac_final_impl(struct shash_desc *desc, u8 *out, bool hash_fin
 
     //aes->controlr.F = 128; //default; only for CFB and OFB modes; change only for customer-specific apps
 
-    //printk("\ndbn = %d\n", mctx->dbn);
 
     if (mctx->started) {
         aes->IV3R = DEU_ENDIAN_SWAP(*(u32 *) mctx->hash);

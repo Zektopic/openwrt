@@ -40,7 +40,6 @@
 */
 
 /* Project Header Files */
-#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/types.h>
@@ -132,7 +131,6 @@ static int des_setkey(struct crypto_tfm *tfm, const u8 *key,
         struct ifx_deu_des_ctx *dctx = crypto_tfm_ctx(tfm);
         int err;
 
-        //printk("setkey in %s\n", __FILE__);
 
         err = des_expand_key(&dctx->des_context, key, keylen);
         if (err == -ENOKEY) {
@@ -432,7 +430,6 @@ static int des3_ede_setkey(struct crypto_tfm *tfm, const u8 *key,
         struct ifx_deu_des_ctx *dctx = crypto_tfm_ctx(tfm);
         int err;
 
-        //printk("setkey in %s\n", __FILE__);
 
         err = des3_ede_expand_key(&dctx->des3_ede_context, key, keylen);
         if (err == -ENOKEY) {

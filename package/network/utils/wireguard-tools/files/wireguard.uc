@@ -13,7 +13,7 @@ function ensure_key_is_generated(cursor, section_name) {
 	let private_key = cursor.get('network', section_name, 'private_key');
 
 	if (!private_key || private_key == 'generate') {
-		let proc = fs.popen(`${WG} genkey`);
+		let proc = fs.popen([ WG, 'genkey' ]);
 		if (!proc)
 			return null;
 
@@ -154,7 +154,7 @@ function proto_setup(proto) {
 			wg_config += sprintf('PersistentKeepalive=%s\n', peer.persistent_keepalive);
 	}
 
-	let wg_proc = fs.popen(sprintf('%s syncconf %s /dev/stdin', WG, iface), 'w');
+	let wg_proc = fs.popen([ WG, 'syncconf', iface, '/dev/stdin' ], 'w');
 	if (!wg_proc) {
 		warn('Failed to run wg syncconf for ', iface, '\n');
 		proto.setup_failed();
@@ -210,7 +210,7 @@ function proto_setup(proto) {
 	}
 
 	if (config.nohostroute != '1') {
-		let endpoints_proc = fs.popen(sprintf('%s show %s endpoints', WG, iface));
+		let endpoints_proc = fs.popen([ WG, 'show', iface, 'endpoints' ]);
 		if (endpoints_proc) {
 			let endpoints_data = endpoints_proc.read('all');
 			endpoints_proc.close();

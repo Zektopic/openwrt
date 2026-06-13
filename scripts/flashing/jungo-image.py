@@ -14,7 +14,7 @@ Valid options:
 \t-d | --dump: create a flash dump
 \t-f | --file: use <filename> to store dump contents
 \t-u | --user: provide username (default admin)
-\t-p | --pass: provide password (default password1)
+	-p | --pass: provide password (prompts if not provided)
 \t     --port: set port for http (default 8080)
 \t-q | --quiet: don't display unnecessary information
 \t-r | --reboot: reboot target on successful transfer
@@ -40,7 +40,7 @@ HOST = "192.168.1.1"
 PORT = 8080
 user = "admin"
 #password = getpass.getpass()
-password = "password1"
+password = None
 proto = "http"
 url = ""
 imagefile = ""
@@ -196,6 +196,9 @@ for o, a in opts:
         reboot = 1
     elif o in ("-v", "--verbose"):
         verbose = 1
+
+if password is None:
+    password = getpass.getpass("Password: ")
 
 # make sure we have enough arguments
 if len(args) > 0:

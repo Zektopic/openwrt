@@ -44,12 +44,7 @@
 #include <linux/mm.h>
 #include <linux/crypto.h>
 #include <crypto/internal/hash.h>
-#include <linux/version.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5,11,0)
-#include <crypto/sha.h>
-#else
 #include <crypto/sha1.h>
-#endif
 #include <linux/types.h>
 #include <linux/scatterlist.h>
 #include <asm/byteorder.h>
@@ -109,7 +104,6 @@ static int sha1_hmac_transform(struct shash_desc *desc, u32 const *in)
 
     if ( ((sctx->dbn<<4)+1) > SHA1_HMAC_DBN_TEMP_SIZE )
     {
-        //printk("SHA1_HMAC_DBN_TEMP_SIZE exceeded\n");
         sha1_hmac_final_impl(desc, (u8 *)sctx->hash, false);
     }
 
@@ -150,7 +144,6 @@ static int sha1_hmac_setkey(struct crypto_shash *tfm, const u8 *key, unsigned in
     }
     memset(sctx->key + sctx->keylen, 0, SHA1_HMAC_MAX_KEYLEN - sctx->keylen);
 
-    //printk("Setting keys of len: %d\n", keylen);
 
     return 0;
 }
@@ -191,7 +184,6 @@ static int sha1_hmac_init(struct shash_desc *desc)
 {
     struct sha1_hmac_ctx *sctx =  crypto_shash_ctx(desc->tfm);
 
-    //printk("debug ln: %d, fn: %s\n", __LINE__, __func__);
     sctx->dbn = 0; //dbn workaround
     sctx->started = 0;
     sctx->count = 0;
@@ -214,7 +206,6 @@ static int sha1_hmac_update(struct shash_desc *desc, const u8 *data,
 
     j = (sctx->count >> 3) & 0x3f;
     sctx->count += len << 3;
-   // printk("sctx->count = %d\n", sctx->count);
 
     if ((j + len) > 63) {
         memcpy (&sctx->buffer[j], data, (i = 64 - j));
@@ -361,7 +352,6 @@ static int sha1_hmac_final_impl(struct shash_desc *desc, u8 *out, bool hash_fina
     } else {
         sctx->dbn = 0;
     }
-    //printk("debug ln: %d, fn: %s\n", __LINE__, __func__);
 
     return 0;
 

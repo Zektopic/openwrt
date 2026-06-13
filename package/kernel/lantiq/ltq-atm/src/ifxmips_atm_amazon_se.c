@@ -34,7 +34,6 @@
  */
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/version.h>
 #include <linux/types.h>
 #include <linux/errno.h>
 #include <linux/proc_fs.h>
@@ -111,14 +110,6 @@ static inline void clear_share_buffer(void);
 
 static inline void init_pmu(void)
 {
-    //*(unsigned long *)0xBF10201C &= ~((1 << 15) | (1 << 13) | (1 << 9));
-    //PPE_TOP_PMU_SETUP(IFX_PMU_ENABLE);
-/*    PPE_SLL01_PMU_SETUP(IFX_PMU_ENABLE);
-    PPE_TC_PMU_SETUP(IFX_PMU_ENABLE);
-    PPE_EMA_PMU_SETUP(IFX_PMU_ENABLE);
-    //PPE_QSB_PMU_SETUP(IFX_PMU_ENABLE);
-    PPE_TPE_PMU_SETUP(IFX_PMU_ENABLE);
-    DSL_DFE_PMU_SETUP(IFX_PMU_ENABLE);*/
 	ltq_pmu_enable(IFX_PMU_MODULE_PPE_SLL01 |
 		IFX_PMU_MODULE_PPE_TC |
 		IFX_PMU_MODULE_PPE_EMA |
@@ -128,13 +119,6 @@ static inline void init_pmu(void)
 
 static inline void uninit_pmu(void)
 {
-    /*PPE_SLL01_PMU_SETUP(IFX_PMU_DISABLE);
-    PPE_TC_PMU_SETUP(IFX_PMU_DISABLE);
-    PPE_EMA_PMU_SETUP(IFX_PMU_DISABLE);
-    //PPE_QSB_PMU_SETUP(IFX_PMU_DISABLE);
-    PPE_TPE_PMU_SETUP(IFX_PMU_DISABLE);
-    DSL_DFE_PMU_SETUP(IFX_PMU_DISABLE);
-    //PPE_TOP_PMU_SETUP(IFX_PMU_DISABLE);*/
 }
 
 static inline void reset_ppe(struct platform_device *pdev)

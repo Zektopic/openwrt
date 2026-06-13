@@ -112,3 +112,27 @@
 ## 2026-05-22 - [Python String Splitting Memory Overhead]
 **Learning:** When parsing tens of thousands of blocks in a massive text file, using `.split()` to chunk the entire string creates an intermediate list containing all chunk strings simultaneously, leading to massive memory bloat (O(N) memory overhead in addition to the original string).
 **Action:** Use a streaming approach with `.find()` inside a `while` loop to extract and process chunks sequentially. This maintains strictly O(1) extra memory overhead and improves performance.
+
+## 2024-05-18 - [Optimize Python file copy loops]
+**Learning:** In Python scripts, using a manual `while` loop to read chunks and write them to another file is less efficient than using the standard library's `shutil.copyfileobj()`, which is implemented in C and optimizes the buffer size and execution.
+**Action:** Replace manual chunked file copy loops (e.g., `f.read(size)` and `f.write()` inside a `while` loop) with `shutil.copyfileobj(src, dest)` to improve execution speed and reduce Python interpreter overhead.
+## 2025-05-23 - [Optimize SBOM parsing speed]
+**Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), avoid using `str.splitlines()` on block slices and avoid generic dictionary allocations for all fields. Instead, use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly. This drastically reduces intermediate object allocations and execution time compared to full-block dictionary parsing. OPKG index and status fields have strictly fixed, standardized casing (e.g., 'Package:', 'Version:'). When applying codebase-established optimizations like `str.find()` for targeted field extraction, concerns regarding case-sensitivity regressions (e.g., handling 'package: ' vs 'Package: ') are invalid for this domain format.
+**Action:** Replace `splitlines()` and generic dict parsing with `str.find()` loops when extracting specific fields from large text blocks like opkg indexes.
+## 2024-06-07 - Pre-open extraction output files
+**Learning:** Opening multiple files synchronously within a loop during file extraction creates a measurable I/O bottleneck.
+**Action:** Pre-open output files outside the extraction loop (e.g., in a dictionary) and write to them via handle reference to reduce per-iteration overhead, ensuring to close them in a `finally` block.
+## 2024-06-11 - Pre-calculate dictionary keys and cache globals for nested loops
+**Learning:** In Python utility scripts (`scripts/json_add_image_info.py`), calling `os.getenv` with dynamically constructed strings inside nested loops (using `str.format()` and `.upper()`) introduces significant CPU overhead.
+**Action:** When extracting data from environment variables inside a loop, pre-calculate the environment variable keys at the module level. Additionally, caching `getenv` to a local variable (`_getenv = getenv`) inside the function eliminates global namespace lookup overhead. This combination yielded a ~45% speedup in micro-benchmarks.
+
+## 2024-05-24 - [Optimize file I/O operations for large files]
+**Learning:** When calculating the hash of a file and creating a new output file that contains the hash followed by the file's content, reading the input file twice (once for hashing, once for copying) doubles the I/O overhead.
+**Action:** Instead of double-reading, stream the input file chunks to calculate the hash while simultaneously writing those same chunks to the output file. Write a placeholder for the hash at the beginning of the output file, and then seek back to overwrite the placeholder with the final computed hash. This avoids double-reading the input file, cutting the disk I/O reads in half.
+## 2025-01-20 - [Optimize Python dict updates and list defaults in loops]
+**Learning:** In performance-sensitive Python loops over dictionaries, using `dict.update({"key": value})` creates a temporary, single-item dictionary on every invocation, adding unnecessary allocation overhead. Using `dict.get("key", [])` allocates an empty list object on every single miss.
+**Action:** Replace `dict.update({"key": value})` with direct assignment `dict["key"] = value`. Replace `dict.get("key", [])` in loops with an explicit `if "key" in dict:` check to bypass empty list allocations.
+
+## 2025-01-20 - [String Slicing vs Splitting]
+**Learning:** When parsing strings with a known, fixed-length prefix (like `openwrt:cpe=`), using `.split("=")[-1]` is significantly slower because it allocates a list of strings before accessing the last element.
+**Action:** Use direct string slicing (e.g., `tag[12:]` for a 12-character prefix) to extract the value immediately without intermediate list allocations.

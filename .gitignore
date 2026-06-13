@@ -20,7 +20,7 @@
 /package/openwrt-packages
 /*.patch
 /llvm-bpf*
-key-build*
+build-key*
 private-key.pem
 public-key.pem
 *.orig

@@ -220,7 +220,7 @@ static void m_vendor(const char *id, const uint8_t *value) {
 	}
 
 	char buf[64];
-	sprintf(buf, "%s %d.%d", str, value[6], value[7]);
+	snprintf(buf, sizeof(buf), "%s %d.%d", str, value[6], value[7]);
 	m_str(id, buf);
 
 	return;

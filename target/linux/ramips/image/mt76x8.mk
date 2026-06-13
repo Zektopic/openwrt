@@ -254,6 +254,15 @@ define Device/cudy_tr1200-v1
 endef
 TARGET_DEVICES += cudy_tr1200-v1
 
+define Device/cudy_wr300-v1
+  IMAGE_SIZE := 7808k
+  DEVICE_VENDOR := Cudy
+  DEVICE_MODEL := WR300
+  DEVICE_VARIANT := v1
+  SUPPORTED_DEVICES += cudy,wr300
+endef
+TARGET_DEVICES += cudy_wr300-v1
+
 define Device/cudy_wr1000
   IMAGE_SIZE := 7872k
   IMAGES += factory.bin
@@ -1534,3 +1543,14 @@ define Device/teltonika_rut241
   IMAGE/sysupgrade.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | check-size | append-metadata
 endef
 TARGET_DEVICES += teltonika_rut241
+
+define Device/yuncore_1200f
+  IMAGE_SIZE := 7872k
+  DEVICE_VENDOR := Yuncore
+  DEVICE_MODEL := 1200F
+  DEVICE_ALT0_VENDOR := KuWFi
+  DEVICE_ALT0_MODEL := AP1200F
+  SUPPORTED_DEVICES += yuncore,1200f
+  DEVICE_PACKAGES := kmod-mt7615e kmod-mt7663-firmware-ap -kmod-mt76x2 -kmod-mt76x2-common -kmod-mt76x02-common
+endef
+TARGET_DEVICES += yuncore_1200f
