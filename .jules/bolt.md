@@ -129,3 +129,10 @@
 ## 2024-05-24 - [Optimize file I/O operations for large files]
 **Learning:** When calculating the hash of a file and creating a new output file that contains the hash followed by the file's content, reading the input file twice (once for hashing, once for copying) doubles the I/O overhead.
 **Action:** Instead of double-reading, stream the input file chunks to calculate the hash while simultaneously writing those same chunks to the output file. Write a placeholder for the hash at the beginning of the output file, and then seek back to overwrite the placeholder with the final computed hash. This avoids double-reading the input file, cutting the disk I/O reads in half.
+## 2025-01-20 - [Optimize Python dict updates and list defaults in loops]
+**Learning:** In performance-sensitive Python loops over dictionaries, using `dict.update({"key": value})` creates a temporary, single-item dictionary on every invocation, adding unnecessary allocation overhead. Using `dict.get("key", [])` allocates an empty list object on every single miss.
+**Action:** Replace `dict.update({"key": value})` with direct assignment `dict["key"] = value`. Replace `dict.get("key", [])` in loops with an explicit `if "key" in dict:` check to bypass empty list allocations.
+
+## 2025-01-20 - [String Slicing vs Splitting]
+**Learning:** When parsing strings with a known, fixed-length prefix (like `openwrt:cpe=`), using `.split("=")[-1]` is significantly slower because it allocates a list of strings before accessing the last element.
+**Action:** Use direct string slicing (e.g., `tag[12:]` for a 12-character prefix) to extract the value immediately without intermediate list allocations.
