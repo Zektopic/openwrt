@@ -372,7 +372,8 @@ void print_autowrap(WINDOW * win, const char *prompt, int width, int y, int x)
 	int prompt_len, room, wlen;
 	char tempstr[MAX_LEN + 1], *word, *sp, *sp2, *newline_separator = 0;
 
-	strcpy(tempstr, prompt);
+	strncpy(tempstr, prompt, MAX_LEN);
+	tempstr[MAX_LEN] = '\0';
 
 	prompt_len = strlen(tempstr);
 
