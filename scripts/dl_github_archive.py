@@ -383,12 +383,10 @@ class DownloadGitHubTarball(object):
         ref = self.version
         url = self._make_repo_url_path('tarball', ref)
         resp = self._make_request(url)
+        # Optimization: stream file contents with shutil.copyfileobj to avoid
+        # python-level loop overhead, which is significantly faster for large files
         with open(path, 'wb') as fout:
-            while True:
-                d = resp.read(1048576)
-                if not d:
-                    break
-                fout.write(d)
+            shutil.copyfileobj(resp, fout, length=1048576)
 
     def _make_repo_url_path(self, *args):
         url = '/repos/{0}/{1}'.format(self.owner, self.repo)
