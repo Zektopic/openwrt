@@ -119,3 +119,7 @@
 **Vulnerability:** A shell command injection vulnerability existed where attacker-controllable variables (e.g. `num_global_macaddr`, `mbssid`) read from potentially unvalidated configuration sources were interpolated into a shell string executed by `fs.popen()`.
 **Learning:** `fs.popen()` executes a shell implicitly and requires strict validation of any interpolated variables. In `ucode`, while `system()` can take an array, `fs.popen()` must take a string.
 **Prevention:** Strictly validate any external input bound for `fs.popen()` interpolation using regex (e.g., `match(var + "", /[^0-9]/)`) to ensure malicious shell tokens are rejected.
+## 2025-05-28 - Hardcoded Passwords in Python Scripts
+**Vulnerability:** A fallback password (`password1`) was hardcoded in `scripts/flashing/jungo-image.py` instead of securely prompting the user if the password argument was omitted.
+**Learning:** Hardcoded credentials are a critical security risk and a common anti-pattern in utility scripts. Scripts should never fall back to plaintext defaults for sensitive data.
+**Prevention:** Always initialize password variables to empty strings (`""`) and enforce secure interactive prompting (e.g., via `getpass.getpass()`) when credentials are required but not provided securely.
