@@ -101,5 +101,44 @@ class TestDlCleanupParseVer12(unittest.TestCase):
         expected_version = (1 << 64) | (2 << 48) | 0
         self.assertEqual(progversion, expected_version)
 
+
+class TestDlCleanupMainErrorHandling(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dl_cleanup.py')
+        spec = importlib.util.spec_from_file_location("dl_cleanup", script_path)
+        cls.dl_cleanup = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.dl_cleanup)
+
+    def test_entry_parse_error_is_caught(self):
+        """Test that EntryParseError in main loop is caught and ignored."""
+        import tempfile
+        import io
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmpdir:
+            builddir = os.path.join(tmpdir, "build_dir")
+            os.makedirs(builddir)
+
+            bad_ext = os.path.join(tmpdir, "invalid_file.xyz")
+            open(bad_ext, 'w').close()
+
+            bad_ver = os.path.join(tmpdir, "invalid-ver-format.tar.gz")
+            open(bad_ver, 'w').close()
+
+            valid_file = os.path.join(tmpdir, "valid-package-1.0.tar.gz")
+            open(valid_file, 'w').close()
+
+            with patch('sys.stdout', new_callable=io.StringIO) as mock_stdout:
+                ret = self.dl_cleanup.main(['dl_cleanup.py', '--download-dir', tmpdir, '--build-dir', builddir, '--dry-run'])
+
+            self.assertEqual(ret, 0)
+            stdout = mock_stdout.getvalue()
+
+            self.assertIn("invalid_file.xyz has an unknown file-extension", stdout)
+            self.assertIn("invalid-ver-format.tar.gz has an unknown version pattern", stdout)
+
+            expected_keep = (tmpdir + "/valid-package-1.0.tar.gz").replace("//", "/")
+            self.assertIn("Keeping " + expected_keep, stdout)
+
 if __name__ == '__main__':
     unittest.main()
