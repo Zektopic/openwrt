@@ -107,45 +107,92 @@ def get_opkg_sbom(text: str, installed: set) -> list:
             end = text_len
 
         element: dict = {}
-        package: dict = {}
-        for line in text[start:end].splitlines():
-            idx = line.find(': ')
-            if idx != -1:
-                package[line[:idx].lower()] = line[idx+2:].strip()
 
-        start = end + 2
-        while start < text_len and text[start] == '\n':
-            start += 1
-
-        # required
-        if 'package' in package:
-            name: str = package['package']
+        name_idx = text.find("\nPackage: ", max(0, start - 1), end)
+        name_found = False
+        if name_idx != -1:
+            name_idx += 10
+            name_found = True
+        elif text.startswith("Package: ", start):
+            name_idx = start + 9
+            name_found = True
+        if name_found:
+            name_end = text.find("\n", name_idx)
+            if name_end == -1 or name_end > end: name_end = end
+            name = text[name_idx:name_end].strip()
             element.update({"name": name})
-            if installed:
-                if name not in installed:
-                    continue
+            if installed and name not in installed:
+                # Move to next block
+                start = end + 2
+                while start < text_len and text[start] == '\n':
+                    start += 1
+                continue
 
-        if 'version' in package:
-            element.update({"version": package['version']})
+        ver_idx = text.find("\nVersion: ", max(0, start - 1), end)
+        ver_found = False
+        if ver_idx != -1:
+            ver_idx += 10
+            ver_found = True
+        elif text.startswith("Version: ", start):
+            ver_idx = start + 9
+            ver_found = True
+        if ver_found:
+            ver_end = text.find("\n", ver_idx)
+            if ver_end == -1 or ver_end > end: ver_end = end
+            element.update({"version": text[ver_idx:ver_end].strip()})
 
-        if 'cpe-id' in package:
-            element.update({"cpe": package['cpe-id']})
+        cpe_idx = text.find("\nCPE-ID: ", max(0, start - 1), end)
+        cpe_found = False
+        if cpe_idx != -1:
+            cpe_idx += 9
+            cpe_found = True
+        elif text.startswith("CPE-ID: ", start):
+            cpe_idx = start + 8
+            cpe_found = True
+        if cpe_found:
+            cpe_end = text.find("\n", cpe_idx)
+            if cpe_end == -1 or cpe_end > end: cpe_end = end
+            element.update({"cpe": text[cpe_idx:cpe_end].strip()})
 
-        # required
-        if 'section' in package:
+        sec_idx = text.find("\nSection: ", max(0, start - 1), end)
+        sec_found = False
+        if sec_idx != -1:
+            sec_idx += 10
+            sec_found = True
+        elif text.startswith("Section: ", start):
+            sec_idx = start + 9
+            sec_found = True
+        if sec_found:
+            sec_end = text.find("\n", sec_idx)
+            if sec_end == -1 or sec_end > end: sec_end = end
+            section = text[sec_idx:sec_end].strip()
             type_category: str = ''
-            if type_allowed.get(package['section']):
-                type_category = type_allowed.get(package['section'])
+            if type_allowed.get(section):
+                type_category = type_allowed.get(section)
             if type_category:
                 element.update({"type": type_category})
             else:
                 element.update({"type": "application"})
 
-        if 'license' in package:
+        lic_idx = text.find("\nLicense: ", max(0, start - 1), end)
+        lic_found = False
+        if lic_idx != -1:
+            lic_idx += 10
+            lic_found = True
+        elif text.startswith("License: ", start):
+            lic_idx = start + 9
+            lic_found = True
+        if lic_found:
+            lic_end = text.find("\n", lic_idx)
+            if lic_end == -1 or lic_end > end: lic_end = end
             licenses: list = []
-            for license in package["license"].split():
+            for license in text[lic_idx:lic_end].strip().split():
                 licenses.append({"license": {"name": license}})
             element.update({"licenses": licenses})
+
+        start = end + 2
+        while start < text_len and text[start] == '\n':
+            start += 1
 
         if element:
             components.append(element)
