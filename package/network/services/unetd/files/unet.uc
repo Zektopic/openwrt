@@ -67,7 +67,7 @@ function network_keygen(pw_file, args, config, out_file, extra_args)
 
 	let cmd = [ "sh", "-c", "unet-tool " + args ];
 	if (extra_args)
-		extra_args = '"' + extra_args + '"';
+		extra_args = "'" + replace(extra_args, /'/g, "'\\''") + "'";
 	else
 		extra_args = "";
 	cmd[2] += ` -s ${rounds},${salt} -o ${out_file}`;

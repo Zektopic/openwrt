@@ -114,6 +114,10 @@
 **Vulnerability:** Unbounded `strcpy` used for copying dynamic string into flexible array member without reusing precalculated length.
 **Learning:** In kernel modules, `strcpy` should be replaced with `strscpy`, and size variables should be precalculated to avoid TOCTOU races between allocation and copying.
 **Prevention:** Use `strscpy` with a precalculated length variable instead of `strcpy` and `strlen`.
+## 2025-02-28 - Command Injection in unet.uc via sh -c interpolation
+**Vulnerability:** In `package/network/services/unetd/files/unet.uc`, the `network_keygen` function executed a shell command (`sh -c`) using string concatenation where a variable (`extra_args`) was wrapped in double quotes but not properly escaped, allowing potential command injection.
+**Learning:** String interpolation for shell execution in `ucode` using `sh -c` introduces command injection risks, even when wrapped in double quotes, because double quotes do not prevent the shell from evaluating variables (`$`) or subshells (`` ` ``).
+**Prevention:** Avoid `sh -c` and use array-based arguments for `system()` or `fs.popen()` when possible. When `sh -c` is unavoidable (e.g., for IO redirection), strictly escape dynamic variables by replacing single quotes (e.g., `replace(var, /'/g, "'\\''")`) and wrapping the result in single quotes (`'...'`).
 
 ## 2024-05-25 - Prevent Command Injection via fs.popen()
 **Vulnerability:** A shell command injection vulnerability existed where attacker-controllable variables (e.g. `num_global_macaddr`, `mbssid`) read from potentially unvalidated configuration sources were interpolated into a shell string executed by `fs.popen()`.
