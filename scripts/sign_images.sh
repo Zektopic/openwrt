@@ -3,7 +3,7 @@
 # directory where search for images
 TOP_DIR="${TOP_DIR:-./bin/targets}"
 # key to sign images
-BUILD_KEY="${BUILD_KEY:-key-build}" # TODO unify naming?
+BUILD_KEY="${BUILD_KEY:-build-key}"
 # remove other signatures (added e.g.  by buildbot)
 REMOVE_OTER_SIGNATURES="${REMOVE_OTER_SIGNATURES:-1}"
 
