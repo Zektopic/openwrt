@@ -49,37 +49,37 @@ def get_apk_sbom(text: str, installed: set) -> list:
         # required
         if 'name' in package:
             name: str = package['name']
-            element.update({"name": name})
+            element["name"] = name
             if installed:
                 if name not in installed:
                     continue
 
         if 'version' in package:
-            element.update({"version": package["version"]})
-
-        for tag in package.get("tags", []):
-            if tag.startswith("openwrt:cpe="):
-                cpe: str = tag.split("=")[-1]
-                element.update({"cpe": cpe})
+            element["version"] = package["version"]
 
         # required
         type_category: str = ''
 
-        for tag in package.get("tags", []):
-            if tag.startswith("openwrt:section="):
-                category: str = tag.split("=")[-1]
-                if type_allowed.get(category):
-                    type_category = type_allowed.get(category)
+        if "tags" in package:
+            for tag in package["tags"]:
+                if tag.startswith("openwrt:cpe="):
+                    cpe: str = tag[12:]
+                    element["cpe"] = cpe
+                elif tag.startswith("openwrt:section="):
+                    category: str = tag[16:]
+                    if type_allowed.get(category):
+                        type_category = type_allowed.get(category)
+
         if type_category:
-            element.update({"type": type_category})
+            element["type"] = type_category
         else:
-            element.update({"type": "application"})
+            element["type"] = "application"
 
         if 'license' in package:
             licenses: list = []
             for license in package["license"].split():
                 licenses.append({"license": {"name": license}})
-            element.update({"licenses": licenses})
+            element["licenses"] = licenses
 
         components.append(element)
 
@@ -164,30 +164,30 @@ def get_opkg_sbom(text: str, installed: set) -> list:
 
         element: dict = {}
         if name:
-            element.update({"name": name})
+            element["name"] = name
             if installed and name not in installed:
                 continue
 
         if version:
-            element.update({"version": version})
+            element["version"] = version
 
         if cpe:
-            element.update({"cpe": cpe})
+            element["cpe"] = cpe
 
         if section:
             type_category: str = ''
             if type_allowed.get(section):
                 type_category = type_allowed.get(section)
             if type_category:
-                element.update({"type": type_category})
+                element["type"] = type_category
             else:
-                element.update({"type": "application"})
+                element["type"] = "application"
 
         if license_val:
             licenses: list = []
             for license in license_val.split():
                 licenses.append({"license": {"name": license}})
-            element.update({"licenses": licenses})
+            element["licenses"] = licenses
 
         if element:
             components.append(element)
