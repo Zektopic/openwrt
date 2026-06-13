@@ -269,6 +269,16 @@ export function prepare(data, phy, num_global_macaddr, macaddr_base) {
 		return;
 	}
 
+	if (num_global_macaddr != null && match(num_global_macaddr + "", /[^0-9]/)) {
+		warn("Invalid num_global_macaddr: ", num_global_macaddr, "\n");
+		return;
+	}
+
+	if (data.mbssid != null && match(data.mbssid + "", /[^0-9]/)) {
+		warn("Invalid mbssid: ", data.mbssid, "\n");
+		return;
+	}
+
 	if (!data.macaddr) {
 		let pipe = fs.popen(`ucode /usr/share/hostap/wdev.uc ${phy} get_macaddr id=${mac_idx} num_global=${num_global_macaddr} mbssid=${data.mbssid ?? 0} macaddr_base=${macaddr_base ?? ""}`);
 
