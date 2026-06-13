@@ -978,7 +978,10 @@ if (!GetOptions("d|debug"       => \$debug,
     print "  [-t|--trailer]   <file>		Input/Output Trailer filename\n";
     print "  [-e|--ethaddr]   <AABBCCDDEEFF>	Set the Ethernet address\n";
 
-    # %%% TODO %%% Document --ramdisk syntax
+    print "\n";
+    print "  The --ramdisk option accepts a single filename or a comma-separated list\n";
+    print "  of mappings in the format <name>:<file>[:<size>]. If <file> is a number,\n";
+    print "  it specifies the size in blocks for an empty partition.\n";
 
     exit 1;
 }
