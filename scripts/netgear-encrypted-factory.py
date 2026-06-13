@@ -3,8 +3,9 @@
 import argparse
 import re
 import struct
-import subprocess
 import zlib
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -43,19 +44,15 @@ def main():
                 break
             chunks.append(chunk)
 
+    key_bytes = bytes.fromhex(args.key)
+    iv_bytes = bytes.fromhex(args.iv)
+    backend = default_backend()
+
     def encrypt_chunk(chunk):
         chunk += b'\x00' * ((-len(chunk)) % 16)  # pad to AES block size (16)
-        res = subprocess.run([
-            args.openssl_bin,
-            'enc',
-            '-aes-256-cbc',
-            '-nosalt',
-            '-nopad',
-            '-K', args.key,
-            '-iv', args.iv
-        ],
-            check=True, input=chunk, stdout=subprocess.PIPE)
-        return res.stdout
+        cipher = Cipher(algorithms.AES(key_bytes), modes.CBC(iv_bytes), backend=backend)
+        encryptor = cipher.encryptor()
+        return encryptor.update(chunk) + encryptor.finalize()
 
     with ThreadPoolExecutor() as executor:
         image_enc = b''.join(executor.map(encrypt_chunk, chunks))
