@@ -70,7 +70,8 @@ function network_keygen(pw_file, args, config, out_file, extra_args)
 		extra_args = "'" + replace(extra_args, /'/g, "'\\''") + "'";
 	else
 		extra_args = "";
-	cmd[2] += ` -s ${rounds},${salt} -o ${out_file}`;
+	let safe_out_file = "'" + replace(out_file, /'/g, "'\\''") + "'";
+	cmd[2] += ` -s ${rounds},${salt} -o ${safe_out_file}`;
 
 	if (config.xorkey) {
 		xorkey = network_get_string_file(config.xorkey);
@@ -817,7 +818,8 @@ function network_edit(ctx, argv) {
 
 	let json_file = mkstemp();
 	let bin_path = "/etc/unetd/" + network + ".bin";
-	if (system([ "sh", "-c", `unet-tool -T -b '${bin_path}' >&${json_file.fileno()}` ]))
+	let safe_bin_path = "'" + replace(bin_path, /'/g, "'\\''") + "'";
+	if (system([ "sh", "-c", `unet-tool -T -b ${safe_bin_path} >&${json_file.fileno()}` ]))
 		return;
 
 	let json_data;
