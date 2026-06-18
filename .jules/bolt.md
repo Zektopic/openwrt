@@ -136,3 +136,6 @@
 ## 2025-01-20 - [String Slicing vs Splitting]
 **Learning:** When parsing strings with a known, fixed-length prefix (like `openwrt:cpe=`), using `.split("=")[-1]` is significantly slower because it allocates a list of strings before accessing the last element.
 **Action:** Use direct string slicing (e.g., `tag[12:]` for a 12-character prefix) to extract the value immediately without intermediate list allocations.
+## 2024-06-25 - Python Cryptography Cipher Initialization Overhead
+**Learning:** Instantiating `cryptography.hazmat.primitives.ciphers.Cipher` object has measurable Python-to-C backend binding overhead. In tight loops (like chunked encryption where CBC IV is reset per block), doing this inside the loop significantly degrades performance.
+**Action:** When performing chunked operations where the cryptographic context must be reset, initialize the `Cipher` object once outside the loop and only call `.encryptor()` or `.decryptor()` inside the loop to create fresh contexts.
