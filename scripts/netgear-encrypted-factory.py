@@ -48,9 +48,14 @@ def main():
     iv_bytes = bytes.fromhex(args.iv)
     backend = default_backend()
 
+    # Optimization: Instantiate Cipher once outside the chunk loop.
+    # Instantiating a Cipher object incurs measurable Python-to-C backend binding overhead.
+    # Since this scheme resets the IV per chunk, we can just call .encryptor() on the same
+    # Cipher instance to generate fresh contexts efficiently.
+    cipher = Cipher(algorithms.AES(key_bytes), modes.CBC(iv_bytes), backend=backend)
+
     def encrypt_chunk(chunk):
         chunk += b'\x00' * ((-len(chunk)) % 16)  # pad to AES block size (16)
-        cipher = Cipher(algorithms.AES(key_bytes), modes.CBC(iv_bytes), backend=backend)
         encryptor = cipher.encryptor()
         return encryptor.update(chunk) + encryptor.finalize()
 

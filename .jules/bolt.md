@@ -136,3 +136,6 @@
 ## 2025-01-20 - [String Slicing vs Splitting]
 **Learning:** When parsing strings with a known, fixed-length prefix (like `openwrt:cpe=`), using `.split("=")[-1]` is significantly slower because it allocates a list of strings before accessing the last element.
 **Action:** Use direct string slicing (e.g., `tag[12:]` for a 12-character prefix) to extract the value immediately without intermediate list allocations.
+## 2024-06-19 - [Optimize Python \`cryptography\` Cipher instantiation]
+**Learning:** In Python's \`cryptography\` library, instantiating a \`Cipher\` object incurs measurable Python-to-C backend binding overhead. When performing chunked operations where the cryptographic context must be reset per block (like effectively using CBC as ECB at the chunk level), re-instantiating the entire \`Cipher\` object in a loop causes unnecessary overhead.
+**Action:** Initialize the \`Cipher\` object once outside the loop and only call \`.encryptor()\` or \`.decryptor()\` inside the loop to generate fresh contexts efficiently.
