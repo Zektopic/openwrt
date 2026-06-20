@@ -127,3 +127,8 @@
 **Vulnerability:** A fallback password (`password1`) was hardcoded in `scripts/flashing/jungo-image.py` instead of securely prompting the user if the password argument was omitted.
 **Learning:** Hardcoded credentials are a critical security risk and a common anti-pattern in utility scripts. Scripts should never fall back to plaintext defaults for sensitive data.
 **Prevention:** Always initialize password variables to empty strings (`""`) and enforce secure interactive prompting (e.g., via `getpass.getpass()`) when credentials are required but not provided securely.
+## 2024-12-04 - Fix Use of Unsafe sprintf in scripts/config
+
+**Vulnerability:** Potential buffer overflow due to the use of unsafe `sprintf` without bounds checking in `scripts/config/expr.c` and `scripts/config/preprocess.c`.
+**Learning:** `sprintf` functions natively do not check bounds, meaning if format input data is larger than buffer array bounds, it will write data to unauthorized memory space.
+**Prevention:** Avoid using `sprintf`. Instead, use `snprintf` which provides bounds-checking against the buffer size to ensure memory overflows cannot happen.

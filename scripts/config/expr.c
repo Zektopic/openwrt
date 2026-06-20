@@ -1218,7 +1218,7 @@ void expr_print(struct expr *e,
 	default:
 	  {
 		char buf[32];
-		sprintf(buf, "<unknown type %d>", e->type);
+		snprintf(buf, sizeof(buf), "<unknown type %d>", e->type);
 		fn(data, NULL, buf);
 		break;
 	  }
