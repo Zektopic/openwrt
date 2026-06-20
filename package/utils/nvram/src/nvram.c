@@ -13,6 +13,7 @@
  */
 
 #include "nvram.h"
+#include <stdlib.h>
 
 #define TRACE(msg) \
 	printf("%s(%i) in %s(): %s\n", \
@@ -484,27 +485,32 @@ int nvram_to_staging(void)
 {
 	int fdmtd, fdstg, stat;
 	char *mtd = nvram_find_mtd();
-	char buf[nvram_part_size];
+	char *buf;
 
 	stat = -1;
 
 	if( (mtd != NULL) && (nvram_part_size > 0) )
 	{
-		if( (fdmtd = open(mtd, O_RDONLY)) > -1 )
+		buf = malloc(nvram_part_size);
+		if (buf != NULL)
 		{
-			if( read(fdmtd, buf, sizeof(buf)) == sizeof(buf) )
+			if( (fdmtd = open(mtd, O_RDONLY)) > -1 )
 			{
-				if((fdstg = open(NVRAM_STAGING, O_WRONLY | O_CREAT, 0600)) > -1)
+				if( read(fdmtd, buf, nvram_part_size) == nvram_part_size )
 				{
-					write(fdstg, buf, sizeof(buf));
-					fsync(fdstg);
-					close(fdstg);
+					if((fdstg = open(NVRAM_STAGING, O_WRONLY | O_CREAT, 0600)) > -1)
+					{
+						write(fdstg, buf, nvram_part_size);
+						fsync(fdstg);
+						close(fdstg);
 
-					stat = 0;
+						stat = 0;
+					}
 				}
-			}
 
-			close(fdmtd);
+				close(fdmtd);
+			}
+			free(buf);
 		}
 	}
 
@@ -517,29 +523,34 @@ int staging_to_nvram(void)
 {
 	int fdmtd, fdstg, stat;
 	char *mtd = nvram_find_mtd();
-	char buf[nvram_part_size];
+	char *buf;
 
 	stat = -1;
 
 	if( (mtd != NULL) && (nvram_part_size > 0) )
 	{
-		if( (fdstg = open(NVRAM_STAGING, O_RDONLY)) > -1 )
+		buf = malloc(nvram_part_size);
+		if (buf != NULL)
 		{
-			if( read(fdstg, buf, sizeof(buf)) == sizeof(buf) )
+			if( (fdstg = open(NVRAM_STAGING, O_RDONLY)) > -1 )
 			{
-				if( (fdmtd = open(mtd, O_WRONLY | O_SYNC)) > -1 )
+				if( read(fdstg, buf, nvram_part_size) == nvram_part_size )
 				{
-					write(fdmtd, buf, sizeof(buf));
-					fsync(fdmtd);
-					close(fdmtd);
-					stat = 0;
+					if( (fdmtd = open(mtd, O_WRONLY | O_SYNC)) > -1 )
+					{
+						write(fdmtd, buf, nvram_part_size);
+						fsync(fdmtd);
+						close(fdmtd);
+						stat = 0;
+					}
 				}
+
+				close(fdstg);
+
+				if( !stat )
+					stat = unlink(NVRAM_STAGING) ? 1 : 0;
 			}
-
-			close(fdstg);
-
-			if( !stat )
-				stat = unlink(NVRAM_STAGING) ? 1 : 0;
+			free(buf);
 		}
 	}
 
