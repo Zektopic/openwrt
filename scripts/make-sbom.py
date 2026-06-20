@@ -107,14 +107,17 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         if end == -1:
             end = text_len
 
-        p_idx = text.find("Package: ", start, end)
-        v_idx = text.find("\nVersion: ", start, end)
-        c_idx = text.find("\nCPE-ID: ", start, end)
-        s_idx = text.find("\nSection: ", start, end)
-        l_idx = text.find("\nLicense: ", start, end)
+        name = ""
 
-        # Make sure "Package: " is at the beginning of the block or immediately after a newline
-        if p_idx == start or (p_idx > start and text[p_idx-1] == '\n'):
+        # Check if it starts with Package:
+        if text.startswith("Package: ", start, end):
+            p_idx = start
+        else:
+            p_idx = text.find("\nPackage: ", start, end)
+            if p_idx != -1:
+                p_idx += 1
+
+        if p_idx != -1:
             p_end = text.find("\n", p_idx, end)
             name = text[p_idx+9:p_end if p_end != -1 else end].strip()
 
@@ -125,44 +128,42 @@ def get_opkg_sbom(text: str, installed: set) -> list:
                 continue
 
             version = ""
+            cpe = ""
+            section = ""
+            license_str = ""
+
+            v_idx = text.find("\nVersion: ", start, end)
             if v_idx != -1:
                 v_end = text.find("\n", v_idx + 1, end)
                 version = text[v_idx+10:v_end if v_end != -1 else end].strip()
 
-            cpe = ""
+            c_idx = text.find("\nCPE-ID: ", start, end)
             if c_idx != -1:
                 c_end = text.find("\n", c_idx + 1, end)
                 cpe = text[c_idx+9:c_end if c_end != -1 else end].strip()
 
-            section = ""
+            s_idx = text.find("\nSection: ", start, end)
             if s_idx != -1:
                 s_end = text.find("\n", s_idx + 1, end)
                 section = text[s_idx+10:s_end if s_end != -1 else end].strip()
 
-            license_str = ""
+            l_idx = text.find("\nLicense: ", start, end)
             if l_idx != -1:
                 l_end = text.find("\n", l_idx + 1, end)
                 license_str = text[l_idx+10:l_end if l_end != -1 else end].strip()
 
             element: dict = {"name": name}
-
             if version:
-                element.update({"version": version})
-
+                element["version"] = version
             if cpe:
-                element.update({"cpe": cpe})
+                element["cpe"] = cpe
 
-            # required
-            if section and type_allowed.get(section):
-                element.update({"type": type_allowed.get(section)})
-            else:
-                element.update({"type": "application"})
+            type_category = type_allowed.get(section, "application")
+            element["type"] = type_category
 
             if license_str:
-                licenses: list = []
-                for license in license_str.split():
-                    licenses.append({"license": {"name": license}})
-                element.update({"licenses": licenses})
+                licenses = [{"license": {"name": l}} for l in license_str.split()]
+                element["licenses"] = licenses
 
             components.append(element)
 
@@ -171,7 +172,6 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         # Skip extra newlines
         while start < text_len and text[start] == '\n':
             start += 1
-
     return components
 
 
