@@ -698,11 +698,20 @@ process_ctrl(struct uline_state *s, char c)
 	case KEY_ENQ:
 		return process_esc(s, VT100_END, 0);
 	case KEY_VT:
-		// TODO: kill
-		return false;
+		if (line->pos >= line->len)
+			return false;
+		free(s->yank_buf);
+		s->yank_len = line->len - line->pos;
+		s->yank_buf = strndup(line->buf + line->pos, s->yank_len);
+		linebuf_delete(line, s->yank_len);
+		return true;
 	case KEY_EM:
-		// TODO: yank
-		return false;
+		if (!s->yank_len)
+			return false;
+		linebuf_insert(line, s->yank_buf, s->yank_len);
+		if (s->line2 && s->cb->line2_update)
+			s->cb->line2_update(s, line->buf, line->len);
+		return true;
 	case KEY_ETB:
 		return process_backword(s, line);
 	case KEY_ESC:
@@ -942,4 +951,5 @@ void uline_free(struct uline_state *s)
 	free_line2(s);
 	termios_set_orig_mode(s);
 	linebuf_free(&s->line);
+	free(s->yank_buf);
 }

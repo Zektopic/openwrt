@@ -91,6 +91,9 @@ struct uline_state {
 	char esc_seq[32];
 	int8_t esc_idx;
 	uint8_t utf8_cont;
+
+	char *yank_buf;
+	size_t yank_len;
 };
 
 void uline_init(struct uline_state *s, const struct uline_cb *cb,
