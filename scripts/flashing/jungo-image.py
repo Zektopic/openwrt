@@ -14,7 +14,11 @@ Valid options:
 \t-d | --dump: create a flash dump
 \t-f | --file: use <filename> to store dump contents
 \t-u | --user: provide username (default admin)
+<<<<<<< HEAD
 	-p | --pass: provide password (prompts if not provided)
+=======
+\t-p | --pass: provide password (prompts if not provided)
+>>>>>>> pr-144
 \t     --port: set port for http (default 8080)
 \t-q | --quiet: don't display unnecessary information
 \t-r | --reboot: reboot target on successful transfer
@@ -39,8 +43,12 @@ reboot = 0
 HOST = "192.168.1.1"
 PORT = 8080
 user = "admin"
+<<<<<<< HEAD
 #password = getpass.getpass()
 password = None
+=======
+password = ""
+>>>>>>> pr-144
 proto = "http"
 url = ""
 imagefile = ""
@@ -211,6 +219,9 @@ if len(args) == 2:
         imagefile = args[1]
 else:
     do_dump = 1;
+
+if not password:
+    password = getpass.getpass(prompt="Password: ")
 
 ####################
 # create a telnet session to the router
