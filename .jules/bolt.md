@@ -142,3 +142,6 @@
 ## 2026-06-05 - [Python `splitlines()` Memory Overhead on String Slices]
 **Learning:** In Python, applying `.splitlines()` on string slices (e.g., `text[start:end].splitlines()`) to parse block-based formats (like opkg lists) can create a massive intermediate list of strings, especially when done in a tight loop across tens of thousands of chunks. This leads to unnecessary memory allocations and bloat.
 **Action:** Use a nested `while` loop with `.find('\n', line_start, end)` to identify lines sequentially without allocating intermediate lists of strings. This significantly improves parsing speed and reduces memory overhead to strictly O(1).
+## 2024-05-30 - Optimize opkg index parsing in make-sbom
+**Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), avoid using `str.splitlines()` on block slices and avoid generic dictionary allocations for all fields. Instead, use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly. This drastically reduces intermediate object allocations and execution time compared to full-block dictionary parsing.
+**Action:** Apply targeted `str.find()` parsing for known, structured, machine-generated text formats rather than fully parsing blocks into dicts when only a subset of fields is needed.
