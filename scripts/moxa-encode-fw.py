@@ -21,7 +21,7 @@ def xor(data: bytes) -> bytes:
     chunk_size = plen * 1024  # 44KB chunks
     repeated_chunk = passphrase * 1024
 
-    out = bytearray()
+    out = []
     for i in range(0, len(data), chunk_size):
         chunk = data[i:i+chunk_size]
         if len(chunk) == chunk_size:
@@ -31,8 +31,8 @@ def xor(data: bytes) -> bytes:
             rep = passphrase * q + passphrase[:r]
 
         xored = int.from_bytes(chunk, 'little') ^ int.from_bytes(rep, 'little')
-        out.extend(xored.to_bytes(len(chunk), 'little'))
-    return out
+        out.append(xored.to_bytes(len(chunk), 'little'))
+    return b''.join(out)
 
 
 def add_fw_header(data: bytes, magic: int, hwid: int, build_id: int,
