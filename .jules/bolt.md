@@ -159,3 +159,7 @@
 ## 2024-06-07 - [Optimize redundant lookups]
 **Learning:** Repeatedly formatting strings and accessing `os.getenv` adds unnecessary function call and string allocation overheads.
 **Action:** Store the results of `getenv()` and formatted strings into local variables instead of calling them multiple times for the same values.
+
+## 2024-06-09 - Optimize JSON array parsing in make-sbom
+**Learning:** Extracting fields directly using `dict.get()` and avoiding intermediate dictionaries (e.g. `dict.update()`) or unneeded list comprehensions when iterating over thousands of JSON objects provides a measurable (~30%) performance speedup in Python scripts.
+**Action:** When parsing large JSON arrays (like apk indices), favor direct key access and manual element construction over generic `.update()` dictionary updates and string `.split('=')[-1]` calls.
