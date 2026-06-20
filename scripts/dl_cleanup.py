@@ -182,16 +182,24 @@ class Entry:
 
     def getBuildPaths(self):
         if self.builddir not in Entry.builddir_subdirs_cache:
-            Entry.builddir_subdirs_cache[self.builddir] = [
-                subdir.path for subdir in os.scandir(self.builddir)
-            ]
+            cache = {}
+            try:
+                for subdir in os.scandir(self.builddir):
+                    if subdir.is_dir():
+                        try:
+                            for pkg in os.scandir(subdir.path):
+                                if pkg.name not in cache:
+                                    cache[pkg.name] = []
+                                cache[pkg.name].append(pkg.path)
+                        except OSError:
+                            pass
+            except OSError:
+                pass
+            Entry.builddir_subdirs_cache[self.builddir] = cache
 
-        paths = []
-        for subdir_path in Entry.builddir_subdirs_cache[self.builddir]:
-            package_build_dir = os.path.join(subdir_path, self.filenoext)
-            if os.path.exists(package_build_dir):
-                paths.append(package_build_dir)
-        return paths
+        if self.filenoext in Entry.builddir_subdirs_cache[self.builddir]:
+            return Entry.builddir_subdirs_cache[self.builddir][self.filenoext]
+        return []
 
     def deleteFile(self):
         path = self.getPath()
