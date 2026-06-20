@@ -163,3 +163,6 @@
 ## 2024-06-09 - Optimize JSON array parsing in make-sbom
 **Learning:** Extracting fields directly using `dict.get()` and avoiding intermediate dictionaries (e.g. `dict.update()`) or unneeded list comprehensions when iterating over thousands of JSON objects provides a measurable (~30%) performance speedup in Python scripts.
 **Action:** When parsing large JSON arrays (like apk indices), favor direct key access and manual element construction over generic `.update()` dictionary updates and string `.split('=')[-1]` calls.
+## 2025-05-24 - Optimization: File download loop with `shutil.copyfileobj`
+**Learning:** In CPython, replacing a manual chunked `while True: read()/write()` loop with `shutil.copyfileobj()` avoids python-level loop overhead by localizing the method lookups (`fsrc.read` and `fdst.write`). This leads to a measurable speedup for large file downloads over a manual chunking loop in Python.
+**Action:** When streaming large amounts of data between file objects (like HTTP response objects to disk files), always use `shutil.copyfileobj` with an appropriate block size instead of a `while True:` `read()` / `write()` loop.
