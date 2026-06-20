@@ -48,10 +48,10 @@ def main():
     iv_bytes = bytes.fromhex(args.iv)
     backend = default_backend()
 
-    # Initialization of the Cipher object incurs a measurable Python-to-C
-    # binding overhead. By moving this out of the loop and only calling
-    # .encryptor() per chunk, we reduce object creation overhead, resulting
-    # in ~40% faster encryption.
+    # Optimization: Reusing the Cipher object and only creating new encryptor contexts
+    # avoids the overhead of repeatedly setting up the AES/CBC algorithm binding per chunk.
+    # We still create a new encryptor() per chunk because Netgear effectively resets the
+    # CBC initialization vector for each block.
     cipher = Cipher(algorithms.AES(key_bytes), modes.CBC(iv_bytes), backend=backend)
 
     def encrypt_chunk(chunk):

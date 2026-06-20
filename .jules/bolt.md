@@ -166,3 +166,6 @@
 ## 2025-05-24 - Optimization: File download loop with `shutil.copyfileobj`
 **Learning:** In CPython, replacing a manual chunked `while True: read()/write()` loop with `shutil.copyfileobj()` avoids python-level loop overhead by localizing the method lookups (`fsrc.read` and `fdst.write`). This leads to a measurable speedup for large file downloads over a manual chunking loop in Python.
 **Action:** When streaming large amounts of data between file objects (like HTTP response objects to disk files), always use `shutil.copyfileobj` with an appropriate block size instead of a `while True:` `read()` / `write()` loop.
+## 2024-06-25 - Python Cryptography Cipher Initialization Overhead
+**Learning:** Instantiating `cryptography.hazmat.primitives.ciphers.Cipher` object has measurable Python-to-C backend binding overhead. In tight loops (like chunked encryption where CBC IV is reset per block), doing this inside the loop significantly degrades performance.
+**Action:** When performing chunked operations where the cryptographic context must be reset, initialize the `Cipher` object once outside the loop and only call `.encryptor()` or `.decryptor()` inside the loop to create fresh contexts.
