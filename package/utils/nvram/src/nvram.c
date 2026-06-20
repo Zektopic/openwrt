@@ -123,20 +123,20 @@ static int _nvram_rehash(nvram_handle_t *h)
 
 	/* Set special SDRAM parameters */
 	if (!nvram_get(h, "sdram_init")) {
-		sprintf(buf, "0x%04X", (uint16_t)(header->crc_ver_init >> 16));
+		snprintf(buf, sizeof(buf), "0x%04X", (uint16_t)(header->crc_ver_init >> 16));
 		nvram_set(h, "sdram_init", buf);
 	}
 	if (!nvram_get(h, "sdram_config")) {
-		sprintf(buf, "0x%04X", (uint16_t)(header->config_refresh & 0xffff));
+		snprintf(buf, sizeof(buf), "0x%04X", (uint16_t)(header->config_refresh & 0xffff));
 		nvram_set(h, "sdram_config", buf);
 	}
 	if (!nvram_get(h, "sdram_refresh")) {
-		sprintf(buf, "0x%04X",
+		snprintf(buf, sizeof(buf), "0x%04X",
 			(uint16_t)((header->config_refresh >> 16) & 0xffff));
 		nvram_set(h, "sdram_refresh", buf);
 	}
 	if (!nvram_get(h, "sdram_ncdl")) {
-		sprintf(buf, "0x%08X", header->config_ncdl);
+		snprintf(buf, sizeof(buf), "0x%08X", header->config_ncdl);
 		nvram_set(h, "sdram_ncdl", buf);
 	}
 
@@ -300,9 +300,12 @@ int nvram_commit(nvram_handle_t *h)
 	/* Write out all tuples */
 	for (i = 0; i < NVRAM_ARRAYSIZE(h->nvram_hash); i++) {
 		for (t = h->nvram_hash[i]; t; t = t->next) {
-			if ((ptr + strlen(t->name) + 1 + strlen(t->value) + 1) > end)
+			int written = snprintf(ptr, end - ptr, "%s=%s", t->name, t->value);
+			if (written < 0 || written >= end - ptr) {
+				/* error or truncation, ignore the rest or break? */
 				break;
-			ptr += sprintf(ptr, "%s=%s", t->name, t->value) + 1;
+			}
+			ptr += written + 1;
 		}
 	}
 
@@ -448,7 +451,7 @@ char * nvram_find_mtd(void)
 			{
 				nvram_part_size = part_size;
 
-				sprintf(dev, "/dev/mtdblock%d", i);
+				snprintf(dev, sizeof(dev), "/dev/mtdblock%d", i);
 				if( stat(dev, &s) > -1 && (s.st_mode & S_IFBLK) )
 				{
 					path = strdup(dev);
