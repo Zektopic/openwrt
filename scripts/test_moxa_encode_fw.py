@@ -14,7 +14,8 @@ class TestMoxaEncodeFw(unittest.TestCase):
         build_id = 0x2222 # 'I' allows up to 32-bit unsigned
         offsets = [10, 20]
         res = moxa.add_fw_header(data, magic, hwid, build_id, offsets)
-        self.assertTrue(len(res) > len(data))
+        expected_hex = "1234567812345678000000350102000000001111000022220000000000002222010000000000003a00000044f032519b68656c6c6f"
+        self.assertEqual(res.hex(), expected_hex)
 
     def test_add_fw_header_invalid_type(self):
         data = b"hello"
