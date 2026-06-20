@@ -3,18 +3,18 @@ import os
 import fcntl
 import importlib.util
 from unittest.mock import Mock, patch, mock_open
-
-class TestGitHubCommitTsCacheGet(unittest.TestCase):
 import errno
-import importlib.util
-
-class TestPathOsFunc(unittest.TestCase):
 from unittest.mock import patch, MagicMock
-import importlib.util
-import os
 import sys
 from io import StringIO
+from unittest.mock import patch, MagicMock, call
 
+class TestGitHubCommitTsCacheGet(unittest.TestCase):
+
+    pass
+class TestPathOsFunc(unittest.TestCase):
+
+    pass
 class TestDlGithubArchive(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -46,10 +46,6 @@ class TestDlGithubArchive(unittest.TestCase):
         self.assertEqual(mock_lockf.call_count, 2)
         mock_lockf.assert_any_call(123, fcntl.LOCK_SH)
         mock_lockf.assert_any_call(123, fcntl.LOCK_UN)
-from unittest.mock import patch, MagicMock
-import os
-import sys
-import importlib.util
 
 class TestDlGithubArchive(unittest.TestCase):
     def setUp(self):
@@ -141,9 +137,6 @@ class TestDlGithubArchive(unittest.TestCase):
                 stderr_output = mock_stderr.getvalue()
                 self.assertIn('test.tar.gz: Download from http://test.url failed', stderr_output)
                 self.assertIn('Test Exception', stderr_output)
-import sys
-import importlib.util
-from unittest.mock import patch, MagicMock, call
 
 class TestDlGithubArchive(unittest.TestCase):
     def setUp(self):
@@ -189,10 +182,6 @@ class TestDlGithubArchive(unittest.TestCase):
         # Verify Path.rm_all was called with the correct argument
         expected_into = os.path.join(self.module.TMPDIR_DL, args.source)
         self.assertIn(call(expected_into), mock_rm_all.call_args_list)
-from unittest.mock import patch, MagicMock
-import os
-import errno
-import importlib.util
 
 spec = importlib.util.spec_from_file_location("dl_github_archive", "scripts/dl_github_archive.py")
 dl_github_archive = importlib.util.module_from_spec(spec)
