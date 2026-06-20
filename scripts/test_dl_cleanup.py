@@ -86,6 +86,15 @@ class TestDlCleanupParseVer12(unittest.TestCase):
         cls.dl_cleanup = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.dl_cleanup)
 
+    def test_parseVer_12_with_patchlevel(self):
+        """Test parseVer_12 when group(4) is successfully matched and returns a string."""
+        mock_match = Mock()
+        mock_match.group.side_effect = lambda idx: {1: "prog", 2: "1", 3: "2", 4: "a"}[idx]
+        progname, progversion = self.dl_cleanup.parseVer_12(mock_match, "dummy_path")
+        self.assertEqual(progname, "prog")
+        expected_version = (1 << 64) | (2 << 48) | ord("a")
+        self.assertEqual(progversion, expected_version)
+
     def test_parseVer_12_index_error_on_patchlevel(self):
         """Test parseVer_12 exception handling when group(4) raises IndexError."""
         mock_match = Mock()
@@ -108,6 +117,15 @@ class TestDlCleanupParseVer123(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("dl_cleanup", script_path)
         cls.dl_cleanup = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.dl_cleanup)
+
+    def test_parseVer_123_with_patchlevel(self):
+        """Test parseVer_123 when group(5) is successfully matched and returns a string."""
+        mock_match = Mock()
+        mock_match.group.side_effect = lambda idx: {1: "prog", 2: "1", 3: "2", 4: "3", 5: "a"}[idx]
+        progname, progversion = self.dl_cleanup.parseVer_123(mock_match, "dummy_path")
+        self.assertEqual(progname, "prog")
+        expected_version = (1 << 64) | (2 << 48) | (3 << 32) | ord("a")
+        self.assertEqual(progversion, expected_version)
 
     def test_parseVer_123_index_error_on_patchlevel(self):
         """Test parseVer_123 exception handling when group(5) raises IndexError."""
