@@ -47,13 +47,14 @@ def get_apk_sbom(text: str, installed: set) -> list:
     # or lists when parsing the JSON array of packages. This provides a measurable
     # speedup (~30%) over using dict.update() and string splitting repeatedly.
     for package in packages["packages"]:
+        name = package.get("name")
+        if installed and name not in installed:
+            continue
+
         element: dict = {}
 
-        name = package.get("name")
         if name:
             element["name"] = name
-            if installed and name not in installed:
-                continue
 
         version = package.get("version")
         if version:
