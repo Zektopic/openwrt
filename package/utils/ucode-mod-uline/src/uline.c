@@ -702,11 +702,17 @@ process_ctrl(struct uline_state *s, char c)
 			return false;
 		free(s->yank_buf);
 		s->yank_len = line->len - line->pos;
-		s->yank_buf = strndup(line->buf + line->pos, s->yank_len);
+		s->yank_buf = malloc(s->yank_len + 1);
+		if (!s->yank_buf) {
+			s->yank_len = 0;
+			return false;
+		}
+		memcpy(s->yank_buf, line->buf + line->pos, s->yank_len);
+		s->yank_buf[s->yank_len] = ' ';
 		linebuf_delete(line, s->yank_len);
 		return true;
 	case KEY_EM:
-		if (!s->yank_len)
+		if (!s->yank_buf || !s->yank_len)
 			return false;
 		linebuf_insert(line, s->yank_buf, s->yank_len);
 		if (s->line2 && s->cb->line2_update)
