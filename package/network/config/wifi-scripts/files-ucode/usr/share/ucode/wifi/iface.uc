@@ -274,13 +274,19 @@ export function prepare(data, phy, num_global_macaddr, macaddr_base) {
 		return;
 	}
 
-	if (data.mbssid != null && match(data.mbssid + "", /[^0-9]/)) {
-		warn("Invalid mbssid: ", data.mbssid, "\n");
+	if (mac_idx != null && match(mac_idx + "", /[^0-9]/)) {
+		warn("Invalid mac_idx: ", mac_idx, "\n");
+		return;
+	}
+
+	let mbssid = data.mbssid ?? 0;
+	if (match(mbssid + "", /[^0-9]/)) {
+		warn("Invalid mbssid: ", mbssid, "\n");
 		return;
 	}
 
 	if (!data.macaddr) {
-		let pipe = fs.popen(`ucode /usr/share/hostap/wdev.uc ${phy} get_macaddr id=${mac_idx} num_global=${num_global_macaddr} mbssid=${data.mbssid ?? 0} macaddr_base=${macaddr_base ?? ""}`);
+		let pipe = fs.popen(`ucode /usr/share/hostap/wdev.uc ${phy} get_macaddr id=${mac_idx} num_global=${num_global_macaddr} mbssid=${mbssid} macaddr_base=${macaddr_base ?? ""}`);
 
 		data.macaddr = trim(pipe.read("all"), '\n');
 		pipe.close();
