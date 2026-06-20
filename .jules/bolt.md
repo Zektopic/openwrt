@@ -139,3 +139,6 @@
 ## 2026-06-20 - [Optimize cryptography Cipher initialization overhead]
 **Learning:** In Python's `cryptography` library, instantiating a `Cipher` object incurs measurable Python-to-C backend binding overhead. When performing chunked operations where the cryptographic context must be reset per block, initializing the `Cipher` object on every iteration creates a significant bottleneck.
 **Action:** Initialize the `Cipher` object once outside the loop and only call `.encryptor()` or `.decryptor()` inside the loop to generate fresh contexts efficiently. This reduces object creation overhead and yields significant performance improvements for large payload chunking loops.
+## 2026-06-05 - [Python `splitlines()` Memory Overhead on String Slices]
+**Learning:** In Python, applying `.splitlines()` on string slices (e.g., `text[start:end].splitlines()`) to parse block-based formats (like opkg lists) can create a massive intermediate list of strings, especially when done in a tight loop across tens of thousands of chunks. This leads to unnecessary memory allocations and bloat.
+**Action:** Use a nested `while` loop with `.find('\n', line_start, end)` to identify lines sequentially without allocating intermediate lists of strings. This significantly improves parsing speed and reduces memory overhead to strictly O(1).
