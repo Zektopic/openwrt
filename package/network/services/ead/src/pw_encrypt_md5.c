@@ -554,7 +554,7 @@ md5_crypt(char passwd[MD5_OUT_BUFSIZE], const unsigned char *pw, const unsigned 
 	for (pl = pw_len; pl > 0; pl -= 16)
 		__md5_Update(&ctx, final, pl > 16 ? 16 : pl);
 
-	/* Clear the buffer so we can use it as a source of zero bytes in the next step. */
+	/* Don't leave anything around in vm they could use. */
 	memset(final, 0, sizeof(final));
 
 	/* Then something really weird... */
