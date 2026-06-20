@@ -167,6 +167,8 @@ def get_opkg_sbom(text: str, installed: set) -> list:
             components.append(element)
 
         start = end + 2
+
+        # Skip extra newlines
         while start < text_len and text[start] == '\n':
             start += 1
 

@@ -145,3 +145,6 @@
 ## 2024-05-30 - Optimize opkg index parsing in make-sbom
 **Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), avoid using `str.splitlines()` on block slices and avoid generic dictionary allocations for all fields. Instead, use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly. This drastically reduces intermediate object allocations and execution time compared to full-block dictionary parsing.
 **Action:** Apply targeted `str.find()` parsing for known, structured, machine-generated text formats rather than fully parsing blocks into dicts when only a subset of fields is needed.
+## 2024-05-24 - Optimize opkg SBOM parsing in make-sbom.py
+**Learning:** When parsing tens of thousands of machine-generated RFC 822-style blocks (like opkg status files), `str.splitlines()` on block slices combined with generic dictionary allocations for all fields causes massive intermediate object creation and severe GC overhead.
+**Action:** Use fast, localized string searches (e.g., `str.find('\nPackage: ', start, end)`) to extract only the specific required fields directly, skipping unused fields and avoiding list/dictionary allocations. This drastically reduces execution time and memory footprint.
