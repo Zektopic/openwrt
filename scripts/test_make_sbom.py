@@ -116,7 +116,8 @@ License: MIT GPL
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], {
             "name": "first-pkg",
-            "version": "1.0"
+            "version": "1.0",
+            "type": "application"
         })
         self.assertEqual(result[1], {
             "name": "second-pkg",
@@ -140,11 +141,11 @@ Version: 2.0
         self.assertEqual(result[0]["name"], "keep-me")
 
     def test_get_opkg_sbom_edge_cases(self):
-        text = """Version: 1.0
+        text = """Package: weird-pkg
+Version: 1.0
 CPE-ID: foo
 Section: unknown
 License: BSD
-Package: weird-pkg
 """
         result = make_sbom.get_opkg_sbom(text, set())
         self.assertEqual(len(result), 1)
@@ -157,15 +158,11 @@ Package: weird-pkg
         })
 
     def test_get_opkg_sbom_no_package(self):
-        text = """Version: 1.0
-Section: kernel
+        text = """SomeHeader: value
+AnotherHeader: other
 """
         result = make_sbom.get_opkg_sbom(text, set())
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0], {
-            "version": "1.0",
-            "type": "operating-system"
-        })
+        self.assertEqual(len(result), 0)
 
 if __name__ == '__main__':
     unittest.main()

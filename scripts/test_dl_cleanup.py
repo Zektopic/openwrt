@@ -111,20 +111,16 @@ class TestDlCleanupParseVer123(unittest.TestCase):
 
     def test_parseVer_123_index_error_on_patchlevel(self):
         """Test parseVer_123 exception handling when group(5) raises IndexError."""
-    def test_missing_patchlevel_index_error(self):
-        """Test parseVer_123 gracefully handles IndexError when match group 5 is missing."""
         mock_match = Mock()
         def side_effect(idx):
             if idx == 5:
                 raise IndexError("No such group")
             return {1: "prog", 2: "1", 3: "2", 4: "3"}[idx]
-            return {1: "pkg", 2: "1", 3: "2", 4: "3"}[idx]
         mock_match.group.side_effect = side_effect
 
         progname, progversion = self.dl_cleanup.parseVer_123(mock_match, "dummy_path")
 
         self.assertEqual(progname, "prog")
-        self.assertEqual(progname, "pkg")
         expected_version = (1 << 64) | (2 << 48) | (3 << 32) | 0
         self.assertEqual(progversion, expected_version)
 
