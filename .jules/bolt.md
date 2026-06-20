@@ -169,3 +169,6 @@
 ## 2024-06-25 - Python Cryptography Cipher Initialization Overhead
 **Learning:** Instantiating `cryptography.hazmat.primitives.ciphers.Cipher` object has measurable Python-to-C backend binding overhead. In tight loops (like chunked encryption where CBC IV is reset per block), doing this inside the loop significantly degrades performance.
 **Action:** When performing chunked operations where the cryptographic context must be reset, initialize the `Cipher` object once outside the loop and only call `.encryptor()` or `.decryptor()` inside the loop to create fresh contexts.
+## 2024-06-19 - [Optimize Python \`cryptography\` Cipher instantiation]
+**Learning:** In Python's \`cryptography\` library, instantiating a \`Cipher\` object incurs measurable Python-to-C backend binding overhead. When performing chunked operations where the cryptographic context must be reset per block (like effectively using CBC as ECB at the chunk level), re-instantiating the entire \`Cipher\` object in a loop causes unnecessary overhead.
+**Action:** Initialize the \`Cipher\` object once outside the loop and only call \`.encryptor()\` or \`.decryptor()\` inside the loop to generate fresh contexts efficiently.

@@ -48,10 +48,10 @@ def main():
     iv_bytes = bytes.fromhex(args.iv)
     backend = default_backend()
 
-    # Optimization: Reusing the Cipher object and only creating new encryptor contexts
-    # avoids the overhead of repeatedly setting up the AES/CBC algorithm binding per chunk.
-    # We still create a new encryptor() per chunk because Netgear effectively resets the
-    # CBC initialization vector for each block.
+    # Optimization: Instantiate Cipher once outside the chunk loop.
+    # Instantiating a Cipher object incurs measurable Python-to-C backend binding overhead.
+    # Since this scheme resets the IV per chunk, we can just call .encryptor() on the same
+    # Cipher instance to generate fresh contexts efficiently.
     cipher = Cipher(algorithms.AES(key_bytes), modes.CBC(iv_bytes), backend=backend)
 
     def encrypt_chunk(chunk):
