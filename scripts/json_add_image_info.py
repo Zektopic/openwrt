@@ -35,10 +35,19 @@ def get_titles():
     _getenv = getenv
     for prefix_vars in TITLE_ENV_KEYS_CHUNKED:
         title = {}
+<<<<<<< HEAD
         for var, env_key in prefix_vars:
             val = _getenv(env_key)
             if val:
                 title[var] = val
+=======
+        for var in ["vendor", "model", "variant"]:
+            # Optimization: Avoid redundant getenv calls and string formats by storing
+            # the result in a local variable. This saves function call overhead.
+            env_val = getenv("DEVICE_{}{}".format(prefix, var.upper()))
+            if env_val:
+                title[var] = env_val
+>>>>>>> pr-143
 
         if title:
             titles.append(title)
@@ -109,20 +118,22 @@ file_info = {
     },
 }
 
-if getenv("IMAGE_SIZE") or getenv("KERNEL_SIZE"):
+image_size = getenv("IMAGE_SIZE")
+kernel_size = getenv("KERNEL_SIZE")
+if image_size or kernel_size:
     file_info["profiles"][device_id]["file_size_limits"] = {}
-    if getenv("IMAGE_SIZE"):
+    if image_size:
+        # Optimization: Avoid redundant getenv calls by using local variable.
         file_info["profiles"][device_id]["file_size_limits"]["image"] = get_numerical_size(
-            getenv("IMAGE_SIZE")
+            image_size
         )
-    if getenv("KERNEL_SIZE"):
+    if kernel_size:
         file_info["profiles"][device_id]["file_size_limits"]["kernel"] = get_numerical_size(
-            getenv("KERNEL_SIZE")
+            kernel_size
         )
 
-if getenv("FILE_FILESYSTEM"):
-    file_info["profiles"][device_id]["images"][0]["filesystem"] = getenv(
-        "FILE_FILESYSTEM"
-    )
+file_filesystem = getenv("FILE_FILESYSTEM")
+if file_filesystem:
+    file_info["profiles"][device_id]["images"][0]["filesystem"] = file_filesystem
 
 json_path.write_text(json.dumps(file_info, separators=(",", ":")))

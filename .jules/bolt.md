@@ -151,3 +151,11 @@
 ## 2026-05-19 - [Optimize bytearray extension in Python loops]
 **Learning:** In Python, repeatedly calling `.extend()` on a `bytearray` inside a loop to accumulate chunks of binary data can lead to O(N^2) memory reallocation overhead for large files. `shutil.copyfileobj()` is internally implemented in pure Python with the same chunk loop as manual implementations, so substituting it offers zero measurable performance benefit on file-like streams.
 **Action:** When accumulating multiple binary chunks in a performance-sensitive loop, initialize an empty list `out = []`, use `out.append(chunk)` inside the loop, and return `b''.join(out)` at the end to guarantee O(N) performance and minimal allocations. Do not use `shutil.copyfileobj` as a micro-optimization on file streams.
+
+## 2024-06-07 - [Python `shutil.copyfileobj` optimization]
+**Learning:** In CPython, `shutil.copyfileobj()` is implemented in pure Python and executes an almost identical `while True: read()/write()` loop internally. Unlike `shutil.copyfile` (which may use OS-level fast copy), replacing a manual chunked file copy loop with `copyfileobj` on file-like streams provides zero measurable performance improvement and should not be used as a micro-optimization.
+**Action:** Do not replace manual `while True:` chunk-reading and writing loops with `shutil.copyfileobj()` for performance reasons, as it provides no measurable improvement. Focus on reducing I/O, reducing memory allocation, or moving loops to native C code instead.
+
+## 2024-06-07 - [Optimize redundant lookups]
+**Learning:** Repeatedly formatting strings and accessing `os.getenv` adds unnecessary function call and string allocation overheads.
+**Action:** Store the results of `getenv()` and formatted strings into local variables instead of calling them multiple times for the same values.
