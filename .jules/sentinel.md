@@ -127,3 +127,7 @@
 **Vulnerability:** A fallback password (`password1`) was hardcoded in `scripts/flashing/jungo-image.py` instead of securely prompting the user if the password argument was omitted.
 **Learning:** Hardcoded credentials are a critical security risk and a common anti-pattern in utility scripts. Scripts should never fall back to plaintext defaults for sensitive data.
 **Prevention:** Always initialize password variables to empty strings (`""`) and enforce secure interactive prompting (e.g., via `getpass.getpass()`) when credentials are required but not provided securely.
+## 2023-10-27 - [Replacing strcpy properly]
+**Vulnerability:** Use of `strcpy` which doesn't check bounds.
+**Learning:** When replacing unsafe `strcpy` calls where the allocation size is exactly derived from the source string (e.g., `strlen(src) + 1`), using `strncpy(dst, src, strlen(src) + 1)` is conceptually incorrect because `strncpy` bounds should reflect the *destination* size, not the source. It also triggers SAST scanners.
+**Prevention:** Prefer using `memcpy(dst, src, size)` instead of `strncpy` for these cases to avoid linter warnings and security scanner rejections, or explicitly use `strncpy` with the mathematically remaining destination size `int remaining = size - (val - dest_start);`.
