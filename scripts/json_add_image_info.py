@@ -35,19 +35,10 @@ def get_titles():
     _getenv = getenv
     for prefix_vars in TITLE_ENV_KEYS_CHUNKED:
         title = {}
-<<<<<<< HEAD
         for var, env_key in prefix_vars:
             val = _getenv(env_key)
             if val:
                 title[var] = val
-=======
-        for var in ["vendor", "model", "variant"]:
-            # Optimization: Avoid redundant getenv calls and string formats by storing
-            # the result in a local variable. This saves function call overhead.
-            env_val = getenv("DEVICE_{}{}".format(prefix, var.upper()))
-            if env_val:
-                title[var] = env_val
->>>>>>> pr-143
 
         if title:
             titles.append(title)

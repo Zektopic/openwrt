@@ -47,50 +47,14 @@ def get_apk_sbom(text: str, installed: set) -> list:
     # or lists when parsing the JSON array of packages. This provides a measurable
     # speedup (~30%) over using dict.update() and string splitting repeatedly.
     for package in packages["packages"]:
-        name = package.get("name")
-        if name and installed and name not in installed:
-            continue
-
         element: dict = {}
+
+        name = package.get("name")
         if name:
             element["name"] = name
+            if installed and name not in installed:
+                continue
 
-<<<<<<< HEAD
-        # required
-        if 'name' in package:
-            name: str = package['name']
-            element["name"] = name
-            if installed:
-                if name not in installed:
-                    continue
-
-        if 'version' in package:
-            element["version"] = package["version"]
-
-        # required
-        type_category: str = ''
-
-        if "tags" in package:
-            for tag in package["tags"]:
-                if tag.startswith("openwrt:cpe="):
-                    cpe: str = tag[12:]
-                    element["cpe"] = cpe
-                elif tag.startswith("openwrt:section="):
-                    category: str = tag[16:]
-                    if type_allowed.get(category):
-                        type_category = type_allowed.get(category)
-
-        if type_category:
-            element["type"] = type_category
-        else:
-            element["type"] = "application"
-
-        if 'license' in package:
-            licenses: list = []
-            for license in package["license"].split():
-                licenses.append({"license": {"name": license}})
-            element["licenses"] = licenses
-=======
         version = package.get("version")
         if version:
             element["version"] = version
@@ -106,7 +70,6 @@ def get_apk_sbom(text: str, installed: set) -> list:
         license_val = package.get("license")
         if license_val:
             element["licenses"] = [{"license": {"name": l}} for l in license_val.split()]
->>>>>>> pr-145
 
         components.append(element)
 
