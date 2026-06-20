@@ -708,7 +708,7 @@ process_ctrl(struct uline_state *s, char c)
 			return false;
 		}
 		memcpy(s->yank_buf, line->buf + line->pos, s->yank_len);
-		s->yank_buf[s->yank_len] = ' ';
+		s->yank_buf[s->yank_len] = '\0';
 		linebuf_delete(line, s->yank_len);
 		return true;
 	case KEY_EM:
