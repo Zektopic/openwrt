@@ -137,4 +137,5 @@ def main():
 
 	create_kernel_header(args)
 
-main()
+if __name__ == "__main__":
+	main()
