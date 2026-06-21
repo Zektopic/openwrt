@@ -181,23 +181,25 @@ class Entry:
     builddir_packages_cache = {}
 
     def getBuildPaths(self):
-        # Optimization: Pre-scan subdirectories and cache package directories
-        # to reduce O(N*M) os.path.exists calls to O(M) os.scandir calls and O(1) dict lookups
-        if self.builddir not in Entry.builddir_packages_cache:
+        if self.builddir not in Entry.builddir_subdirs_cache:
             cache = {}
             try:
                 for subdir in os.scandir(self.builddir):
                     if subdir.is_dir():
                         try:
-                            for pkg_dir in os.scandir(subdir.path):
-                                cache.setdefault(pkg_dir.name, []).append(pkg_dir.path)
-                        except (PermissionError, FileNotFoundError):
+                            for pkg in os.scandir(subdir.path):
+                                if pkg.name not in cache:
+                                    cache[pkg.name] = []
+                                cache[pkg.name].append(pkg.path)
+                        except OSError:
                             pass
-            except (PermissionError, FileNotFoundError):
+            except OSError:
                 pass
-            Entry.builddir_packages_cache[self.builddir] = cache
+            Entry.builddir_subdirs_cache[self.builddir] = cache
 
-        return Entry.builddir_packages_cache[self.builddir].get(self.filenoext, [])
+        if self.filenoext in Entry.builddir_subdirs_cache[self.builddir]:
+            return Entry.builddir_subdirs_cache[self.builddir][self.filenoext]
+        return []
 
     def deleteFile(self):
         path = self.getPath()
