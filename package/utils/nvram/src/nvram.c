@@ -13,6 +13,7 @@
  */
 
 #include "nvram.h"
+#include <stdlib.h>
 
 #define TRACE(msg) \
 	printf("%s(%i) in %s(): %s\n", \
@@ -123,20 +124,20 @@ static int _nvram_rehash(nvram_handle_t *h)
 
 	/* Set special SDRAM parameters */
 	if (!nvram_get(h, "sdram_init")) {
-		sprintf(buf, "0x%04X", (uint16_t)(header->crc_ver_init >> 16));
+		snprintf(buf, sizeof(buf), "0x%04X", (uint16_t)(header->crc_ver_init >> 16));
 		nvram_set(h, "sdram_init", buf);
 	}
 	if (!nvram_get(h, "sdram_config")) {
-		sprintf(buf, "0x%04X", (uint16_t)(header->config_refresh & 0xffff));
+		snprintf(buf, sizeof(buf), "0x%04X", (uint16_t)(header->config_refresh & 0xffff));
 		nvram_set(h, "sdram_config", buf);
 	}
 	if (!nvram_get(h, "sdram_refresh")) {
-		sprintf(buf, "0x%04X",
+		snprintf(buf, sizeof(buf), "0x%04X",
 			(uint16_t)((header->config_refresh >> 16) & 0xffff));
 		nvram_set(h, "sdram_refresh", buf);
 	}
 	if (!nvram_get(h, "sdram_ncdl")) {
-		sprintf(buf, "0x%08X", header->config_ncdl);
+		snprintf(buf, sizeof(buf), "0x%08X", header->config_ncdl);
 		nvram_set(h, "sdram_ncdl", buf);
 	}
 
@@ -300,9 +301,12 @@ int nvram_commit(nvram_handle_t *h)
 	/* Write out all tuples */
 	for (i = 0; i < NVRAM_ARRAYSIZE(h->nvram_hash); i++) {
 		for (t = h->nvram_hash[i]; t; t = t->next) {
-			if ((ptr + strlen(t->name) + 1 + strlen(t->value) + 1) > end)
+			int written = snprintf(ptr, end - ptr, "%s=%s", t->name, t->value);
+			if (written < 0 || written >= end - ptr) {
+				/* error or truncation, ignore the rest or break? */
 				break;
-			ptr += sprintf(ptr, "%s=%s", t->name, t->value) + 1;
+			}
+			ptr += written + 1;
 		}
 	}
 
@@ -448,7 +452,7 @@ char * nvram_find_mtd(void)
 			{
 				nvram_part_size = part_size;
 
-				sprintf(dev, "/dev/mtdblock%d", i);
+				snprintf(dev, sizeof(dev), "/dev/mtdblock%d", i);
 				if( stat(dev, &s) > -1 && (s.st_mode & S_IFBLK) )
 				{
 					path = strdup(dev);
@@ -481,27 +485,32 @@ int nvram_to_staging(void)
 {
 	int fdmtd, fdstg, stat;
 	char *mtd = nvram_find_mtd();
-	char buf[nvram_part_size];
+	char *buf;
 
 	stat = -1;
 
 	if( (mtd != NULL) && (nvram_part_size > 0) )
 	{
-		if( (fdmtd = open(mtd, O_RDONLY)) > -1 )
+		buf = malloc(nvram_part_size);
+		if (buf != NULL)
 		{
-			if( read(fdmtd, buf, sizeof(buf)) == sizeof(buf) )
+			if( (fdmtd = open(mtd, O_RDONLY)) > -1 )
 			{
-				if((fdstg = open(NVRAM_STAGING, O_WRONLY | O_CREAT, 0600)) > -1)
+				if( read(fdmtd, buf, nvram_part_size) == nvram_part_size )
 				{
-					write(fdstg, buf, sizeof(buf));
-					fsync(fdstg);
-					close(fdstg);
+					if((fdstg = open(NVRAM_STAGING, O_WRONLY | O_CREAT, 0600)) > -1)
+					{
+						write(fdstg, buf, nvram_part_size);
+						fsync(fdstg);
+						close(fdstg);
 
-					stat = 0;
+						stat = 0;
+					}
 				}
-			}
 
-			close(fdmtd);
+				close(fdmtd);
+			}
+			free(buf);
 		}
 	}
 
@@ -514,29 +523,34 @@ int staging_to_nvram(void)
 {
 	int fdmtd, fdstg, stat;
 	char *mtd = nvram_find_mtd();
-	char buf[nvram_part_size];
+	char *buf;
 
 	stat = -1;
 
 	if( (mtd != NULL) && (nvram_part_size > 0) )
 	{
-		if( (fdstg = open(NVRAM_STAGING, O_RDONLY)) > -1 )
+		buf = malloc(nvram_part_size);
+		if (buf != NULL)
 		{
-			if( read(fdstg, buf, sizeof(buf)) == sizeof(buf) )
+			if( (fdstg = open(NVRAM_STAGING, O_RDONLY)) > -1 )
 			{
-				if( (fdmtd = open(mtd, O_WRONLY | O_SYNC)) > -1 )
+				if( read(fdstg, buf, nvram_part_size) == nvram_part_size )
 				{
-					write(fdmtd, buf, sizeof(buf));
-					fsync(fdmtd);
-					close(fdmtd);
-					stat = 0;
+					if( (fdmtd = open(mtd, O_WRONLY | O_SYNC)) > -1 )
+					{
+						write(fdmtd, buf, nvram_part_size);
+						fsync(fdmtd);
+						close(fdmtd);
+						stat = 0;
+					}
 				}
+
+				close(fdstg);
+
+				if( !stat )
+					stat = unlink(NVRAM_STAGING) ? 1 : 0;
 			}
-
-			close(fdstg);
-
-			if( !stat )
-				stat = unlink(NVRAM_STAGING) ? 1 : 0;
+			free(buf);
 		}
 	}
 
