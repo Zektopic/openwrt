@@ -1,4 +1,8 @@
-## 2025-02-14 - Replace unsafe strcpy with bounded snprintf in conf_touch_dep
+## 2024-05-30 - Replace unsafe strcpy with direct buffer assignment
+**Vulnerability:** Use of unsafe `strcpy` function to initialize a buffer with a null byte (`strcpy(gs.s, "\0");`).
+**Learning:** Even though the source is a constant string and destination size is known, using `strcpy` triggers static analysis tools and violates secure coding practices because it lacks bounds checking. Initializing an empty string can be done directly and more safely.
+**Prevention:** Always use direct buffer assignment (e.g., `buf[0] = '\0';`) to initialize an empty string, avoiding the unnecessary overhead and potential risk of unsafe C string functions.
+ - Replace unsafe strcpy with bounded snprintf in conf_touch_dep
 **Vulnerability:** The `scripts/config/confdata.c` file used `strcpy` to copy a string into an offset buffer.
 **Learning:** While the preceding code performed a length check to ensure the string would fit, `strcpy` itself is inherently unsafe because it relies entirely on external bounds checking. If the bounds logic is altered or the data flow becomes complex, `strcpy` provides no localized safety guarantees, making it a frequent target for security linters and a potential point of failure during refactoring.
 **Prevention:** Always use bounded string operations like `snprintf` or `strscpy`/`strncpy` (with proper null termination) when copying strings, even when preceding logic "guarantees" safety. This enforces defense-in-depth and satisfies security scanning requirements.
@@ -131,6 +135,7 @@
 **Vulnerability:** A fallback password (`password1`) was hardcoded in `scripts/flashing/jungo-image.py` instead of securely prompting the user if the password argument was omitted.
 **Learning:** Hardcoded credentials are a critical security risk and a common anti-pattern in utility scripts. Scripts should never fall back to plaintext defaults for sensitive data.
 **Prevention:** Always initialize password variables to empty strings (`""`) and enforce secure interactive prompting (e.g., via `getpass.getpass()`) when credentials are required but not provided securely.
+<<<<<<< HEAD
 ## 2023-10-27 - [Replacing strcpy properly]
 **Vulnerability:** Use of `strcpy` which doesn't check bounds.
 **Learning:** When replacing unsafe `strcpy` calls where the allocation size is exactly derived from the source string (e.g., `strlen(src) + 1`), using `strncpy(dst, src, strlen(src) + 1)` is conceptually incorrect because `strncpy` bounds should reflect the *destination* size, not the source. It also triggers SAST scanners.
