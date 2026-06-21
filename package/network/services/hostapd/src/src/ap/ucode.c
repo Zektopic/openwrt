@@ -158,7 +158,7 @@ bss_reload_vlans(struct hostapd_data *hapd, struct hostapd_bss_config *bss)
 		return -1;
 
 	if (vlan && wildcard && strcmp(vlan->ifname, wildcard->ifname) != 0)
-		strcpy(vlan->ifname, wildcard->ifname);
+		os_strlcpy(vlan->ifname, wildcard->ifname, sizeof(vlan->ifname));
 	else
 		wildcard = NULL;
 
