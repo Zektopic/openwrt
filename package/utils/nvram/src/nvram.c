@@ -305,9 +305,7 @@ int nvram_commit(nvram_handle_t *h)
 			if (written < 0 || written >= end - ptr) {
 				/* error or truncation, ignore the rest or break? */
 				break;
-			}
-			ptr += written + 1;
-		}
+			ptr += snprintf(ptr, end - ptr, "%s=%s", t->name, t->value) + 1;		}
 	}
 
 	/* End with a double NULL and pad to 4 bytes */
