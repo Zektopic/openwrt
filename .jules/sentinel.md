@@ -1,3 +1,7 @@
+## 2025-02-14 - Replace unsafe strcpy with bounded snprintf in conf_touch_dep
+**Vulnerability:** The `scripts/config/confdata.c` file used `strcpy` to copy a string into an offset buffer.
+**Learning:** While the preceding code performed a length check to ensure the string would fit, `strcpy` itself is inherently unsafe because it relies entirely on external bounds checking. If the bounds logic is altered or the data flow becomes complex, `strcpy` provides no localized safety guarantees, making it a frequent target for security linters and a potential point of failure during refactoring.
+**Prevention:** Always use bounded string operations like `snprintf` or `strscpy`/`strncpy` (with proper null termination) when copying strings, even when preceding logic "guarantees" safety. This enforces defense-in-depth and satisfies security scanning requirements.
 ## 2025-06-14 - Fix Potential Command Injection in unetd
 **Vulnerability:** Shell command injection in `unet.uc` where `bin_path` and `out_file` variables were directly interpolated into `system([ "sh", "-c", "..." ])` without escaping.
 **Learning:** Even if input variables are validated via regex earlier in the code, injecting them unquoted or using single quotes without escaping them directly into `sh -c` introduces a vulnerability pattern if those validations are ever bypassed, refactored, or missed.

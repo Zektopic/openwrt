@@ -136,7 +136,8 @@ static int conf_touch_dep(const char *name)
 	if (depfile_prefix_len + strlen(name) + 1 > sizeof(depfile_path))
 		return -1;
 
-	strcpy(depfile_path + depfile_prefix_len, name);
+	snprintf(depfile_path + depfile_prefix_len,
+		 sizeof(depfile_path) - depfile_prefix_len, "%s", name);
 
 	fd = open(depfile_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd == -1)
