@@ -42,6 +42,7 @@
 /*#define _POSIX_SOURCE*/
 #include <stdio.h>
 #include "t_defines.h"
+#include <ctype.h>
 
 static int
 hexDigitToInt(c)
@@ -65,18 +66,27 @@ t_fromhex(dst, src)
      register char *dst, *src;
 {
   register char *chp = dst;
-  register unsigned size = strlen(src);
+  register unsigned size = 0;
+  register char *s;
 
-  /* FIXME: handle whitespace and non-hex digits by setting size and src
-     appropriately. */
+  for (s = src; *s; s++) {
+    if (isxdigit(*s)) {
+      size++;
+    }
+  }
 
   if(size % 2 == 1) {
+    while(*src && !isxdigit(*src)) src++;
     *chp++ = hexDigitToInt(*src++);
     --size;
   }
   while(size > 0) {
-    *chp++ = (hexDigitToInt(*src) << 4) | hexDigitToInt(*(src + 1));
-    src += 2;
+    int v1, v2;
+    while(*src && !isxdigit(*src)) src++;
+    v1 = hexDigitToInt(*src++);
+    while(*src && !isxdigit(*src)) src++;
+    v2 = hexDigitToInt(*src++);
+    *chp++ = (v1 << 4) | v2;
     size -= 2;
   }
   return chp - dst;
