@@ -80,5 +80,37 @@ Version: 1.2.3
             "libc": "1.2.3"
         })
 
+
+    def test_parse_opkg_edge_cases(self):
+        # Edge cases:
+        # 1. Package without Version
+        # 2. Extra newlines between packages
+        # 3. Block not starting with Package:
+        # 4. Empty string
+        # 5. Missing trailing newline on final Version/ABIVersion
+        text = """Package: pkg-no-version
+
+Package: pkg-no-newline
+Version: 1.0
+
+
+Not-Package: ignore-this
+Package: ignored
+Version: 2.0
+
+Package: pkg-missing-abi-newline
+Version: 1.0
+ABIVersion: 1.1"""
+
+        result = make_index_json.parse_opkg(text)
+        self.assertEqual(result, {
+            "pkg-no-version": "",
+            "pkg-no-newline": "1.0",
+            "pkg-missing-abi-newline": "1.0"
+        })
+
+        # Empty string
+        self.assertEqual(make_index_json.parse_opkg(""), {})
+
 if __name__ == '__main__':
     unittest.main()
