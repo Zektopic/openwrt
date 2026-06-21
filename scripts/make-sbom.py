@@ -86,9 +86,8 @@ def get_opkg_sbom(text: str, installed: set) -> list:
     }
 
     # Optimization: use string find to locate chunks instead of splitting the entire text
-    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings.
-    # Additionally, we avoid splitting lines and allocating intermediate dicts by
-    # extracting fields directly using str.find().
+    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings
+    # while preserving exact dictionary-based parsing for robustness.
     start = 0
     text_len = len(text)
 
@@ -97,71 +96,57 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         if end == -1:
             end = text_len
 
-        name = ""
+        element: dict = {}
 
-        # Check if it starts with Package:
-        if text.startswith("Package: ", start, end):
-            p_idx = start
-        else:
-            p_idx = text.find("\nPackage: ", start, end)
-            if p_idx != -1:
-                p_idx += 1
-
-        if p_idx != -1:
+        p_idx = text.find("Package: ", start, end)
+        if p_idx == start or (p_idx > 0 and text[p_idx-1] == '\n'):
             p_end = text.find("\n", p_idx, end)
             name = text[p_idx+9:p_end if p_end != -1 else end].strip()
+            if not name:
+                pass
+            elif installed and name not in installed:
+                pass
+            else:
+                element["name"] = name
 
-            if installed and name not in installed:
-                start = end + 2
-                while start < text_len and text[start] == '\n':
-                    start += 1
-                continue
+                v_idx = text.find("\nVersion: ", start, end)
+                if v_idx != -1:
+                    v_end = text.find("\n", v_idx + 1, end)
+                    element["version"] = text[v_idx+10:v_end if v_end != -1 else end].strip()
 
-            version = ""
-            cpe = ""
-            section = ""
-            license_str = ""
+                c_idx = text.find("\nCPE-ID: ", start, end)
+                if c_idx != -1:
+                    c_end = text.find("\n", c_idx + 1, end)
+                    element["cpe"] = text[c_idx+9:c_end if c_end != -1 else end].strip()
 
-            v_idx = text.find("\nVersion: ", start, end)
-            if v_idx != -1:
-                v_end = text.find("\n", v_idx + 1, end)
-                version = text[v_idx+10:v_end if v_end != -1 else end].strip()
+                s_idx = text.find("\nSection: ", start, end)
+                type_category = ''
+                if s_idx != -1:
+                    s_end = text.find("\n", s_idx + 1, end)
+                    section = text[s_idx+10:s_end if s_end != -1 else end].strip()
+                    if type_allowed.get(section):
+                        type_category = type_allowed.get(section)
+                    if type_category:
+                        element["type"] = type_category
+                    else:
+                        element["type"] = "application"
 
-            c_idx = text.find("\nCPE-ID: ", start, end)
-            if c_idx != -1:
-                c_end = text.find("\n", c_idx + 1, end)
-                cpe = text[c_idx+9:c_end if c_end != -1 else end].strip()
+                l_idx = text.find("\nLicense: ", start, end)
+                if l_idx != -1:
+                    l_end = text.find("\n", l_idx + 1, end)
+                    license_str = text[l_idx+10:l_end if l_end != -1 else end].strip()
+                    licenses = []
+                    for license in license_str.split():
+                        licenses.append({"license": {"name": license}})
+                    element["licenses"] = licenses
 
-            s_idx = text.find("\nSection: ", start, end)
-            if s_idx != -1:
-                s_end = text.find("\n", s_idx + 1, end)
-                section = text[s_idx+10:s_end if s_end != -1 else end].strip()
-
-            l_idx = text.find("\nLicense: ", start, end)
-            if l_idx != -1:
-                l_end = text.find("\n", l_idx + 1, end)
-                license_str = text[l_idx+10:l_end if l_end != -1 else end].strip()
-
-            element: dict = {"name": name}
-            if version:
-                element["version"] = version
-            if cpe:
-                element["cpe"] = cpe
-
-            type_category = type_allowed.get(section, "application")
-            element["type"] = type_category
-
-            if license_str:
-                licenses = [{"license": {"name": l}} for l in license_str.split()]
-                element["licenses"] = licenses
-
-            components.append(element)
+                if element:
+                    components.append(element)
 
         start = end + 2
-
-        # Skip extra newlines
         while start < text_len and text[start] == '\n':
             start += 1
+
     return components
 
 

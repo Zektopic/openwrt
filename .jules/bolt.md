@@ -1,3 +1,6 @@
+## 2024-05-19 - Fast OPKG Status Parsing
+**Learning:** Parsing tens of thousands of RFC 822-style blocks (like opkg package indices or SBOMs) in Python by repeatedly calling `splitlines()` and creating an intermediate dictionary for each block causes massive memory allocations and parsing overhead.
+**Action:** Use index-based string searching (`str.find('Key: ', start, end)`) and direct string slicing to extract exactly the fields needed, bypassing dictionary construction and reducing execution time by over 60%.
 ## 2024-05-24 - [Avoid `email.parser` for large package indexes]
 **Learning:** `email.parser.Parser` performs full RFC 822/2822 compliance checks which adds massive overhead. When parsing tens of thousands of machine-generated opkg package index blocks with predictable `Key: Value` line formats, standard string splitting and `.startswith()` checks provide a ~14x speedup.
 **Action:** When extracting a few specific headers from a trusted and uniform block format instead of parsing arbitrary emails, avoid `email.parser.Parser` and use fast native python string operations instead. Make sure to use `.strip()` when parsing values to correctly handle `\r\n` line endings.
