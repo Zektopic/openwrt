@@ -172,3 +172,8 @@
 ## 2024-06-19 - [Optimize Python \`cryptography\` Cipher instantiation]
 **Learning:** In Python's \`cryptography\` library, instantiating a \`Cipher\` object incurs measurable Python-to-C backend binding overhead. When performing chunked operations where the cryptographic context must be reset per block (like effectively using CBC as ECB at the chunk level), re-instantiating the entire \`Cipher\` object in a loop causes unnecessary overhead.
 **Action:** Initialize the \`Cipher\` object once outside the loop and only call \`.encryptor()\` or \`.decryptor()\` inside the loop to generate fresh contexts efficiently.
+## 2024-06-21 - Optimize dl_cleanup.py getBuildPaths with pre-scanning
+
+**Learning:** When a Python script repeatedly calls `os.path.exists()` on dynamically constructed paths checking if files exist across multiple subdirectories inside a loop, it results in O(N*M) I/O bottleneck (stat calls). This was exactly what was happening in `scripts/dl_cleanup.py`'s `getBuildPaths` method, which checked for package existences in every subdirectory of `build_dir/`.
+
+**Action:** Whenever a script does many nested or repetitive existence checks across a directory structure, pre-scan the directory structure once using `os.scandir()` and construct a cache dictionary mapped by the targeted file/directory names. This changes the O(N*M) stat calls to O(M) scandir calls and O(1) dictionary lookups, significantly improving speed.
