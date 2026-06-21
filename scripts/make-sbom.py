@@ -47,13 +47,14 @@ def get_apk_sbom(text: str, installed: set) -> list:
     # or lists when parsing the JSON array of packages. This provides a measurable
     # speedup (~30%) over using dict.update() and string splitting repeatedly.
     for package in packages["packages"]:
+        name = package.get("name")
+        if installed and name not in installed:
+            continue
+
         element: dict = {}
 
-        name = package.get("name")
         if name:
             element["name"] = name
-            if installed and name not in installed:
-                continue
 
         version = package.get("version")
         if version:
@@ -86,8 +87,9 @@ def get_opkg_sbom(text: str, installed: set) -> list:
     }
 
     # Optimization: use string find to locate chunks instead of splitting the entire text
-    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings
-    # while preserving exact dictionary-based parsing for robustness.
+    # on "\n\n" at once. This avoids allocating a massive intermediate list of strings.
+    # Additionally, we avoid splitting lines and allocating intermediate dicts by
+    # extracting fields directly using str.find().
     start = 0
     text_len = len(text)
 
@@ -96,61 +98,73 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         if end == -1:
             end = text_len
 
-        element: dict = {}
-        package: dict = {}
+        name = ""
 
-        # Optimization: use native string parsing to build the dictionary without
-        # allocating intermediate lists via splitlines().
-        line_start = start
-        while line_start < end:
-            line_end = text.find('\n', line_start, end)
-            if line_end == -1:
-                line_end = end
+        # Check if it starts with Package:
+        if text.startswith("Package: ", start, end):
+            p_idx = start
+        else:
+            p_idx = text.find("\nPackage: ", start, end)
+            if p_idx != -1:
+                p_idx += 1
 
-            idx = text.find(': ', line_start, line_end)
-            if idx != -1:
-                package[text[line_start:idx].lower()] = text[idx+2:line_end].strip()
+        if p_idx != -1:
+            p_end = text.find("\n", p_idx, end)
+            name = text[p_idx+9:p_end if p_end != -1 else end].strip()
 
-            line_start = line_end + 1
+            if installed and name not in installed:
+                start = end + 2
+                while start < text_len and text[start] == '\n':
+                    start += 1
+                continue
 
-        start = end + 2
-        while start < text_len and text[start] == '\n':
-            start += 1
+            version = ""
+            cpe = ""
+            section = ""
+            license_str = ""
 
-        # required
-        if 'package' in package:
-            name: str = package['package']
-            element.update({"name": name})
-            if installed:
-                if name not in installed:
-                    continue
+            v_idx = text.find("\nVersion: ", start, end)
+            if v_idx != -1:
+                v_end = text.find("\n", v_idx + 1, end)
+                version = text[v_idx+10:v_end if v_end != -1 else end].strip()
 
-        if 'version' in package:
-            element.update({"version": package['version']})
+            c_idx = text.find("\nCPE-ID: ", start, end)
+            if c_idx != -1:
+                c_end = text.find("\n", c_idx + 1, end)
+                cpe = text[c_idx+9:c_end if c_end != -1 else end].strip()
 
-        if 'cpe-id' in package:
-            element.update({"cpe": package['cpe-id']})
+            s_idx = text.find("\nSection: ", start, end)
+            if s_idx != -1:
+                s_end = text.find("\n", s_idx + 1, end)
+                section = text[s_idx+10:s_end if s_end != -1 else end].strip()
 
-        # required
-        if 'section' in package:
-            type_category: str = ''
-            if type_allowed.get(package['section']):
-                type_category = type_allowed.get(package['section'])
-            if type_category:
-                element.update({"type": type_category})
-            else:
-                element.update({"type": "application"})
+            l_idx = text.find("\nLicense: ", start, end)
+            if l_idx != -1:
+                l_end = text.find("\n", l_idx + 1, end)
+                license_str = text[l_idx+10:l_end if l_end != -1 else end].strip()
 
-        if 'license' in package:
-            licenses: list = []
-            for license in package["license"].split():
-                licenses.append({"license": {"name": license}})
-            element.update({"licenses": licenses})
+            element: dict = {"name": name}
+            if version:
+                element["version"] = version
+            if cpe:
+                element["cpe"] = cpe
 
-        if element:
+            type_category = type_allowed.get(section, "application")
+            element["type"] = type_category
+
+            if license_str:
+                licenses = [{"license": {"name": l}} for l in license_str.split()]
+                element["licenses"] = licenses
+
             components.append(element)
 
+        start = end + 2
+
+        # Skip extra newlines
+        while start < text_len and text[start] == '\n':
+            start += 1
     return components
+
 
 if __name__ == "__main__":
     import sys
