@@ -1,4 +1,9 @@
-## 2024-05-30 - Replace unsafe strcpy with direct buffer assignment
+## 2024-12-04 - Fix Use of Unsafe sprintf in scripts/config
+
+**Vulnerability:** Potential buffer overflow due to the use of unsafe `sprintf` without bounds checking in `scripts/config/expr.c` and `scripts/config/preprocess.c`.
+**Learning:** `sprintf` functions natively do not check bounds, meaning if format input data is larger than buffer array bounds, it will write data to unauthorized memory space.
+**Prevention:** Avoid using `sprintf`. Instead, use `snprintf` which provides bounds-checking against the buffer size to ensure memory overflows cannot happen.
+ - Replace unsafe strcpy with direct buffer assignment
 **Vulnerability:** Use of unsafe `strcpy` function to initialize a buffer with a null byte (`strcpy(gs.s, "\0");`).
 **Learning:** Even though the source is a constant string and destination size is known, using `strcpy` triggers static analysis tools and violates secure coding practices because it lacks bounds checking. Initializing an empty string can be done directly and more safely.
 **Prevention:** Always use direct buffer assignment (e.g., `buf[0] = '\0';`) to initialize an empty string, avoiding the unnecessary overhead and potential risk of unsafe C string functions.
@@ -135,6 +140,7 @@
 **Vulnerability:** A fallback password (`password1`) was hardcoded in `scripts/flashing/jungo-image.py` instead of securely prompting the user if the password argument was omitted.
 **Learning:** Hardcoded credentials are a critical security risk and a common anti-pattern in utility scripts. Scripts should never fall back to plaintext defaults for sensitive data.
 **Prevention:** Always initialize password variables to empty strings (`""`) and enforce secure interactive prompting (e.g., via `getpass.getpass()`) when credentials are required but not provided securely.
+<<<<<<< HEAD
 <<<<<<< HEAD
 ## 2023-10-27 - [Replacing strcpy properly]
 **Vulnerability:** Use of `strcpy` which doesn't check bounds.

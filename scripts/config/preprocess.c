@@ -133,7 +133,7 @@ static char *do_lineno(int argc, char *argv[])
 {
 	char buf[16];
 
-	sprintf(buf, "%d", yylineno);
+	snprintf(buf, sizeof(buf), "%d", yylineno);
 
 	return xstrdup(buf);
 }
