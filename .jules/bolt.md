@@ -185,4 +185,6 @@
 
 **Learning:** When a Python script repeatedly calls `os.path.exists()` on dynamically constructed paths checking if files exist across multiple subdirectories inside a loop, it results in O(N*M) I/O bottleneck (stat calls). This was exactly what was happening in `scripts/dl_cleanup.py`'s `getBuildPaths` method, which checked for package existences in every subdirectory of `build_dir/`.
 
-**Action:** Whenever a script does many nested or repetitive existence checks across a directory structure, pre-scan the directory structure once using `os.scandir()` and construct a cache dictionary mapped by the targeted file/directory names. This changes the O(N*M) stat calls to O(M) scandir calls and O(1) dictionary lookups, significantly improving speed.
+**Action:** Whenever a script does many nested or repetitive existence checks across a directory structure, pre-scan the directory structure once using `os.scandir()` and construct a cache dictionary mapped by the targeted file/directory names. This changes the O(N*M) stat calls to O(M) scandir calls and O(1) dictionary lookups, significantly improving speed.## 2025-01-20 - [Optimize Python dict updates and list defaults in loops]
+**Learning:** In performance-sensitive Python loops over dictionaries, using `dict.get("key", [])` allocates an empty list object on every single miss.
+**Action:** Replace `dict.get("key", [])` in loops with an explicit `if "key" in dict:` check to bypass empty list allocations.
