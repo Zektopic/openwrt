@@ -186,3 +186,10 @@
 **Learning:** When a Python script repeatedly calls `os.path.exists()` on dynamically constructed paths checking if files exist across multiple subdirectories inside a loop, it results in O(N*M) I/O bottleneck (stat calls). This was exactly what was happening in `scripts/dl_cleanup.py`'s `getBuildPaths` method, which checked for package existences in every subdirectory of `build_dir/`.
 
 **Action:** Whenever a script does many nested or repetitive existence checks across a directory structure, pre-scan the directory structure once using `os.scandir()` and construct a cache dictionary mapped by the targeted file/directory names. This changes the O(N*M) stat calls to O(M) scandir calls and O(1) dictionary lookups, significantly improving speed.
+## 2024-05-18 - JSON dumps formatting overhead in Python
+**Learning:** For a large number of items in a JSON structure, using `json.dumps(obj, indent=2)` is significantly slower (~7.5x overhead) compared to `json.dumps(obj)` without indentation, and it increases artifact output size drastically.
+**Action:** When generating large machine-readable JSON artifacts like SBOMs, remove indentation parameters to maximize serialization performance and reduce storage constraints.
+
+## 2024-05-18 - Avoiding dict.get() for dynamic iteration defaults
+**Learning:** Using `for item in data.get("key", []):` inside a tight Python loop creates a new empty list instance on every miss, causing measurable memory and time overhead for large loop sets where "key" is frequently missing.
+**Action:** Use an explicit existence check (`if "key" in data:`) before iterating over its value to avoid allocating default fallback objects inside hot loops.
