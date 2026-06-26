@@ -61,11 +61,14 @@ def get_apk_sbom(text: str, installed: set) -> list:
             element["version"] = version
 
         type_category = "application"
-        for tag in package.get("tags", []):
-            if tag.startswith("openwrt:cpe="):
-                element["cpe"] = tag[12:]
-            elif tag.startswith("openwrt:section="):
-                type_category = type_allowed.get(tag[16:], "application")
+        # Optimization: use explicit `in` check instead of `.get("tags", [])` to avoid
+        # allocating an empty list on every miss, which is measurably faster inside tight loops.
+        if "tags" in package:
+            for tag in package["tags"]:
+                if tag.startswith("openwrt:cpe="):
+                    element["cpe"] = tag[12:]
+                elif tag.startswith("openwrt:section="):
+                    type_category = type_allowed.get(tag[16:], "application")
         element["type"] = type_category
 
         license_val = package.get("license")
