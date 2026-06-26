@@ -1,9 +1,0 @@
-ead: Replace unsafe `sprintf` with `snprintf` in tphrase.c
-
-The buffer 'bakfile' and 'bakfile2' were allocated as
-`strlen(pwname) + 5`, which is exactly enough for '.bak\0'. However, using
-`sprintf` is unsafe and bad practice compared to `snprintf`. This commit
-replaces `sprintf` with `snprintf` using an explicit `alloc_size` length
-boundary to prevent potential buffer overflows.
-
-Signed-off-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
