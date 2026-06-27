@@ -193,3 +193,6 @@
 ## 2024-05-18 - Avoiding dict.get() for dynamic iteration defaults
 **Learning:** Using `for item in data.get("key", []):` inside a tight Python loop creates a new empty list instance on every miss, causing measurable memory and time overhead for large loop sets where "key" is frequently missing.
 **Action:** Use an explicit existence check (`if "key" in data:`) before iterating over its value to avoid allocating default fallback objects inside hot loops.
+## 2025-06-26 - [JSON dumps formatting overhead in Python]
+**Learning:** For a large number of items in a JSON structure, using `json.dumps(obj, indent=2)` is significantly slower compared to `json.dumps(obj, separators=(",", ":"))` without indentation, and it increases artifact output size drastically.
+**Action:** When generating large machine-readable JSON artifacts, remove indentation parameters and use compact separators to maximize serialization performance and reduce storage constraints.
