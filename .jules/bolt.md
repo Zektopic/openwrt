@@ -193,3 +193,6 @@
 ## 2024-05-18 - Avoiding dict.get() for dynamic iteration defaults
 **Learning:** Using `for item in data.get("key", []):` inside a tight Python loop creates a new empty list instance on every miss, causing measurable memory and time overhead for large loop sets where "key" is frequently missing.
 **Action:** Use an explicit existence check (`if "key" in data:`) before iterating over its value to avoid allocating default fallback objects inside hot loops.
+## 2024-05-24 - JSON Serialization Overhead
+**Learning:** For large machine-readable JSON payloads, using default indentation adds significant serialization time and memory overhead. Explicitly using `separators=(',', ':')` drastically reduces serialization time and minimizes output artifact size.
+**Action:** When serializing large JSON structures that don't need human readability, avoid `indent` and explicitly set `separators=(',', ':')`.
