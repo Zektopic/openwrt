@@ -130,4 +130,7 @@ if __name__ == "__main__":
             "architecture": args.architecture,
             "packages": packages,
         }
-        print(json.dumps(index, indent=2))
+        # Using separators without indentation is significantly faster for large
+        # JSON indexes. Since this is machine-readable output, removing indentation
+        # also drastically reduces output size and serialization time.
+        print(json.dumps(index, separators=(",", ":")))
