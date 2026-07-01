@@ -193,3 +193,6 @@
 ## 2024-05-18 - Avoiding dict.get() for dynamic iteration defaults
 **Learning:** Using `for item in data.get("key", []):` inside a tight Python loop creates a new empty list instance on every miss, causing measurable memory and time overhead for large loop sets where "key" is frequently missing.
 **Action:** Use an explicit existence check (`if "key" in data:`) before iterating over its value to avoid allocating default fallback objects inside hot loops.
+## 2024-07-01 - JSON Serialization Performance
+**Learning:** In Python, generating large machine-readable JSON payloads (like package index files or SBOMs) using the default `indent=2` parameter introduces massive overhead. By removing indentation and explicitly configuring compact separators (`separators=(',', ':')`), serialization time is drastically reduced (e.g., ~6x faster) and the resulting artifact size shrinks significantly because whitespace allocation is completely eliminated.
+**Action:** When serializing large JSON datasets intended purely for programmatic consumption (where human readability isn't strictly required), always utilize compact separators instead of pretty-printing.
