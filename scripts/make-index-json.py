@@ -130,4 +130,6 @@ if __name__ == "__main__":
             "architecture": args.architecture,
             "packages": packages,
         }
-        print(json.dumps(index, indent=2))
+        # Optimization: Removing indentation and explicitly setting compact separators
+        # drastically reduces the serialization time and the final file size of the index JSON.
+        print(json.dumps(index, separators=(',', ':')))
