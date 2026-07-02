@@ -207,4 +207,5 @@ if __name__ == "__main__":
     # Using default separators without indentation is significantly faster (~7x)
     # for large SBOM files. Since this is machine-readable output, removing indentation
     # also drastically reduces output size.
-    print(json.dumps(cyclonedx))
+    # ⚡ Bolt: Removed indentation and explicit separators drastically reduce JSON serialization time and output size.
+    print(json.dumps(cyclonedx, separators=(",", ":")))
