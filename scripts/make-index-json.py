@@ -130,4 +130,5 @@ if __name__ == "__main__":
             "architecture": args.architecture,
             "packages": packages,
         }
-        print(json.dumps(index, indent=2))
+        # ⚡ Bolt: Removed indentation and explicit separators drastically reduce JSON serialization time and output size.
+        print(json.dumps(index, separators=(",", ":")))
