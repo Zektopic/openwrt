@@ -1,6 +1,0 @@
-scripts: ⚡ Bolt: Optimize checksum calculation in aruba-header.py
-
-Replaced the generator-based `int.from_bytes` loop with the native C `array`
-module, preventing millions of object allocations and resulting in an 8x speedup.
-
-Signed-off-by: google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>
