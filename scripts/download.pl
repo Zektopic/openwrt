@@ -204,7 +204,11 @@ sub download
 		copy($link, "$target/$filename.dl");
 
 		$hash_cmd and do {
-			if (system("cat '$target/$filename.dl' | $hash_cmd > '$target/$filename.hash'")) {
+			my $path = "$target/$filename.dl";
+			$path =~ s/'/'\\''/g;
+			my $hash_path = "$target/$filename.hash";
+			$hash_path =~ s/'/'\\''/g;
+			if (system("cat '$path' | $hash_cmd > '$hash_path'")) {
 				print("Failed to generate hash for $filename\n");
 				return;
 			}
@@ -218,7 +222,9 @@ sub download
 		print STDERR "+ ".join(" ",@cmd)."\n";
 		open(FETCH_FD, '-|', @cmd) or die "Cannot launch aria2c, curl or wget.\n";
 		$hash_cmd and do {
-			open MD5SUM, "| $hash_cmd > '$target/$filename.hash'" or die "Cannot launch $hash_cmd.\n";
+			my $hash_path = "$target/$filename.hash";
+			$hash_path =~ s/'/'\\''/g;
+			open MD5SUM, "| $hash_cmd > '$hash_path'" or die "Cannot launch $hash_cmd.\n";
 		};
 		open OUTPUT, "> $target/$filename.dl" or die "Cannot create file $target/$filename.dl: $!\n";
 		my $buffer;
@@ -238,7 +244,9 @@ sub download
 	}
 
 	$hash_cmd and do {
-		my $sum = `cat "$target/$filename.hash"`;
+		my $hash_path = "$target/$filename.hash";
+		$hash_path =~ s/'/'\\''/g;
+		my $sum = `cat '$hash_path'`;
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
@@ -304,11 +312,15 @@ projectsmirrors '@OPENWRT';
 
 if (-f "$target/$filename") {
 	$hash_cmd and do {
-		if (system("cat '$target/$filename' | $hash_cmd > '$target/$filename.hash'")) {
+		my $path = "$target/$filename";
+		$path =~ s/'/'\\''/g;
+		my $hash_path = "$target/$filename.hash";
+		$hash_path =~ s/'/'\\''/g;
+		if (system("cat '$path' | $hash_cmd > '$hash_path'")) {
 			die "Failed to generate hash for $filename\n";
 		}
 
-		my $sum = `cat "$target/$filename.hash"`;
+		my $sum = `cat '$hash_path'`;
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
