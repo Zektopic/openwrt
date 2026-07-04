@@ -61,7 +61,8 @@ def get_apk_sbom(text: str, installed: set) -> list:
             element["version"] = version
 
         type_category = "application"
-        # Optimization: Use explicit `in` check to avoid allocating an empty list object on every single miss via `.get("tags", [])`
+        # Optimization: use explicit `in` check instead of `.get("tags", [])` to avoid
+        # allocating an empty list on every miss, which is measurably faster inside tight loops.
         if "tags" in package:
             for tag in package["tags"]:
                 if tag.startswith("openwrt:cpe="):
