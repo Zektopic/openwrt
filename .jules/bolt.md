@@ -193,3 +193,6 @@
 ## 2024-05-18 - Avoiding dict.get() for dynamic iteration defaults
 **Learning:** Using `for item in data.get("key", []):` inside a tight Python loop creates a new empty list instance on every miss, causing measurable memory and time overhead for large loop sets where "key" is frequently missing.
 **Action:** Use an explicit existence check (`if "key" in data:`) before iterating over its value to avoid allocating default fallback objects inside hot loops.
+## 2025-07-03 - [Optimize 32-bit Integer Checksum on Large Bytes]
+**Learning:** In Python, computing a 32-bit integer checksum over a large byte buffer using a generator expression with `int.from_bytes` (e.g., `sum(int.from_bytes(data[i:i+4], 'big') for ...)`) is extremely slow. It creates millions of temporary integer objects and slice objects inside the Python VM, resulting in huge overhead.
+**Action:** Use the native C-implemented `array` module (e.g., `a = array.array('I', data)`). If the parsed data is big-endian but the host system is little-endian (`sys.byteorder == 'little'`), apply `a.byteswap()`. Then, simply compute the sum via `sum(a)`. This avoids allocating millions of temporary Python objects, providing a massive speedup (~8x).
