@@ -8,6 +8,8 @@
 # Generates a header for use with the APBoot bootloader on (some?) Aruba APs.
 
 import argparse
+import array
+import sys
 
 LEN_BUILD = 256
 LEN_VERSION = 24
@@ -183,8 +185,15 @@ def make_header(data: bytes, build: str, version: str, oem: str, imageType: int,
     assert len(data) % 4 == 0
 
     # Compute checksum such that the big-endian sum of all 32-bit integers becomes zero.
-    curSum = sum(int.from_bytes(header[i : i + 4], 'big') for i in range(0, 512, 4))
-    curSum += sum(int.from_bytes(data[i : i + 4], 'big') for i in range(0, len(data), 4))
+    # Optimization: Use the native C-implemented array module and apply .byteswap()
+    # to compute a 32-bit integer checksum across a large buffer. This avoids allocating
+    # millions of temporary integer and slice objects from a generator expression.
+    header_words = array.array('I', header)
+    data_words = array.array('I', data)
+    if sys.byteorder == 'little':
+        header_words.byteswap()
+        data_words.byteswap()
+    curSum = sum(header_words) + sum(data_words)
 
     # Set checksum
     checksum = 0x100000000 - (curSum % 0x100000000)
