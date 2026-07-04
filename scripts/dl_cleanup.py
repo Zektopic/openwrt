@@ -178,7 +178,7 @@ class Entry:
     def getPath(self):
         return (self.directory + "/" + self.filename).replace("//", "/")
 
-    builddir_packages_cache = {}
+    builddir_subdirs_cache = {}
 
     def getBuildPaths(self):
         if self.builddir not in Entry.builddir_subdirs_cache:
