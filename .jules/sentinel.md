@@ -152,3 +152,7 @@
 **Vulnerability:** Command injection exists in `scripts/download.pl` due to unsanitized variables (`$target`, `$filename`) being directly interpolated into strings passed to `system()` and backticks (e.g., `system("cat '$target/$filename' | $hash_cmd > '$target/$filename.hash'")`). Even though the strings are enclosed in single quotes, an attacker supplying a filename containing a single quote (e.g., `test'; id; echo '`) can break out of the quoting and execute arbitrary shell commands.
 **Learning:** Perl's `system("string")` invokes the shell (`/bin/sh -c`) rather than executing directly via `execvp()`. Direct string interpolation, even within shell quotes, is vulnerable if the variables are not properly escaped or sanitized.
 **Prevention:** Always properly escape variables destined for the shell using shell-quoting routines (e.g., replacing `'` with `'\''`), or pass arguments as a list to `system(@args)` to bypass the shell entirely. For pipes and redirections where a shell is unavoidable, rigorous quoting of dynamic variables is mandatory.
+## 2024-05-18 - Shell Option Injection via cat pipe
+**Vulnerability:** Shell option injection when executing `system("cat $path | ...")` if `$path` evaluates to a string starting with a hyphen.
+**Learning:** Using `cat` to pipe file contents into a command is vulnerable if the filename starts with a hyphen, as `cat` will interpret it as a flag instead of a file.
+**Prevention:** Use shell input redirection `cmd < $path` instead, which guarantees the shell treats the string purely as a file path.
