@@ -32,6 +32,12 @@ my $download_tool;
 
 $url_filename or $url_filename = $filename;
 
+sub shell_quote {
+	my $str = shift;
+	$str =~ s/'/'\\''/g;
+	return "'$str'";
+}
+
 sub localmirrors {
 	my @mlist;
 	open LM, "$scriptdir/localmirrors" and do {
@@ -127,31 +133,33 @@ sub download_cmd {
 		return (qw(curl -f --connect-timeout 5 --retry 3 --location),
 			$check_certificate ? () : '--insecure',
 			shellwords($ENV{CURL_OPTIONS} || ''),
-			$url);
+			shell_quote($url));
 	} elsif ($download_tool eq "wget") {
 		return (qw(wget --tries=3 --timeout=5 --output-document=-),
 			$check_certificate ? () : '--no-check-certificate',
 			shellwords($ENV{WGET_OPTIONS} || ''),
-			$url);
+			shell_quote($url));
 	} elsif ($download_tool eq "aria2c") {
-		my $additional_mirrors = join(" ", map "$_/$filename", @_);
+		my @quoted_mirrors = map { shell_quote("$_/$filename") } @_;
+		my $additional_mirrors = join(" ", @quoted_mirrors);
 		my @chArray = ('a'..'z', 'A'..'Z', 0..9);
 		my $rfn = join '', "${filename}_", map{ $chArray[int rand @chArray] } 0..9;
+		my $q_rfn = shell_quote($rfn);
 
 		@mirrors=();
 
 		return join(" ", "[ -d $ENV{'TMPDIR'}/aria2c ] || mkdir $ENV{'TMPDIR'}/aria2c;",
-			"touch $ENV{'TMPDIR'}/aria2c/${rfn}_spp;",
-			qw(aria2c --stderr -c -x2 -s10 -j10 -k1M), $url, $additional_mirrors,
+			"touch $ENV{'TMPDIR'}/aria2c/${q_rfn}_spp;",
+			qw(aria2c --stderr -c -x2 -s10 -j10 -k1M), shell_quote($url), $additional_mirrors,
 			$check_certificate ? () : '--check-certificate=false',
-			"--server-stat-of=$ENV{'TMPDIR'}/aria2c/${rfn}_spp",
-			"--server-stat-if=$ENV{'TMPDIR'}/aria2c/${rfn}_spp",
+			"--server-stat-of=$ENV{'TMPDIR'}/aria2c/${q_rfn}_spp",
+			"--server-stat-if=$ENV{'TMPDIR'}/aria2c/${q_rfn}_spp",
 			"--daemon=false --no-conf", shellwords($ENV{ARIA2C_OPTIONS} || ''),
-			"-d $ENV{'TMPDIR'}/aria2c -o $rfn;",
-			"cat $ENV{'TMPDIR'}/aria2c/$rfn;",
-			"rm $ENV{'TMPDIR'}/aria2c/$rfn $ENV{'TMPDIR'}/aria2c/${rfn}_spp");
+			"-d $ENV{'TMPDIR'}/aria2c -o $q_rfn;",
+			"cat $ENV{'TMPDIR'}/aria2c/$q_rfn;",
+			"rm $ENV{'TMPDIR'}/aria2c/$q_rfn $ENV{'TMPDIR'}/aria2c/${q_rfn}_spp");
 	} else {
-		return join(" ", $download_tool, $url);
+		return join(" ", $download_tool, shell_quote($url));
 	}
 }
 
@@ -178,7 +186,7 @@ sub download
 			make_path($target);
 		}
 
-		if (! open TMPDLS, "find $mirror -follow -name $filename 2>/dev/null |") {
+		if (! open TMPDLS, "find " . shell_quote($mirror) . " -follow -name " . shell_quote($filename) . " 2>/dev/null |") {
 			print("Failed to search for $filename in $mirror\n");
 			return;
 		}
