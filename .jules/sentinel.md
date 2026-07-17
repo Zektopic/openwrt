@@ -166,3 +166,8 @@
 **Vulnerability:** Command injection exists in `scripts/download.pl` due to unsanitized variables (like `$url`, `$filename`, `$mirror`) being directly interpolated into strings executed by the shell via `open(..., '-|', @cmd)` or backticks. If an attacker controls the download URL or filename, they can inject shell metacharacters and execute arbitrary commands.
 **Learning:** In Perl scripts that invoke system commands dynamically, when array-based `system(@args)` cannot be used (e.g., when building shell pipelines for `aria2c`), dynamic variables cannot be safely enclosed in single quotes directly because the variables themselves might contain shell breakouts (like `'; id; echo '`).
 **Prevention:** Introduce a `shell_quote()` helper function that securely escapes single quotes (by replacing `'` with `'\''`) and wraps the entire resulting string in single quotes (e.g., `return "'$str'";`), and meticulously apply this function to every dynamic variable before interpolating it into a shell command string.
+
+## 2024-05-24 - Option Injection via `cat |` in shell commands
+**Vulnerability:** Shell commands executing `system("cat '$file' | cmd")` can interpret `$file` values starting with a hyphen (e.g., `-n`) as options to `cat` instead of a file.
+**Learning:** This is an option injection vulnerability rather than command injection because the user-controlled input (`$path` in this case) isn't being executed but is interpreted as a flag by the invoked binary (`cat`).
+**Prevention:** Avoid `cat $file | cmd` patterns. Use shell input redirection directly (`cmd < $file`) which forces the shell to treat the variable strictly as a file descriptor input, bypassing any flag parsing.
