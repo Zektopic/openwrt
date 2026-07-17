@@ -208,7 +208,7 @@ sub download
 			$path =~ s/'/'\\''/g;
 			my $hash_path = "$target/$filename.hash";
 			$hash_path =~ s/'/'\\''/g;
-			if (system("cat '$path' | $hash_cmd > '$hash_path'")) {
+			if (system("$hash_cmd < '$path' > '$hash_path'")) {
 				print("Failed to generate hash for $filename\n");
 				return;
 			}
@@ -316,7 +316,7 @@ if (-f "$target/$filename") {
 		$path =~ s/'/'\\''/g;
 		my $hash_path = "$target/$filename.hash";
 		$hash_path =~ s/'/'\\''/g;
-		if (system("cat '$path' | $hash_cmd > '$hash_path'")) {
+		if (system("$hash_cmd < '$path' > '$hash_path'")) {
 			die "Failed to generate hash for $filename\n";
 		}
 
