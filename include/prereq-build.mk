@@ -34,6 +34,7 @@ ifndef IB
 $(eval $(call SetupHostCommand,gcc, \
 	Please install the GNU C Compiler (gcc) 10 or later, \
 	$(CC) -dumpversion | grep -E '^(1[0-9]|[2-9][0-9])\.?', \
+	cc -dumpversion | grep -E '^(1[0-9]|[2-9][0-9])\.?', \
 	gcc -dumpversion | grep -E '^(1[0-9]|[2-9][0-9])\.?', \
 	clang -dumpversion | grep -E '^(1[2-9]|[2-9][0-9])\.', \
 	clang-12 -dumpversion | grep -E '^(1[2-9]|[2-9][0-9])\.' ))
@@ -194,6 +195,7 @@ $(eval $(call SetupHostCommand,python,Please install Python >= 3.8, \
 	python3.10 -V 2>&1 | grep 'Python 3', \
 	python3.9 -V 2>&1 | grep 'Python 3', \
 	python3.8 -V 2>&1 | grep 'Python 3', \
+	python -V 2>&1 | grep -E 'Python 3\.([8-9]|[0-9][0-9])\.?', \
 	python3 -V 2>&1 | grep -E 'Python 3\.([8-9]|[0-9][0-9])\.?'))
 
 $(eval $(call SetupHostCommand,python3,Please install Python >= 3.8, \
