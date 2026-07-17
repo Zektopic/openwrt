@@ -171,3 +171,8 @@
 **Vulnerability:** Shell commands executing `system("cat '$file' | cmd")` can interpret `$file` values starting with a hyphen (e.g., `-n`) as options to `cat` instead of a file.
 **Learning:** This is an option injection vulnerability rather than command injection because the user-controlled input (`$path` in this case) isn't being executed but is interpreted as a flag by the invoked binary (`cat`).
 **Prevention:** Avoid `cat $file | cmd` patterns. Use shell input redirection directly (`cmd < $file`) which forces the shell to treat the variable strictly as a file descriptor input, bypassing any flag parsing.
+
+## $(date +%Y-%m-%d) - Prevent Shell Option Injection in `download.pl`
+**Vulnerability:** Shell option injection via `cat` command in `scripts/download.pl`.
+**Learning:** Using `cat $file | cmd` where `$file` is a dynamic variable can lead to option injection if the filename starts with a hyphen (e.g., `-n`), causing `cat` to interpret it as a flag.
+**Prevention:** Always use shell input redirection (`cmd < $file`) instead of piping `cat`, which ensures the shell strictly interprets the string as a file path.
