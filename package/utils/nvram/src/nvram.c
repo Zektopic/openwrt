@@ -77,12 +77,13 @@ static nvram_tuple_t * _nvram_realloc( nvram_handle_t *h, nvram_tuple_t *t,
 		return NULL;
 
 	if (!t) {
-		t = malloc(sizeof(nvram_tuple_t) + strlen(name) + 1);
+		size_t name_len = strlen(name);
+		t = malloc(sizeof(nvram_tuple_t) + name_len + 1);
 		if (!t)
 			return NULL;
 
 		/* Copy name */
-		strcpy(t->name, name);
+		memcpy(t->name, name, name_len + 1);
 
 		t->value = NULL;
 	}
@@ -248,10 +249,11 @@ nvram_tuple_t * nvram_getall(nvram_handle_t *h)
 
 	for (i = 0; i < NVRAM_ARRAYSIZE(h->nvram_hash); i++) {
 		for (t = h->nvram_hash[i]; t; t = t->next) {
-			x = malloc(sizeof(*x) + strlen(t->name) + 1);
+			size_t name_len = strlen(t->name);
+			x = malloc(sizeof(*x) + name_len + 1);
 			if(!x)
 				break;
-			strcpy(x->name, t->name);
+			memcpy(x->name, t->name, name_len + 1);
 			x->value = t->value;
 			x->next  = l;
 			l = x;
@@ -305,7 +307,9 @@ int nvram_commit(nvram_handle_t *h)
 			if (written < 0 || written >= end - ptr) {
 				/* error or truncation, ignore the rest or break? */
 				break;
-			ptr += snprintf(ptr, end - ptr, "%s=%s", t->name, t->value) + 1;		}
+			}
+			ptr += snprintf(ptr, end - ptr, "%s=%s", t->name, t->value) + 1;
+		}
 	}
 
 	/* End with a double NULL and pad to 4 bytes */
