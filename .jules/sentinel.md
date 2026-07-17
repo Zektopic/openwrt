@@ -156,3 +156,8 @@
 **Vulnerability:** Shell option injection existed in `scripts/download.pl` because a dynamic `$path` variable was interpolated directly into a `cat` command within a pipeline passed to `system()` (e.g., `system("cat '$path' | $hash_cmd")`). If `$path` evaluated to a string starting with a hyphen, `cat` would process it as a flag instead of a file. Additionally, pipelines mask failures of the left-hand commands, potentially allowing empty data to be hashed.
 **Learning:** In Perl `system()` (or similar shell wrappers), using `cat $file | cmd` is an anti-pattern. Beyond being inefficient ("useless use of cat"), it opens up option injection if `$file` starts with a hyphen, and it silently succeeds if `$file` cannot be read, feeding empty data to `cmd`.
 **Prevention:** Avoid pipelines with `cat` inside shell strings. Always use shell input redirection (`system("cmd < '$file'")`), which forces the shell to safely evaluate the variable strictly as a file path and immediately fails the command with a non-zero exit status if the file cannot be read.
+
+## 2024-05-18 - Shell Option Injection via cat pipe
+**Vulnerability:** Shell option injection when executing `system("cat $path | ...")` if `$path` evaluates to a string starting with a hyphen.
+**Learning:** Using `cat` to pipe file contents into a command is vulnerable if the filename starts with a hyphen, as `cat` will interpret it as a flag instead of a file.
+**Prevention:** Use shell input redirection `cmd < $path` instead, which guarantees the shell treats the string purely as a file path.

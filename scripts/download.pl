@@ -246,7 +246,7 @@ sub download
 	$hash_cmd and do {
 		my $hash_path = "$target/$filename.hash";
 		$hash_path =~ s/'/'\\''/g;
-		my $sum = `cat '$hash_path'`;
+		my $sum = `cat < '$hash_path'`;
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
@@ -320,7 +320,7 @@ if (-f "$target/$filename") {
 			die "Failed to generate hash for $filename\n";
 		}
 
-		my $sum = `cat '$hash_path'`;
+		my $sum = `cat < '$hash_path'`;
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
