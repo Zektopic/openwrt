@@ -136,11 +136,10 @@ sub parsePartitionEntry {
     ($name, $flash_base, $dummy_long, $size, $dummy_long, $dummy_long, $padding, $dummy_long, $dummy_long) =
 	unpack("a16N5a212N2",$partition_entry);
 
-    # A partition entry starting with 0xFF terminates the table.
+    # A partition entry starting with 0xFF is empty/skipped.
     if (unpack("C", $name) eq 0xff) {
-	# %%% FIXME: This should only skip, not terminate. %%%
-	$debug and print "Found terminator for <FIS directory>\n";
-	return 0;
+	$debug and print "Found skipped entry for <FIS directory>\n";
+	return undef;
     }
 
     # Remove trailing nulls from the partition name.
@@ -177,13 +176,14 @@ sub findPartitionTable {
 sub parsePartitionTable {
     my($partition_table) = @_;
 
-    my(@partitions, $fields_ref);
+    my(@partitions);
     my($entry_len) = 0x100;
-    my($partition_count) = 0;
 
     # Loop through the fixed size partition table entries, and store the entries in @partitions.
-    # %%% FIXME: This doesn't handle the case of a completely full partition table. %%%
-    while ($fields_ref = parsePartitionEntry(substr($partition_table, $partition_count * $entry_len, $entry_len))) {
+    for (my $offset = 0; $offset + $entry_len <= length($partition_table); $offset += $entry_len) {
+	my $fields_ref = parsePartitionEntry(substr($partition_table, $offset, $entry_len));
+	next unless defined $fields_ref;
+
 	$debug and printf("Found <%s> at 0x%08X (%s)%s\n", $fields_ref->[0], $fields_ref->[1],
 			  ($fields_ref->[2] >= $block_size ?
 			   sprintf("%d blocks", numBlocks($fields_ref->[2])) :
@@ -194,7 +194,7 @@ sub parsePartitionTable {
 					map { sprintf("0x%05X/0x%05X", $_->{'offset'},$_->{'size'}) }
 					@{$fields_ref->[3]})) :
 			   ""));
-	$partitions[$partition_count++] = $fields_ref;
+	push(@partitions, $fields_ref);
     }
     return(@partitions);
 }
