@@ -50,8 +50,12 @@ def parse_apk(text: str) -> dict:
     for package in data:
         package_name: str = package["name"]
 
-        if "tags" in package:
-            for tag in package["tags"]:
+        # Optimization: use simple `.get("tags")` which defaults to None. This is a
+        # highly-optimized single C-level lookup, avoiding the two slower Python-level
+        # hash lookups required by an `in` check plus index access.
+        tags = package.get("tags")
+        if tags:
+            for tag in tags:
                 if tag.startswith("openwrt:abiversion="):
                     # string slicing is faster than split
                     package_abi: str = tag[19:]
