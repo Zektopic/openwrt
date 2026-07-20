@@ -176,3 +176,7 @@
 **Vulnerability:** Shell option injection via `cat` command in `scripts/download.pl`.
 **Learning:** Using `cat $file | cmd` where `$file` is a dynamic variable can lead to option injection if the filename starts with a hyphen (e.g., `-n`), causing `cat` to interpret it as a flag.
 **Prevention:** Always use shell input redirection (`cmd < $file`) instead of piping `cat`, which ensures the shell strictly interprets the string as a file path.
+## 2024-07-20 - Missing global regex flag in shell quote escape allows command injection
+**Vulnerability:** Shell command injection via feed name containing multiple single quotes in `scripts/feeds`.
+**Learning:** Perl's regex substitution (`s/'/'\\''/`) requires the `/g` flag to replace *all* occurrences. Without it, only the first quote is escaped, allowing subsequent quotes in user input to break out of single-quoted shell strings.
+**Prevention:** Always use the `/g` flag when globally replacing shell escape characters in Perl (`s/'/'\\''/g`).
