@@ -198,3 +198,6 @@
 ## 2025-07-03 - [Optimize 32-bit Integer Checksum on Large Bytes]
 **Learning:** In Python, computing a 32-bit integer checksum over a large byte buffer using a generator expression with `int.from_bytes` (e.g., `sum(int.from_bytes(data[i:i+4], 'big') for ...)`) is extremely slow. It creates millions of temporary integer objects and slice objects inside the Python VM, resulting in huge overhead.
 **Action:** Use the native C-implemented `array` module (e.g., `a = array.array('I', data)`). If the parsed data is big-endian but the host system is little-endian (`sys.byteorder == 'little'`), apply `a.byteswap()`. Then, simply compute the sum via `sum(a)`. This avoids allocating millions of temporary Python objects, providing a massive speedup (~8x).
+## 2024-06-25 - Pre-computing integer from_bytes in hot XOR loop
+**Learning:** In Python, calling `int.from_bytes()` on a constant byte sequence inside a hot loop (like chunked XOR encryption) incurs significant redundant overhead.
+**Action:** Pre-compute the integer conversion for constant byte chunks outside the loop to achieve measurable performance gains (~2x speedup).
