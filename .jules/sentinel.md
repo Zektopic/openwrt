@@ -181,3 +181,8 @@
 **Vulnerability:** A missing global `/g` flag in a Perl regex replacement used to escape single quotes (`s/'/'\\''/`) allowed subsequent single quotes to bypass escaping, leading to command injection when the result was interpolated into a shell string.
 **Learning:** In Perl, string replacements are only applied to the first match by default. When escaping shell quotes, every instance of the target character must be escaped.
 **Prevention:** Always use the `/g` flag in Perl regex replacements when escaping characters to ensure the replacement is applied globally to the entire string.
+
+## 2024-07-20 - Missing global regex flag in shell quote escape allows command injection
+**Vulnerability:** Shell command injection via feed name containing multiple single quotes in `scripts/feeds`.
+**Learning:** Perl's regex substitution (`s/'/'\\''/`) requires the `/g` flag to replace *all* occurrences. Without it, only the first quote is escaped, allowing subsequent quotes in user input to break out of single-quoted shell strings.
+**Prevention:** Always use the `/g` flag when globally replacing shell escape characters in Perl (`s/'/'\\''/g`).
