@@ -1689,7 +1689,6 @@ static int atm_showtime_enter(struct port_cell_info *port_cell, void *xdata_addr
 		if ( g_atm_priv_data.conn[i].vcc != NULL )
 			set_qsb(g_atm_priv_data.conn[i].vcc, &g_atm_priv_data.conn[i].vcc->qos, i);
 
-	//  TODO: ReTX set xdata_addr
 	g_xdata_addr = xdata_addr;
 
 	g_showtime = 1;
