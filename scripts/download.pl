@@ -86,6 +86,12 @@ sub which($) {
 	return $res;
 }
 
+sub shell_quote {
+	my $str = shift;
+	$str =~ s/'/'\\''/g;
+	return "'$str'";
+}
+
 sub hash_cmd() {
 	my $len = length($file_hash);
 	my $cmd;
@@ -140,24 +146,27 @@ sub download_cmd {
 			shellwords($ENV{WGET_OPTIONS} || ''),
 			shell_quote($url));
 	} elsif ($download_tool eq "aria2c") {
-		my @quoted_mirrors = map { shell_quote("$_/$filename") } @_;
-		my $additional_mirrors = join(" ", @quoted_mirrors);
+		my $additional_mirrors = join(" ", map shell_quote("$_/$filename"), @_);
 		my @chArray = ('a'..'z', 'A'..'Z', 0..9);
 		my $rfn = join '', "${filename}_", map{ $chArray[int rand @chArray] } 0..9;
-		my $q_rfn = shell_quote($rfn);
+		my $sq_dir = shell_quote("$ENV{'TMPDIR'}/aria2c");
+		my $sq_spp = shell_quote("$ENV{'TMPDIR'}/aria2c/${rfn}_spp");
+		my $sq_rfn = shell_quote($rfn);
+		my $sq_rfn_path = shell_quote("$ENV{'TMPDIR'}/aria2c/$rfn");
+		my $sq_url = shell_quote($url);
 
 		@mirrors=();
 
-		return join(" ", "[ -d $ENV{'TMPDIR'}/aria2c ] || mkdir $ENV{'TMPDIR'}/aria2c;",
-			"touch $ENV{'TMPDIR'}/aria2c/${q_rfn}_spp;",
-			qw(aria2c --stderr -c -x2 -s10 -j10 -k1M), shell_quote($url), $additional_mirrors,
+		return join(" ", "[ -d $sq_dir ] || mkdir -p $sq_dir;",
+			"touch $sq_spp;",
+			qw(aria2c --stderr -c -x2 -s10 -j10 -k1M), $sq_url, $additional_mirrors,
 			$check_certificate ? () : '--check-certificate=false',
-			"--server-stat-of=$ENV{'TMPDIR'}/aria2c/${q_rfn}_spp",
-			"--server-stat-if=$ENV{'TMPDIR'}/aria2c/${q_rfn}_spp",
-			"--daemon=false --no-conf", shellwords($ENV{ARIA2C_OPTIONS} || ''),
-			"-d $ENV{'TMPDIR'}/aria2c -o $q_rfn;",
-			"cat $ENV{'TMPDIR'}/aria2c/$q_rfn;",
-			"rm $ENV{'TMPDIR'}/aria2c/$q_rfn $ENV{'TMPDIR'}/aria2c/${q_rfn}_spp");
+			"--server-stat-of=$sq_spp",
+			"--server-stat-if=$sq_spp",
+			"--daemon=false --no-conf", join(" ", map shell_quote($_), shellwords($ENV{ARIA2C_OPTIONS} || '')),
+			"-d $sq_dir -o $sq_rfn;",
+			"cat $sq_rfn_path;",
+			"rm -f $sq_rfn_path $sq_spp");
 	} else {
 		return join(" ", $download_tool, shell_quote($url));
 	}

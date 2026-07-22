@@ -172,7 +172,7 @@
 **Learning:** This is an option injection vulnerability rather than command injection because the user-controlled input (`$path` in this case) isn't being executed but is interpreted as a flag by the invoked binary (`cat`).
 **Prevention:** Avoid `cat $file | cmd` patterns. Use shell input redirection directly (`cmd < $file`) which forces the shell to treat the variable strictly as a file descriptor input, bypassing any flag parsing.
 
-## $(date +%Y-%m-%d) - Prevent Shell Option Injection in `download.pl`
-**Vulnerability:** Shell option injection via `cat` command in `scripts/download.pl`.
-**Learning:** Using `cat $file | cmd` where `$file` is a dynamic variable can lead to option injection if the filename starts with a hyphen (e.g., `-n`), causing `cat` to interpret it as a flag.
-**Prevention:** Always use shell input redirection (`cmd < $file`) instead of piping `cat`, which ensures the shell strictly interprets the string as a file path.
+## 2026-07-22 - Prevent command injection in scripts/download.pl
+**Vulnerability:** Shell command/option injection via `system("cat $path | ...")` and unsanitized parameters passed into `aria2c` shell command interpolation.
+**Learning:** Shell pipelines like `cat $path` are vulnerable to option injection if `$path` starts with a hyphen (e.g. `-n`). Variables concatenated directly into shell strings without proper escaping risk arbitrary command execution.
+**Prevention:** For file operations in shell wrappers, use input redirection (`< $path`) instead of `cat`. For shell string building, define a `shell_quote()` subroutine replacing `'` with `'\''` and wrapping in `'` for all user-supplied variables.
