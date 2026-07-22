@@ -213,3 +213,6 @@
 ## 2024-05-18 - Optimize redundant integer conversions in loops
 **Learning:** In Python, when performing chunked XOR operations inside a tight loop with a constant byte sequence, repeatedly calling `int.from_bytes()` on that constant incurs massive redundant object allocation overhead and significantly degrades performance.
 **Action:** Pre-compute the integer conversion outside the loop and reuse the integer directly for all operations inside the loop.
+## 2024-07-22 - Combine regex blacklist checking to avoid O(N*M) loop overhead
+**Learning:** Checking a large string list against multiple regular expressions iteratively inside a nested loop causes significant overhead in Python. The C regex engine natively optimizes OR-ed patterns.
+**Action:** Combine the list of regexes into a single combined regex using `"|".join(f"(?:{regex.pattern})"...)` before the loop, pushing the workload entirely into the C regex matching logic. Ensure dynamic arguments are processed first before compiling the combined regex.

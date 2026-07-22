@@ -296,22 +296,26 @@ def main(argv):
         print("Can't find build directory", builddir)
         return 1
 
+    if blacklist:
+        blacklist_regex = re.compile("|".join(f"(?:{regex.pattern})" for name, regex in blacklist))
+    else:
+        blacklist_regex = None
+
     # Create a directory listing and parse the file names.
     entries = []
     for direntry in os.scandir(directory):
         filename = direntry.name
         if filename == "." or filename == "..":
             continue
-        for (name, regex) in blacklist:
-            if regex.match(filename):
-                if opt_dryrun:
-                    print(filename, "is blacklisted")
-                break
-        else:
-            try:
-                entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
-            except EntryParseError as e:
-                pass
+        if blacklist_regex and blacklist_regex.match(filename):
+            if opt_dryrun:
+                print(filename, "is blacklisted")
+            continue
+
+        try:
+            entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
+        except EntryParseError as e:
+            pass
 
     # Create a map of programs
     # Optimization: collections.defaultdict(list) avoids creating an empty list
