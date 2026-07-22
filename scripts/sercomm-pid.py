@@ -105,4 +105,5 @@ def main():
 
 	create_pid_file(args)
 
-main()
+if __name__ == "__main__":
+	main()
