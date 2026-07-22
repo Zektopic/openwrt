@@ -935,7 +935,6 @@ static int ptm_showtime_enter(struct port_cell_info *port_cell, void *xdata_addr
 	ASSERT(port_cell != NULL, "port_cell is NULL");
 	ASSERT(xdata_addr != NULL, "xdata_addr is NULL");
 
-	//  TODO: ReTX set xdata_addr
 	g_xdata_addr = xdata_addr;
 
 	g_showtime = 1;
@@ -972,7 +971,6 @@ static int ptm_showtime_exit(void)
 
 	g_showtime = 0;
 
-	//  TODO: ReTX clean state
 	g_xdata_addr = NULL;
 
 	printk("leave showtime\n");
