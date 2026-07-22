@@ -216,7 +216,7 @@ sub update_feed_via($$$$$$$$) {
 
 	my $m = $update_method{$type};
 	my $safename = $name;
-	$safename =~ s/'/'\\''/;
+	$safename =~ s/'/'\\''/g;
 	my $localpath = "./feeds/$safename";
 	my $localpath_orig;
 	if (defined $flags->{'root'}) {
