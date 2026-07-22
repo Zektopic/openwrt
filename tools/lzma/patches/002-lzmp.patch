@@ -654,9 +654,6 @@
 +	if (filenames.empty()) {
 +		stdinput = true;
 +		stdoutput = true;
-+
-+		/* FIXME: get rid of this */
-+		filenames.push_back("-");
 +	}
 +
 +	/* Protection: always create new files with 0600 in order to prevent
@@ -664,8 +661,10 @@
 +	umask(0077);
 +
 +	bool warning = false;
++	int num_files = filenames.empty() ? 1 : filenames.size();
 +
-+	for (int i = 0; i < filenames.size(); i++) {
++	for (int i = 0; i < num_files; i++) {
++		string input_filename = filenames.empty() ? "-" : filenames[i];
 +		CMyComPtr<ISequentialInStream> inStream;
 +		CMyComPtr<ISequentialOutStream> outStream;
 +		UInt64 fileSize = 0;
@@ -685,11 +684,11 @@
 +			outhandle = STDOUT_FILENO;
 +		}
 +		else {
-+			mode_t infile_mode = get_file_mode(filenames[i]);
++			mode_t infile_mode = get_file_mode(input_filename);
 +			if (!S_ISREG(infile_mode)) {
 +				if (S_ISDIR(infile_mode)) {
 +					warning = true;
-+					cerr << argv[0] << ": " << filenames[i] << ": "
++					cerr << argv[0] << ": " << input_filename << ": "
 +						<< "cowardly refusing to work on directory"
 +						<< endl;
 +
@@ -699,7 +698,7 @@
 +					if (!stdoutput && !force) {
 +						warning = true;
 +
-+					cerr << argv[0] << ": " << filenames[i] << ": "
++					cerr << argv[0] << ": " << input_filename << ": "
 +							<< "cowardly refusing to work on symbolic link "
 +							<< "(use --force to force encoding or decoding)"
 +							<< endl;
@@ -710,7 +709,7 @@
 +				else {
 +					warning = true;
 +
-+					cerr << argv[0] << ": " << filenames[i] << ": "
++					cerr << argv[0] << ": " << input_filename << ": "
 +						<< "doesn't exist or is not a regular file"
 +						<< endl;
 +
@@ -720,11 +719,11 @@
 +
 +			// Test if the file already ends with *suffix.
 +			if (program_mode == PM_COMPRESS && !force
-+					&& string_ends_with(filenames[i],
++					&& string_ends_with(input_filename,
 +						suffix)) {
 +				warning = true;
 +
-+				cerr << filenames[i] << " already has "
++				cerr << input_filename << " already has "
 +					<< suffix << " suffix -- unchanged\n";
 +
 +				continue;
@@ -732,10 +731,10 @@
 +
 +			// Test if the file extension is known.
 +			if (program_mode == PM_DECOMPRESS
-+					&& !extension_is_known(filenames[i])) {
++					&& !extension_is_known(input_filename)) {
 +				warning = true;
 +
-+				cerr << filenames[i] << ": "
++				cerr << input_filename << ": "
 +					<< " unknown suffix -- unchanged"
 +					<< endl;
 +
@@ -743,7 +742,7 @@
 +			}
 +
 +			try {
-+				inhandle = open_instream(filenames[i], inStream, fileSize);
++				inhandle = open_instream(input_filename, inStream, fileSize);
 +			}
 +			catch (Exception e) {
 +				cerr << argv[0] << ": " << e.what() << endl;
@@ -762,9 +761,9 @@
 +				if (program_mode == PM_TEST)
 +					output_filename = "/dev/null";
 +				else if (program_mode == PM_DECOMPRESS)
-+					output_filename = replace_extension(filenames[i]);
++					output_filename = replace_extension(input_filename);
 +				else
-+					output_filename = filenames[i]
++					output_filename = input_filename
 +							+ suffix;
 +				archive_name = output_filename;
 +
@@ -862,12 +861,12 @@
 +			ret = futimes(outhandle, file_times);
 +
 +			if (!keep)
-+				unlink(filenames[i].c_str());
++				unlink(input_filename.c_str());
 +		}
 +
 +		if (verbosity > 0) {
 +			if (stdoutput) {
-+				cerr << filenames[i] << ":\t ";
++				cerr << input_filename << ":\t ";
 +				cerr << "decoded succesfully"
 +					<< endl;
 +			}
@@ -883,7 +882,7 @@
 +							(1 - get_ratio(inhandle, outhandle)) * 100);
 +
 +				string ratio = buf;
-+				cerr << pretty_print_status(filenames[i], output_filename,
++				cerr << pretty_print_status(input_filename, output_filename,
 +						ratio)
 +					<< endl;
 +			}
