@@ -209,3 +209,7 @@
 ## 2024-06-25 - Pre-computing integer from_bytes in hot XOR loop
 **Learning:** In Python, calling `int.from_bytes()` on a constant byte sequence inside a hot loop (like chunked XOR encryption) incurs significant redundant overhead.
 **Action:** Pre-compute the integer conversion for constant byte chunks outside the loop to achieve measurable performance gains (~2x speedup).
+
+## 2024-05-18 - Optimize redundant integer conversions in loops
+**Learning:** In Python, when performing chunked XOR operations inside a tight loop with a constant byte sequence, repeatedly calling `int.from_bytes()` on that constant incurs massive redundant object allocation overhead and significantly degrades performance.
+**Action:** Pre-compute the integer conversion outside the loop and reuse the integer directly for all operations inside the loop.
