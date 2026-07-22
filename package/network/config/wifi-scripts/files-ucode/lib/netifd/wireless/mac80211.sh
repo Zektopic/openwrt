@@ -70,9 +70,10 @@ function setup_phy(phy, config, data) {
 	config.channel = +config.channel;
 	config.frequency = get_channel_frequency(config.band, config.channel);
 
-	if (config.country) {
-		log(`Setting country code to ${config.country}`);
-		system([ "iw", "reg", "set", config.country ]);
+	let country = config.country_code || config.country;
+	if (country) {
+		log(`Setting country code to ${country}`);
+		system([ "iw", "reg", "set", country ]);
 	}
 
 	set_default(config, 'rxantenna', 0xffffffff);
@@ -83,7 +84,9 @@ function setup_phy(phy, config, data) {
 	if (config.rxantenna == 'all')
 		config.rxantenna = 0xffffffff;
 
-	if (config.txantenna != data?.txantenna || config.rxantenna != data?.rxantenna)
+	let antenna_changed = (config.txantenna != data?.txantenna || config.rxantenna != data?.rxantenna);
+
+	if (antenna_changed)
 		reset_config(phy, config.radio);
 
 	netifd.set_data({
@@ -98,8 +101,11 @@ function setup_phy(phy, config, data) {
 	else
 		config.txpower = 'auto';
 
-	log(`Configuring '${phy}' txantenna: ${config.txantenna}, rxantenna: ${config.rxantenna} distance: ${config.distance}`);
-	system([ "iw", "phy", phy, "set", "antenna", config.txantenna, config.rxantenna ]);
+	log(`Configuring '${phy}' distance: ${config.distance}`);
+	if (antenna_changed) {
+		log(`Setting antenna for '${phy}' txantenna: ${config.txantenna}, rxantenna: ${config.rxantenna}`);
+		system([ "iw", "phy", phy, "set", "antenna", config.txantenna, config.rxantenna ]);
+	}
 	system([ "iw", "phy", phy, "set", "distance", config.distance ]);
 
 	let txpower_args = split(config.txpower, ' ');
@@ -214,7 +220,7 @@ function setup() {
 		idx[mode] ??= 0;
 		let mode_idx = idx[mode]++;
 
-		if (!v.config.ifname) 
+		if (!v.config.ifname)
 			v.config.ifname = data.ifname_prefix + mode + mode_idx;
 		push(active_ifnames, v.config.ifname);
 
@@ -247,12 +253,13 @@ function setup() {
 				break;
 			// fallthrough
 		case 'mesh':
-			supplicant_mesh ??= !system("wpa_supplicant -vmesh");
+			supplicant_mesh ??= (fs.access('/usr/sbin/wpa_supplicant', 'x') && !system("/usr/sbin/wpa_supplicant -vmesh"));
 			if (mode == "mesh" && !supplicant_mesh)
 				break;
 			// fallthrough
 		case 'sta':
 			data.ap_start_disabled = true;
+			data.channel_follow = true;
 			let config = supplicant.generate(supplicant_data, data, v);
 			if (mode == "mesh")
 				config_add_mesh_params(config, v.config);

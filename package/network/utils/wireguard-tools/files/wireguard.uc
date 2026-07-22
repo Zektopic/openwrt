@@ -117,6 +117,8 @@ function proto_setup(proto) {
 	if (config.fwmark)
 		wg_config += sprintf('FwMark=%s\n', config.fwmark);
 
+	let metric = int(config.metric);
+
 	let ipv4_routes = [];
 	let ipv6_routes = [];
 
@@ -142,6 +144,8 @@ function proto_setup(proto) {
 				for (let allowed_ip in allowed_list) {
 					let addr_info = parse_address(allowed_ip);
 					let route = { target: addr_info.address, netmask: '' + addr_info.mask };
+					if (metric)
+						route.metric = metric;
 					if (addr_info.family == 6)
 						push(ipv6_routes, route);
 					else
