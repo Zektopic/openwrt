@@ -76,9 +76,6 @@ class TestSercommKernelHeader(unittest.TestCase):
             expected_header_crc = binascii.crc32(header_no_crc) & 0xffffffff
             self.assertEqual(struct.unpack_from('<L', header, 0x8)[0], expected_header_crc)
 
-    # def tearDown(self):
-        # if "sercomm_kernel_header" in sys.modules:
-            # del sys.modules["sercomm_kernel_header"]
     def test_get_kernel_header_with_rootfs(self):
         class DummyArgs:
             pass
