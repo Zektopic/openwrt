@@ -22,15 +22,18 @@ def xor(data: bytes) -> bytes:
     repeated_chunk = passphrase * 1024
 
     out = []
+    # ⚡ Bolt: Pre-computing the integer representation of the constant chunk outside
+    # the loop avoids massive redundant Python object allocation overhead on each iteration.
+    repeated_chunk_int = int.from_bytes(repeated_chunk, 'little')
     for i in range(0, len(data), chunk_size):
         chunk = data[i:i+chunk_size]
         if len(chunk) == chunk_size:
-            rep = repeated_chunk
+            xored = int.from_bytes(chunk, 'little') ^ repeated_chunk_int
         else:
             q, r = divmod(len(chunk), plen)
             rep = passphrase * q + passphrase[:r]
+            xored = int.from_bytes(chunk, 'little') ^ int.from_bytes(rep, 'little')
 
-        xored = int.from_bytes(chunk, 'little') ^ int.from_bytes(rep, 'little')
         out.append(xored.to_bytes(len(chunk), 'little'))
     return b''.join(out)
 
