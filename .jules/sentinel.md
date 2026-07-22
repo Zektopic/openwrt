@@ -176,3 +176,8 @@
 **Vulnerability:** Shell command/option injection via `system("cat $path | ...")` and unsanitized parameters passed into `aria2c` shell command interpolation.
 **Learning:** Shell pipelines like `cat $path` are vulnerable to option injection if `$path` starts with a hyphen (e.g. `-n`). Variables concatenated directly into shell strings without proper escaping risk arbitrary command execution.
 **Prevention:** For file operations in shell wrappers, use input redirection (`< $path`) instead of `cat`. For shell string building, define a `shell_quote()` subroutine replacing `'` with `'\''` and wrapping in `'` for all user-supplied variables.
+
+## 2024-05-24 - Missing global flag in shell quote escaping
+**Vulnerability:** A missing global `/g` flag in a Perl regex replacement used to escape single quotes (`s/'/'\\''/`) allowed subsequent single quotes to bypass escaping, leading to command injection when the result was interpolated into a shell string.
+**Learning:** In Perl, string replacements are only applied to the first match by default. When escaping shell quotes, every instance of the target character must be escaped.
+**Prevention:** Always use the `/g` flag in Perl regex replacements when escaping characters to ensure the replacement is applied globally to the entire string.
