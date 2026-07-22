@@ -157,7 +157,6 @@ public:
 
 		return ret;
 	}
-	// TODO: Implement paintCell
 
 	ConfigItem* nextItem;
 	struct menu *menu;
