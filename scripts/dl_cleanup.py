@@ -298,20 +298,21 @@ def main(argv):
 
     # Create a directory listing and parse the file names.
     entries = []
+    # ⚡ Bolt: Combine multiple regex patterns into a single OR-ed pattern for O(N) matching instead of O(N*M)
+    combined_blacklist_regex = re.compile('|'.join(f'(?:{regex.pattern})' for name, regex in blacklist)) if blacklist else None
+
     for direntry in os.scandir(directory):
         filename = direntry.name
         if filename == "." or filename == "..":
             continue
-        for (name, regex) in blacklist:
-            if regex.match(filename):
-                if opt_dryrun:
-                    print(filename, "is blacklisted")
-                break
-        else:
-            try:
-                entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
-            except EntryParseError as e:
-                pass
+        if combined_blacklist_regex and combined_blacklist_regex.match(filename):
+            if opt_dryrun:
+                print(filename, "is blacklisted")
+            continue
+        try:
+            entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
+        except EntryParseError as e:
+            pass
 
     # Create a map of programs
     # Optimization: collections.defaultdict(list) avoids creating an empty list
