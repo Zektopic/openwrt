@@ -182,20 +182,18 @@ class Entry:
 
     def getBuildPaths(self):
         if self.builddir not in Entry.builddir_subdirs_cache:
-            cache = {}
+            cache = collections.defaultdict(list)
             try:
-                for subdir in os.scandir(self.builddir):
-                    if subdir.is_dir():
-                        try:
-                            for pkg in os.scandir(subdir.path):
-                                if pkg.name not in cache:
-                                    cache[pkg.name] = []
-                                cache[pkg.name].append(pkg.path)
-                        except OSError:
-                            pass
+                subdirs = (d for d in os.scandir(self.builddir) if d.is_dir())
+                for subdir in subdirs:
+                    try:
+                        for pkg in os.scandir(subdir.path):
+                            cache[pkg.name].append(pkg.path)
+                    except OSError:
+                        pass
             except OSError:
                 pass
-            Entry.builddir_subdirs_cache[self.builddir] = cache
+            Entry.builddir_subdirs_cache[self.builddir] = dict(cache)
 
         if self.filenoext in Entry.builddir_subdirs_cache[self.builddir]:
             return Entry.builddir_subdirs_cache[self.builddir][self.filenoext]
