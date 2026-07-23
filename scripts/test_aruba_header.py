@@ -70,6 +70,40 @@ class TestArubaHeader(unittest.TestCase):
         total_sum = (sum(header_words) + sum(data_words)) % 0x100000000
         self.assertEqual(total_sum, 0)
 
+    def test_make_header_exact_bytes(self):
+        data = b'testdata'
+        build = 'build123'
+        version = '1.0.0'
+        oem = 'myoem'
+        imageType = self.aruba_header.ImageType.ELF
+        machineType = self.aruba_header.MACHINE_TYPES['MSWITCH']
+
+        header = self.aruba_header.make_header(data, build, version, oem, imageType, machineType)
+
+        expected_header = (
+            b'\x00\x00\x00\x08' +
+            b'\x00\x00\x00\x02' +
+            b'\xa1\x98\x87\xa5' +
+            b'ARUBA\x00\x00\x00' +
+            b'build123' + b'\x00' * 248 +
+            b'1.0.0' + b'\x00' * 19 +
+            b'\x01' +
+            b'\x00' +
+            b'\x00' +
+            b'\x00' +
+            b'\x00\x00\x00\x08' +
+            b'\x00\x00\x00\x00' +
+            b'\x00' * 16 +
+            b'\x00' * 4 +
+            b'\x00\x00\x00\x00' +
+            b'\x00' * 12 +
+            b'\x00' * 36 +
+            b'myoem' + b'\x00' * 27 +
+            b'\x00' * 96
+        )
+
+        self.assertEqual(header, expected_header)
+
     def test_make_header_too_long_strings(self):
         data = b'testdata'
 
