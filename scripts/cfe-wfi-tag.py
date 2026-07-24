@@ -77,7 +77,7 @@ def create_output(args):
     # avoiding loading the entire file into memory and reducing memory complexity to O(1).
     with open(args.output_file, "r+b") as f:
         while True:
-            chunk = f.read(65536)
+            chunk = f.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
             if not chunk:
                 break
             crc = binascii.crc32(chunk, crc)

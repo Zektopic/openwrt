@@ -116,7 +116,7 @@ write_buffer(os.SEEK_SET, buf)
 args.uimage_file.seek(args.rootfs_start)
 checksum = 0
 while True:
-    chunk = args.uimage_file.read(65536)
+    chunk = args.uimage_file.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
     if not chunk:
         break
     checksum = (checksum + sum(chunk)) % (1<<32)
