@@ -25,7 +25,7 @@ def create_output(args):
 		out_f.write(b'\x00' * 32)
 		with open(args.input_file, 'rb') as in_f:
 			while True:
-				chunk = in_f.read(65536)
+				chunk = in_f.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
 				if not chunk:
 					break
 				sha256.update(chunk)

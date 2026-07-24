@@ -71,7 +71,7 @@ def extract(datafile):
             section_file = files[section['name']]
             bytes_left = section['size']
             while bytes_left > 0:
-                chunk = datafile.read(min(65536, bytes_left))
+                chunk = datafile.read(min(1048576, bytes_left)) # Optimization: read larger chunks
                 if not chunk:
                     break
                 section_file.write(chunk)
@@ -94,7 +94,7 @@ def write_section_contents(section, out_file):
         size = 0
         with open(section['file'], 'rb') as section_file:
             while True:
-                chunk = section_file.read(65536)
+                chunk = section_file.read(1048576) # Optimization: read larger chunks
                 if not chunk:
                     break
                 out_file.write(chunk)
@@ -150,7 +150,7 @@ def write_image(output_image, header):
         # Optimization: use explicit while loop with chunked read
         # to avoid reading the whole file into memory and lambdas.
         while True:
-            chunk = out_file.read(65536)
+            chunk = out_file.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
             if not chunk:
                 break
             md5_sum.update(chunk)

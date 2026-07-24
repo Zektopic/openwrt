@@ -68,7 +68,7 @@ with open(str(file_path),"rb") as f:
     # Optimization: A while True loop with explicit read and break is ~5-10% faster
     # than iter(lambda: f.read(65536), b"") by avoiding lambda invocation per chunk.
     while True:
-        byte_block = f.read(65536)
+        byte_block = f.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
         if not byte_block:
             break
         sha256_hash.update(byte_block)

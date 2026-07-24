@@ -223,3 +223,6 @@
 **Learning:** When building a cache of nested directory structures during hot-path operations, manual dictionary initialization (`if key not in cache: cache[key] = []`) and nested `if` checks for directory filtering inside loops incur significant overhead.
 
 **Action:** For optimal performance, always replace manual dictionary check-and-insert with `collections.defaultdict(list)`. Furthermore, flatten directory filtering by using a generator expression (`subdirs = (d for d in os.scandir(...) if d.is_dir())`) before the inner loop. This reduces conditional branching and Python overhead inside the tight loop. Finally, cast the `defaultdict` back to a regular `dict` before caching if you need to prevent dynamic key creation on subsequent read operations.
+## 2026-07-24 - Optimize chunked file reads
+**Learning:** When performing checksums or hashes on large files in Python, using small read chunks (like 64KB) incurs excessive Python-level loop overhead.
+**Action:** Increase read chunks to 1MB (`1048576`) to significantly reduce the number of loop iterations and minimize interpreter overhead during hot path file processing.
