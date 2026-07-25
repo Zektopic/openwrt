@@ -232,3 +232,7 @@
 ## 2024-05-14 - Code Review Feedback Evaluation
 **Learning:** When evaluating automated code review feedback, be aware that the reviewer may base its analysis on outdated code snippets provided in the original task prompt rather than the current file contents on disk. For example, it claimed `img_hdr` was hallucinated in `DSL_DEV_PRIVATE`, but it actually exists and is actively used in the codebase (verified via `grep -n "img_hdr" package/kernel/lantiq/ltq-adsl-mei/src/drv_mei_cpe.c`).
 **Action:** Always verify reviewer claims (e.g., about return types, missing fields, or endianness) against the actual workspace code and disregard feedback that relies on demonstrably stale context.
+
+## 2024-05-18 - Caching `str.endswith` match to skip loops
+**Learning:** Python's `str.endswith()` accepts a tuple of strings and executes much faster in C than iterating over the same strings in a Python `for` loop. When the vast majority of checks fail (e.g., checking if an arbitrary file matches a known extension list), adding an initial `if filename.endswith(extensions):` guard can massively speed up processing by avoiding the slow Python loop entirely for non-matching strings.
+**Action:** Use `str.endswith(tuple)` as a fast C-level guard condition before falling back to a Python loop to determine *which* specific prefix/suffix matched, especially when non-matches are frequent.
