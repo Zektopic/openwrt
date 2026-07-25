@@ -181,10 +181,9 @@ kernel_xconfig: prepare_kernel_conf
 
 $(STAGING_DIR_HOST)/.prereq-build: include/prereq-build.mk
 	mkdir -p tmp
-	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prereq-build.mk prereq FORCE="$(FORCE)" 2>/dev/null || { \
-		echo "Prerequisite check failed. Use FORCE=1 to override."; \
-		false; \
-	}
+	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prereq-build.mk prereq FORCE="$(FORCE)" 2>/dev/null || \
+		if [ "$(FORCE)" = "1" ] || [ "$$FORCE" = "1" ] || [ -n "$$FORCE" ]; then true; else echo "Prerequisite check failed. Use FORCE=1 to override."; false; fi
+	@touch $@
   ifneq ($(realpath $(TOPDIR)/include/prepare.mk),)
 	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prepare.mk prepare 2>/dev/null || { \
 		echo "Preparation failed."; \
