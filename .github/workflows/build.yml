@@ -136,7 +136,7 @@ jobs:
 
       - name: Fix permission
         run: |
-          chown -R buildbot:buildbot openwrt
+          sudo chown -R buildbot:buildbot openwrt
 
       - name: Initialization environment
         run: |
