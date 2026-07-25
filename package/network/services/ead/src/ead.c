@@ -995,7 +995,7 @@ int main(int argc, char **argv)
 		unlink(pidfile);
 		fd = open(pidfile, O_CREAT|O_WRONLY|O_EXCL, 0644);
 		if (fd > 0) {
-			len = sprintf(pid, "%d\n", getpid());
+			len = snprintf(pid, sizeof(pid), "%d\n", getpid());
 			write(fd, pid, len);
 			close(fd);
 		}
