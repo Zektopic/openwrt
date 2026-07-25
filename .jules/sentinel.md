@@ -186,3 +186,7 @@
 **Vulnerability:** Shell command injection via feed name containing multiple single quotes in `scripts/feeds`.
 **Learning:** Perl's regex substitution (`s/'/'\\''/`) requires the `/g` flag to replace *all* occurrences. Without it, only the first quote is escaped, allowing subsequent quotes in user input to break out of single-quoted shell strings.
 **Prevention:** Always use the `/g` flag when globally replacing shell escape characters in Perl (`s/'/'\\''/g`).
+## 2024-07-25 - Fix command injection in checkpatch.pl
+**Vulnerability:** Command injection due to unsanitized filenames being interpolated into shell commands.
+**Learning:** In Perl, using backticks or 2-argument `open()` with user-controlled input can execute arbitrary shell commands.
+**Prevention:** Always use the list-form of `open()` to pass arguments directly to the program, bypassing the shell.
