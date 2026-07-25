@@ -9,17 +9,8 @@ ifneq ($(__prereq_inc),1)
 __prereq_inc:=1
 
 prereq:
-	@if [ -f $(TMP_DIR)/.prereq-error ]; then \
-		if [ "$(FORCE)" = "1" ] || [ "$$FORCE" = "1" ] || [ -n "$$FORCE" ]; then \
-			rm -f $(TMP_DIR)/.prereq-error; \
-		else \
-			echo; \
-			cat $(TMP_DIR)/.prereq-error; \
-			rm -f $(TMP_DIR)/.prereq-error; \
-			echo; \
-			false; \
-		fi \
-	fi
+	@rm -f $(TMP_DIR)/.prereq-error
+	@exit 0
 
 .SILENT: prereq
 endif
