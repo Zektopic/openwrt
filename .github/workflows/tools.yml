@@ -108,7 +108,7 @@ jobs:
 
       - name: Fix permission
         run: |
-          sudo chown -R buildbot:buildbot openwrt
+          chown -R buildbot:buildbot openwrt
 
       - name: Set configs for tools container
         if: github.event_name == 'push'
