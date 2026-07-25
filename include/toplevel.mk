@@ -55,6 +55,7 @@ export PATH:=$(path)
 export STAGING_DIR_HOST:=$(if $(STAGING_DIR),$(abspath $(STAGING_DIR)/../host),$(TOPDIR)/staging_dir/host)
 
 unexport TAR_OPTIONS
+export FORCE
 
 ifeq ($(FORCE),)
   .config scripts/config/conf scripts/config/mconf: $(STAGING_DIR_HOST)/.prereq-build
