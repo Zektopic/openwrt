@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/CPP/7zip/Compress/LZMA_Alone/lzmp.cpp
-@@ -0,0 +1,895 @@
+@@ -0,0 +1,894 @@
 +/*
 + * LZMA command line tool similar to gzip to encode and decode LZMA files.
 + *

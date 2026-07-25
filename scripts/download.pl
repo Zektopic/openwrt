@@ -139,12 +139,12 @@ sub download_cmd {
 		return (qw(curl -f --connect-timeout 5 --retry 3 --location),
 			$check_certificate ? () : '--insecure',
 			shellwords($ENV{CURL_OPTIONS} || ''),
-			shell_quote($url));
+			$url);
 	} elsif ($download_tool eq "wget") {
 		return (qw(wget --tries=3 --timeout=5 --output-document=-),
 			$check_certificate ? () : '--no-check-certificate',
 			shellwords($ENV{WGET_OPTIONS} || ''),
-			shell_quote($url));
+			$url);
 	} elsif ($download_tool eq "aria2c") {
 		my $additional_mirrors = join(" ", map shell_quote("$_/$filename"), @_);
 		my @chArray = ('a'..'z', 'A'..'Z', 0..9);
@@ -153,7 +153,7 @@ sub download_cmd {
 		my $sq_spp = shell_quote("$ENV{'TMPDIR'}/aria2c/${rfn}_spp");
 		my $sq_rfn = shell_quote($rfn);
 		my $sq_rfn_path = shell_quote("$ENV{'TMPDIR'}/aria2c/$rfn");
-		my $sq_url = shell_quote($url);
+		my $sq_url = $url;
 
 		@mirrors=();
 
@@ -168,7 +168,7 @@ sub download_cmd {
 			"cat $sq_rfn_path;",
 			"rm -f $sq_rfn_path $sq_spp");
 	} else {
-		return join(" ", $download_tool, shell_quote($url));
+		return join(" ", $download_tool, $url);
 	}
 }
 
