@@ -229,3 +229,6 @@
 ## 2024-07-25 - [Optimize chunked file reads]
 **Learning:** When performing checksums or hashes on large files in Python, using small read chunks (like 64KB) incurs excessive Python-level loop overhead.
 **Action:** Increase read chunks to 1MB (`1048576`) to significantly reduce the number of loop iterations and minimize interpreter overhead during hot path file processing.
+## 2024-05-14 - Code Review Feedback Evaluation
+**Learning:** When evaluating automated code review feedback, be aware that the reviewer may base its analysis on outdated code snippets provided in the original task prompt rather than the current file contents on disk. For example, it claimed `img_hdr` was hallucinated in `DSL_DEV_PRIVATE`, but it actually exists and is actively used in the codebase (verified via `grep -n "img_hdr" package/kernel/lantiq/ltq-adsl-mei/src/drv_mei_cpe.c`).
+**Action:** Always verify reviewer claims (e.g., about return types, missing fields, or endianness) against the actual workspace code and disregard feedback that relies on demonstrably stale context.

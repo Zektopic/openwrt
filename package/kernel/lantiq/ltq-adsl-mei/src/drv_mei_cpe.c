@@ -45,6 +45,7 @@
 #include <linux/sched.h>
 #include <linux/platform_device.h>
 #include <asm/uaccess.h>
+#include <linux/crc32.h>
 #include <asm/hardirq.h>
 
 #include "lantiq_atm.h"
@@ -1309,8 +1310,21 @@ IFX_MEI_RunAdslModem (DSL_DEV_Device_t *pDev)
 		IFX_MEI_EMSG ("Firmware download is not completed. Please download firmware again!\n");
 		return DSL_DEV_MEI_ERR_FAILURE;
 	}
-	// TODO: check crc
-	///
+
+	{
+		u32 crc = ~0;
+		for (idx = 0; idx < MAX_BAR_REGISTERS; idx++) {
+			if (DSL_DEV_PRIVATE(pDev)->adsl_mem_info[idx].nCopy > 0) {
+				crc = crc32_le(crc, (unsigned char *)DSL_DEV_PRIVATE(pDev)->adsl_mem_info[idx].address,
+					    DSL_DEV_PRIVATE(pDev)->adsl_mem_info[idx].nCopy);
+			}
+		}
+		crc = ~crc;
+		if (crc != le32_to_cpu(DSL_DEV_PRIVATE(pDev)->img_hdr->checksum)) {
+			IFX_MEI_EMSG("CRC mismatch! Calculated: 0x%08x, Expected: 0x%08x\n", crc, le32_to_cpu(DSL_DEV_PRIVATE(pDev)->img_hdr->checksum));
+			return DSL_DEV_MEI_ERR_FAILURE;
+		}
+	}
 
 	IFX_MEI_ResetARC (pDev);
 	IFX_MEI_HaltArc (pDev);
