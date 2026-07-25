@@ -103,7 +103,7 @@ if __name__ == '__main__':
     crc = 0xffffffff
     size = 0
     while True:
-        chunk = args.source.read(65536)
+        chunk = args.source.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
         if not chunk:
             break
         size += len(chunk)

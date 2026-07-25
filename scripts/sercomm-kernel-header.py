@@ -46,7 +46,7 @@ def get_kernel_header(args):
 		with open(args.rootfs_file, 'rb') as f:
 			bytes_left = rootfs_size
 			while bytes_left > 0:
-				chunk = f.read(min(65536, bytes_left))
+				chunk = f.read(min(1048576, bytes_left)) # Optimization: read larger chunks
 				if not chunk:
 					break
 				crc = binascii.crc32(chunk, crc)
@@ -70,7 +70,7 @@ def get_kernel_header(args):
 	crc = 0
 	with open(args.kernel_file, 'rb') as f:
 		while True:
-			chunk = f.read(65536)
+			chunk = f.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
 			if not chunk:
 				break
 			crc = binascii.crc32(chunk, crc)

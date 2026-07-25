@@ -64,7 +64,7 @@ def create_output(args):
     crc = 0
     with open(args.input_file, "rb") as in_f:
         while True:
-            chunk = in_f.read(65536)
+            chunk = in_f.read(1048576) # Optimization: read larger chunks to reduce Python loop overhead
             if not chunk:
                 break
             crc = binascii.crc32(chunk, crc)
