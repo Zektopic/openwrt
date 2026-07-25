@@ -53,6 +53,7 @@
 //#include "ifxmips_atm.h"
 #define IFX_MEI_BSP
 #include "ifxmips_mei_interface.h"
+#include <linux/crc32.h>
 
 /*#define LTQ_RCU_RST                   IFX_RCU_RST_REQ
 #define LTQ_RCU_RST_REQ_ARC_JTAG      IFX_RCU_RST_REQ_ARC_JTAG
