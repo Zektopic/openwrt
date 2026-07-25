@@ -88,7 +88,6 @@ jobs:
     timeout-minutes: 360
     needs: setup_build
     runs-on: ubuntu-latest
-    container: ghcr.io/${{ needs.setup_build.outputs.owner_lc }}/tools:${{ needs.setup_build.outputs.container_tag }}
     permissions:
       contents: read
       packages: read
