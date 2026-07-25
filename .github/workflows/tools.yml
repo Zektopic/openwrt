@@ -54,7 +54,7 @@ jobs:
             make \
             mpfr \
             ncurses \
-            openssl@1.1 \
+            openssl@3 \
             pcre \
             pkg-config \
             quilt \
