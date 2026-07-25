@@ -893,7 +893,11 @@ sub is_maintained_obsolete {
 	return 0 if (!$tree || !(-e "$root/scripts/get_maintainer.pl"));
 
 	if (!exists($maintained_status{$filename})) {
-		$maintained_status{$filename} = `perl $root/scripts/get_maintainer.pl --status --nom --nol --nogit --nogit-fallback -f $filename 2>&1`;
+		my @cmd = ("perl", "$root/scripts/get_maintainer.pl", "--status", "--nom", "--nol", "--nogit", "--nogit-fallback", "-f", $filename);
+		my $pid = open(my $fh, '-|', @cmd) or die "Failed to execute get_maintainer.pl: $!";
+		local $/;
+		$maintained_status{$filename} = <$fh>;
+		close $fh;
 	}
 
 	return $maintained_status{$filename} =~ /obsolete/i;
@@ -1042,15 +1046,15 @@ $allow_c99_comments = !defined $ignore_type{"C99_COMMENT_TOLERANCE"};
 for my $filename (@ARGV) {
 	my $FILE;
 	if ($git) {
-		open($FILE, '-|', "git format-patch -M --stdout -1 $filename") ||
+		open($FILE, '-|', "git", "format-patch", "-M", "--stdout", "-1", $filename) ||
 			die "$P: $filename: git format-patch failed - $!\n";
 	} elsif ($file) {
-		open($FILE, '-|', "diff -u /dev/null $filename") ||
+		open($FILE, '-|', "diff", "-u", "/dev/null", $filename) ||
 			die "$P: $filename: diff failed - $!\n";
 	} elsif ($filename eq '-') {
 		open($FILE, '<&STDIN');
 	} else {
-		open($FILE, '<', "$filename") ||
+		open($FILE, '<', $filename) ||
 			die "$P: $filename: open failed - $!\n";
 	}
 	if ($filename eq '-') {
