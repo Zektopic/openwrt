@@ -142,44 +142,46 @@ def make_header(data: bytes, build: str, version: str, oem: str, imageType: int,
     assert len(oemBytes) < LEN_OEM
     oemBytes += b'\0' * (LEN_OEM - len(oemBytes))
 
-    header = b''
-    # Payload size, image plus optional signature (which we don't use)
-    header += len(data).to_bytes(4, 'big')
-    # Use what appears to be the current version
-    header += FormatVersion.CURRENT.to_bytes(4, 'big')
-    # Checksum is computed later
-    header += b'\0\0\0\0'
-    # Vendor magic number
-    header += HEADER_MAGIC
-    # Long build information string
-    header += buildBytes
-    # Short version information string
-    header += versionBytes
-    # Image is valid
-    header += ValidFlag.YES.to_bytes(1, 'big')
-    # Image type
-    header += imageType.to_bytes(1, 'big')
-    # APBoot doesn't appear to actually support compression
-    header += CompressionType.NONE.to_bytes(1, 'big')
-    # Machine type
-    header += machine.to_bytes(1, 'big')
-    # Image size
-    header += len(data).to_bytes(4, 'big')
-    # Next header (we don't support signing)
-    header += NextHeader.NONE.to_bytes(4, 'big')
-    # MD5 checksum plus fudge factor (to ensure non-zero hash), appears unused
-    header += b'\0' * 16
-    header += b'\0' * 4
-    # No flags are set
-    header += int(0).to_bytes(4, 'big')
-    # No next header is used
-    header += b'\0' * 12
-    # Padding
-    header += b'\0' * 36
-    # OEM string
-    header += oemBytes
-    # Padding
-    header += b'\0' * 96
+    header_parts = [
+        # Payload size, image plus optional signature (which we don't use)
+        len(data).to_bytes(4, 'big'),
+        # Use what appears to be the current version
+        FormatVersion.CURRENT.to_bytes(4, 'big'),
+        # Checksum is computed later
+        b'\0\0\0\0',
+        # Vendor magic number
+        HEADER_MAGIC,
+        # Long build information string
+        buildBytes,
+        # Short version information string
+        versionBytes,
+        # Image is valid
+        ValidFlag.YES.to_bytes(1, 'big'),
+        # Image type
+        imageType.to_bytes(1, 'big'),
+        # APBoot doesn't appear to actually support compression
+        CompressionType.NONE.to_bytes(1, 'big'),
+        # Machine type
+        machine.to_bytes(1, 'big'),
+        # Image size
+        len(data).to_bytes(4, 'big'),
+        # Next header (we don't support signing)
+        NextHeader.NONE.to_bytes(4, 'big'),
+        # MD5 checksum plus fudge factor (to ensure non-zero hash), appears unused
+        b'\0' * 16,
+        b'\0' * 4,
+        # No flags are set
+        int(0).to_bytes(4, 'big'),
+        # No next header is used
+        b'\0' * 12,
+        # Padding
+        b'\0' * 36,
+        # OEM string
+        oemBytes,
+        # Padding
+        b'\0' * 96
+    ]
+    header = b''.join(header_parts)
 
     assert len(header) == 512
     assert len(data) % 4 == 0
