@@ -95,6 +95,12 @@ jobs:
       FORCE: 1
 
     steps:
+      - name: Create buildbot user
+        run: |
+          sudo useradd -m -s /bin/bash buildbot || true
+          echo "buildbot ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+          sudo chown -R buildbot:buildbot .
+
       - name: Checkout master directory
         uses: actions/checkout@v4
         with:
