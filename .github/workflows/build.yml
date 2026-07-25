@@ -91,6 +91,8 @@ jobs:
     permissions:
       contents: read
       packages: read
+    env:
+      FORCE: 1
 
     steps:
       - name: Checkout master directory
