@@ -37,9 +37,9 @@ jobs:
     strategy:
       fail-fast: False
       matrix:
-        include:
-          - target: malta/be
-          - target: x86/64
+        target:
+          - malta/be
+          - x86/64
     uses: ./.github/workflows/build.yml
     with:
       target: ${{ matrix.target }}
