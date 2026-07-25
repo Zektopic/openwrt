@@ -11,6 +11,10 @@ my $PATH = $ARGV[0];
 ($PATH and -d $PATH) or die 'invalid path';
 
 my %config;
+my %replace = (
+	'FEATURE_BUFFERS_USE_MALLOC' => 'FEATURE_BUFFERS_GO_ON_STACK',
+	'FEATURE_SH_IS_NONE' => 'FEATURE_SH_IS_ASH'
+);
 
 open FIND, "find \"$PATH\" -name Config.in |";
 while (<FIND>) {
@@ -29,9 +33,9 @@ while (<FIND>) {
 	while ($line = <INPUT>) {
 		next if $line =~ /^\s*mainmenu/;
 
-		# FIXME: make this dynamic
-		$line =~ s/default FEATURE_BUFFERS_USE_MALLOC/default FEATURE_BUFFERS_GO_ON_STACK/;
-		$line =~ s/default FEATURE_SH_IS_NONE/default FEATURE_SH_IS_ASH/;
+		foreach my $key (keys %replace) {
+			$line =~ s/default $key/default $replace{$key}/;
+		}
 
 		if ($line =~ /^\s*config\s*([\w_]+)/) {
 			$cur = $1;
