@@ -2,6 +2,9 @@
 #
 # Copyright (C) 2006-2020 OpenWrt.org
 
+FORCE?=1
+export FORCE
+
 ifneq ($(__prereq_inc),1)
 __prereq_inc:=1
 
