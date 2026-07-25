@@ -318,7 +318,7 @@ jobs:
           echo "CONFIG_TARGET_${{ env.TARGET }}=y" >> .config
           echo "CONFIG_TARGET_${{ env.TARGET }}_${{ env.SUBTARGET }}=y" >> .config
 
-          make defconfig
+          make FORCE=1 defconfig
       - name: Show configuration
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
@@ -329,32 +329,32 @@ jobs:
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
         run: |
-          make tools/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+          make FORCE=1 tools/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build toolchain
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
         run: |
-          make toolchain/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+          make FORCE=1 toolchain/install -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build Kernel
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
         run: |
-          make target/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+          make FORCE=1 target/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build Kernel Kmods
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
         run: |
-          make package/linux/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+          make FORCE=1 package/linux/compile -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Build everything
         if: inputs.build_full == true
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
         run: |
-          make -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+          make FORCE=1 -j$(($(nproc)+1)) --load-average=$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Upload logs
         if: failure()

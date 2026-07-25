@@ -76,11 +76,11 @@ jobs:
 
       - name: Make prereq
         working-directory: ${{ env.WORKPATH }}/openwrt
-        run: make defconfig
+        run: make FORCE=1 defconfig
 
       - name: Build tools MacOS
         working-directory: ${{ env.WORKPATH }}/openwrt
-        run: make tools/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make FORCE=1 tools/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Upload logs
         if: always()
@@ -122,12 +122,12 @@ jobs:
       - name: Make prereq
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make defconfig
+        run: make FORCE=1 defconfig
 
       - name: Build tools BuildBot Container
         shell: su buildbot -c "sh -e {0}"
         working-directory: openwrt
-        run: make tools/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+        run: make FORCE=1 tools/install -j$(nproc) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
 
       - name: Upload logs
         if: always()
