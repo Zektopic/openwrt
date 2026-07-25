@@ -229,3 +229,6 @@
 ## 2024-07-25 - [Optimize chunked file reads]
 **Learning:** When performing checksums or hashes on large files in Python, using small read chunks (like 64KB) incurs excessive Python-level loop overhead.
 **Action:** Increase read chunks to 1MB (`1048576`) to significantly reduce the number of loop iterations and minimize interpreter overhead during hot path file processing.
+## 2024-05-18 - Caching `str.endswith` match to skip loops
+**Learning:** Python's `str.endswith()` accepts a tuple of strings and executes much faster in C than iterating over the same strings in a Python `for` loop. When the vast majority of checks fail (e.g., checking if an arbitrary file matches a known extension list), adding an initial `if filename.endswith(extensions):` guard can massively speed up processing by avoiding the slow Python loop entirely for non-matching strings.
+**Action:** Use `str.endswith(tuple)` as a fast C-level guard condition before falling back to a Python loop to determine *which* specific prefix/suffix matched, especially when non-matches are frequent.

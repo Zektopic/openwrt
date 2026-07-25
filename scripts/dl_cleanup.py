@@ -154,16 +154,16 @@ class Entry:
 
         if self.is_dir:
             self.filenoext = filename
-        else:
+        elif filename.endswith(extensions):
             for ext in extensions:
                 if filename.endswith(ext):
                     filename = filename[0 : 0 - len(ext)]
                     self.filenoext = filename
                     self.fileext = ext
                     break
-            else:
-                print(self.filename, "has an unknown file-extension")
-                raise EntryParseError("ext")
+        else:
+            print(self.filename, "has an unknown file-extension")
+            raise EntryParseError("ext")
         for (regex, parseVersion) in versionRegex:
             match = regex.match(filename)
             if match:
