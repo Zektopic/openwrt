@@ -34,7 +34,7 @@ check "No unresolved merge conflicts" \
 echo ""
 echo "--- Conflict Marker Check ---"
 check "No <<<<<<< markers in source files" \
-    test -z "$(git grep -l '<<<<<<<' -- ':!.gitignore' 2>/dev/null)"
+    test -z "$(git grep -l '<<<<<<<' -- ':!.gitignore' ':!.zektopic' 2>/dev/null)"
 
 # 3. Check wireguard security fix
 echo ""
