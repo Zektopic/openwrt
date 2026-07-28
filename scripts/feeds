@@ -229,7 +229,7 @@ sub update_feed_via($$$$$$$$) {
 
 	if( $relocate || !$m->{'update'} || !-d "$localpath/$m->{'controldir'}" ) {
 		if (defined $flags->{'root'}) {
-			system("rm -rf $localpath_orig; ln -s $safename/$flags->{'root'} $localpath_orig");
+			system("rm -rf '$localpath_orig'; ln -s '$safename/$flags->{'root'}' '$localpath_orig'");
 		}
 		system("rm -rf '$localpath'");
 		if ($m->{'init_branch'} and $branch) {
