@@ -14,7 +14,8 @@ sub get_ts($$) {
 	my $ts = 0;
 	my $fn = "";
 	$path .= "/" if( -d $path);
-	open FIND, "find $path -type f -and -not -path \\*/.svn\\* -and -not -path \\*CVS\\* $options 2>/dev/null |";
+	$path =~ s/'/'\\''/g;
+	open FIND, "find '$path' -type f -and -not -path \\*/.svn\\* -and -not -path \\*CVS\\* $options 2>/dev/null |";
 	while (<FIND>) {
 		chomp;
 		my $file = $_;
