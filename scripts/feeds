@@ -229,15 +229,27 @@ sub update_feed_via($$$$$$$$) {
 
 	if( $relocate || !$m->{'update'} || !-d "$localpath/$m->{'controldir'}" ) {
 		if (defined $flags->{'root'}) {
-			system("rm -rf '$localpath_orig'; ln -s '$safename/$flags->{'root'}' '$localpath_orig'");
+			my $root = $flags->{'root'};
+			$root =~ s/'/'\\''/g;
+			system("rm -rf '$localpath_orig'; ln -s '$safename/$root' '$localpath_orig'");
 		}
 		system("rm -rf '$localpath'");
 		if ($m->{'init_branch'} and $branch) {
-			system(sprintf($m->{'init_branch'}, $branch, $base_branch, $localpath)) == 0 or return 1;
+			my $escaped_branch = $branch;
+			$escaped_branch =~ s/'/'\\''/g;
+			my $escaped_base_branch = $base_branch;
+			$escaped_base_branch =~ s/'/'\\''/g;
+			system(sprintf($m->{'init_branch'}, $escaped_branch, $escaped_base_branch, $localpath)) == 0 or return 1;
 		} elsif ($m->{'init_commit'} and $commit) {
-			system(sprintf($m->{'init_commit'}, $base_commit, $localpath, $localpath, $commit, $commit)) == 0 or return 1;
+			my $escaped_commit = $commit;
+			$escaped_commit =~ s/'/'\\''/g;
+			my $escaped_base_commit = $base_commit;
+			$escaped_base_commit =~ s/'/'\\''/g;
+			system(sprintf($m->{'init_commit'}, $escaped_base_commit, $localpath, $localpath, $escaped_commit, $escaped_commit)) == 0 or return 1;
 		} else {
-			system(sprintf($m->{'init'}, $src, $localpath)) == 0 or return 1;
+			my $escaped_src = $src;
+			$escaped_src =~ s/'/'\\''/g;
+			system(sprintf($m->{'init'}, $escaped_src, $localpath)) == 0 or return 1;
 		}
 	} elsif ($m->{'init_commit'} and $commit) {
 		# in case git hash has been provided don't update the feed
