@@ -195,9 +195,8 @@ class Entry:
                 pass
             Entry.builddir_subdirs_cache[self.builddir] = dict(cache)
 
-        if self.filenoext in Entry.builddir_subdirs_cache[self.builddir]:
-            return Entry.builddir_subdirs_cache[self.builddir][self.filenoext]
-        return []
+        # Optimization: use single .get() lookup instead of 'if in' and then index lookup
+        return Entry.builddir_subdirs_cache[self.builddir].get(self.filenoext, [])
 
     def deleteFile(self):
         path = self.getPath()
