@@ -190,3 +190,7 @@
 **Vulnerability:** Command injection due to unsanitized filenames being interpolated into shell commands.
 **Learning:** In Perl, using backticks or 2-argument `open()` with user-controlled input can execute arbitrary shell commands.
 **Prevention:** Always use the list-form of `open()` to pass arguments directly to the program, bypassing the shell.
+## 2026-07-31 - Fix command injection in scripts/dump-target-info.pl
+**Vulnerability:** Command injection was present in `scripts/dump-target-info.pl` where user-controlled input (`$subtarget` derived from `ARGV[1]`) was interpolated directly into a piped `open(M, "make -C '$target_dir' ... SUBTARGET='$subtarget' |")` call. By supplying a string like `foo'; id; #`, an attacker could execute arbitrary commands.
+**Learning:** In Perl, the 2-argument form of `open` with a trailing pipe (e.g., `open(..., "... |")`) invokes a shell (`/bin/sh -c`) to evaluate the command string. Single quotes do not prevent command injection if the variable itself can contain single quotes (e.g., `'; cmd; '`).
+**Prevention:** Always implement and use a robust `shell_quote` subroutine (e.g., `$str =~ s/'/'\\''/g; return "'$str'";`) for every variable interpolated into a shell string, or prefer the multi-argument form of `open` (`open(my $fh, '-|', @cmd)`) when possible to bypass the shell entirely.
