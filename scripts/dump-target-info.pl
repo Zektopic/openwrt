@@ -9,10 +9,16 @@ my (%targets, %architectures, %kernels, %devices);
 $ENV{'TOPDIR'} = Cwd::getcwd();
 
 
+sub shell_quote {
+	my $str = shift;
+	$str =~ s/'/'\\''/g;
+	return "'$str'";
+}
+
 sub parse_targetinfo {
 	my ($target_dir, $subtarget) = @_;
 
-	if (open M, "make -C '$target_dir' --no-print-directory DUMP=1 TARGET_BUILD=1 SUBTARGET='$subtarget' |") {
+	if (open M, "make -C " . shell_quote($target_dir) . " --no-print-directory DUMP=1 TARGET_BUILD=1 SUBTARGET=" . shell_quote($subtarget) . " |") {
 		my ($target_name, $target_arch, $target_kernel, $target_testing_kernel, @target_features);
 		while (defined(my $line = readline M)) {
 			chomp $line;
@@ -59,7 +65,7 @@ sub parse_targetinfo {
 sub parse_devices {
 	my ($target_dir, $subtarget) = @_;
 
-	if (open M, "make -C '$target_dir' --no-print-directory DUMP=1 TARGET_BUILD=1 SUBTARGET='$subtarget' V=s |") {
+	if (open M, "make -C " . shell_quote($target_dir) . " --no-print-directory DUMP=1 TARGET_BUILD=1 SUBTARGET=" . shell_quote($subtarget) . " V=s |") {
 		my ($device_profile, $device_name, @device_alt_names, $device_is_alt);
 		while (defined(my $line = readline M)) {
 			chomp $line;
@@ -123,7 +129,7 @@ sub get_targetinfo {
 		my ($target_dir) = $target_makefile =~ m!^(.+)/Makefile$!;
 		my @subtargets;
 
-		if (open M, "make -C '$target_dir' --no-print-directory DUMP=1 TARGET_BUILD=1 val.FEATURES V=s 2>/dev/null |") {
+		if (open M, "make -C " . shell_quote($target_dir) . " --no-print-directory DUMP=1 TARGET_BUILD=1 val.FEATURES V=s 2>/dev/null |") {
 			if (defined(my $line = readline M)) {
 				chomp $line;
 				if (grep { $_ eq 'broken' or $_ eq 'source-only' } split /\s+/, $line) {
@@ -132,7 +138,7 @@ sub get_targetinfo {
 			}
 		}
 
-		if (open M, "make -C '$target_dir' --no-print-directory DUMP=1 TARGET_BUILD=1 val.SUBTARGETS V=s 2>/dev/null |") {
+		if (open M, "make -C " . shell_quote($target_dir) . " --no-print-directory DUMP=1 TARGET_BUILD=1 val.SUBTARGETS V=s 2>/dev/null |") {
 			if (defined(my $line = readline M)) {
 				chomp $line;
 				@subtargets = split /\s+/, $line;
