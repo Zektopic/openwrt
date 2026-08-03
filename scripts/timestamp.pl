@@ -38,6 +38,7 @@ while (@ARGV > 0) {
 	my $path = shift @ARGV;
 	if ($path =~ /^-x/) {
 		my $str = shift @ARGV;
+		$str =~ s/'/'\\''/g;
 		$options{"findopts"} .= " -and -not -path '".$str."'"
 	} elsif ($path =~ /^-f/) {
 		$options{"findopts"} .= " -follow";
