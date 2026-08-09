@@ -59,8 +59,9 @@ def main():
         encryptor = cipher.encryptor()
         return encryptor.update(chunk) + encryptor.finalize()
 
-    with ThreadPoolExecutor() as executor:
-        image_enc = b''.join(executor.map(encrypt_chunk, chunks))
+    # ⚡ Bolt: Removed ThreadPoolExecutor overhead for sequential generator expression,
+    # significantly speeding up processing of many small chunks.
+    image_enc = b''.join(encrypt_chunk(c) for c in chunks)
 
     image_with_header = struct.pack(
         '>32s32s64s64sIBBB13s200s100s12sII',
