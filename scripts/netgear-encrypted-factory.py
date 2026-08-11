@@ -6,7 +6,6 @@ import struct
 import zlib
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-from concurrent.futures import ThreadPoolExecutor
 
 
 def main():
@@ -59,8 +58,10 @@ def main():
         encryptor = cipher.encryptor()
         return encryptor.update(chunk) + encryptor.finalize()
 
-    with ThreadPoolExecutor() as executor:
-        image_enc = b''.join(executor.map(encrypt_chunk, chunks))
+    # Optimization: Sequential generator expression avoids ThreadPool overhead
+    # which outweighs parallelization benefits when processing small chunks
+    # with C-optimized libraries like cryptography.
+    image_enc = b''.join(encrypt_chunk(c) for c in chunks)
 
     image_with_header = struct.pack(
         '>32s32s64s64sIBBB13s200s100s12sII',
