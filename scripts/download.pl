@@ -86,12 +86,6 @@ sub which($) {
 	return $res;
 }
 
-sub shell_quote {
-	my $str = shift;
-	$str =~ s/'/'\\''/g;
-	return "'$str'";
-}
-
 sub hash_cmd() {
 	my $len = length($file_hash);
 	my $cmd;
@@ -153,7 +147,7 @@ sub download_cmd {
 		my $sq_spp = shell_quote("$ENV{'TMPDIR'}/aria2c/${rfn}_spp");
 		my $sq_rfn = shell_quote($rfn);
 		my $sq_rfn_path = shell_quote("$ENV{'TMPDIR'}/aria2c/$rfn");
-		my $sq_url = $url;
+		my $sq_url = shell_quote($url);
 
 		@mirrors=();
 
@@ -165,10 +159,10 @@ sub download_cmd {
 			"--server-stat-if=$sq_spp",
 			"--daemon=false --no-conf", join(" ", map shell_quote($_), shellwords($ENV{ARIA2C_OPTIONS} || '')),
 			"-d $sq_dir -o $sq_rfn;",
-			"cat $sq_rfn_path;",
+			"cat < $sq_rfn_path;",
 			"rm -f $sq_rfn_path $sq_spp");
 	} else {
-		return join(" ", $download_tool, $url);
+		return join(" ", $download_tool, shell_quote($url));
 	}
 }
 
