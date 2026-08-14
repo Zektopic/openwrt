@@ -236,3 +236,6 @@
 ## 2024-05-18 - Caching `str.endswith` match to skip loops
 **Learning:** Python's `str.endswith()` accepts a tuple of strings and executes much faster in C than iterating over the same strings in a Python `for` loop. When the vast majority of checks fail (e.g., checking if an arbitrary file matches a known extension list), adding an initial `if filename.endswith(extensions):` guard can massively speed up processing by avoiding the slow Python loop entirely for non-matching strings.
 **Action:** Use `str.endswith(tuple)` as a fast C-level guard condition before falling back to a Python loop to determine *which* specific prefix/suffix matched, especially when non-matches are frequent.
+## 2024-05-18 - [Optimize chunk encryption with sequential generator]
+**Learning:** For CPU-bound tasks in Python, especially those executing quickly (like AES encrypting typical firmware image chunks), multithreading using `ThreadPoolExecutor` often introduces more overhead (thread creation, context switching, GIL contention during Python-level operations) than it saves.
+**Action:** When performing chunked encryption where the AES operation itself is extremely fast, prefer a sequential generator expression (e.g. `b''.join(func(c) for c in chunks)`) over `ThreadPoolExecutor` to eliminate threading overhead and improve performance.
