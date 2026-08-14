@@ -236,7 +236,11 @@
 ## 2024-05-18 - Caching `str.endswith` match to skip loops
 **Learning:** Python's `str.endswith()` accepts a tuple of strings and executes much faster in C than iterating over the same strings in a Python `for` loop. When the vast majority of checks fail (e.g., checking if an arbitrary file matches a known extension list), adding an initial `if filename.endswith(extensions):` guard can massively speed up processing by avoiding the slow Python loop entirely for non-matching strings.
 **Action:** Use `str.endswith(tuple)` as a fast C-level guard condition before falling back to a Python loop to determine *which* specific prefix/suffix matched, especially when non-matches are frequent.
-
 ## 2026-08-09 - [Python Cryptography Chunk Processing]
 **Learning:** For C-bound cryptography operations (like AES encrypt) running on many small data chunks in Python, `ThreadPoolExecutor` incurs significant GIL/thread-management overhead that outweighs parallelization benefits. A sequential generator expression (`b''.join(func(c) for c in chunks)`) can be ~40-50% faster.
 **Action:** Prefer sequential execution over thread pools for processing numerous small chunks with fast C-extensions unless profiling explicitly shows a benefit.
+
+## 2024-08-11 - [Optimize threading overhead with Python cryptography Cipher]
+**Learning:** In Python, when processing numerous small chunks of data (e.g., encrypting 64KB blocks) using C-optimized libraries like `cryptography`, using `concurrent.futures.ThreadPoolExecutor` adds significant threading overhead. The thread pool setup, context switching, and GIL contention outweigh parallelization benefits for such short-lived CPU-bound tasks, making it much slower than sequential processing.
+**Action:** Replace `ThreadPoolExecutor.map()` with a sequential generator expression (e.g., `b''.join(func(c) for c in chunks)`) when iterating through numerous small chunks with highly-optimized C-backend libraries.
+
