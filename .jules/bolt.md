@@ -248,3 +248,7 @@
 **Learning:** In Python, when processing numerous small chunks of data (e.g., encrypting 64KB blocks) using C-optimized libraries like `cryptography`, using `concurrent.futures.ThreadPoolExecutor` adds significant thread overhead that outweighs the parallelization benefits, due to the Global Interpreter Lock (GIL) and fast C execution.
 **Action:** Replace `ThreadPoolExecutor` mapping with a sequential generator expression (e.g., `b''.join(func(c) for c in chunks)`) for significantly better performance in cryptographic chunk processing loops.
 
+## 2024-05-18 - [Optimize chunk encryption with sequential generator]
+**Learning:** For CPU-bound tasks in Python, especially those executing quickly (like AES encrypting typical firmware image chunks), multithreading using `ThreadPoolExecutor` often introduces more overhead (thread creation, context switching, GIL contention during Python-level operations) than it saves.
+**Action:** When performing chunked encryption where the AES operation itself is extremely fast, prefer a sequential generator expression (e.g. `b''.join(func(c) for c in chunks)`) over `ThreadPoolExecutor` to eliminate threading overhead and improve performance.
+
