@@ -33,12 +33,12 @@ def get_initial_output(image_info):
 # Pre-compile the regex to improve performance when called repeatedly in loops
 arch_regex = re.compile(r".*Linux-([^.]*)\.")
 
-def add_artifact(artifact, prefix="openwrt-"):
-    files = list(output_dir.glob(f"{prefix}{artifact}-*"))
-    if len(files):
+def add_artifact(artifact, dir_files, prefix="openwrt-"):
+    prefix_str = f"{prefix}{artifact}-"
+    files = [f for f in dir_files if f.startswith(prefix_str)]
+    if files:
         output[artifact] = {}
         for file in files:
-            file = str(file.name)
             # Optimization: Use pre-compiled regex for ~50% faster matching
             arch = arch_regex.match(file)
             if arch:
@@ -106,9 +106,12 @@ if output:
     if git_commit.returncode == 0:
         output["git_commit"] = git_commit.stdout.strip()
 
+    import os
+    dir_files = os.listdir(output_dir) if output_dir.is_dir() else []
+
     for artifact in "imagebuilder", "sdk", "toolchain":
-        filename = add_artifact(artifact)
-    add_artifact("llvm-bpf", prefix="")
+        filename = add_artifact(artifact, dir_files)
+    add_artifact("llvm-bpf", dir_files, prefix="")
 
     output_path.write_text(json.dumps(output, sort_keys=True, separators=(",", ":")))
 else:
