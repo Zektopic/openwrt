@@ -1,55 +1,120 @@
+import unittest
 import importlib.util
 import os
-import unittest
-from unittest.mock import patch, MagicMock
-
-# Load the module dynamically
-spec = importlib.util.spec_from_file_location("cfe_wfi_tag", "scripts/cfe-wfi-tag.py")
-cfe_wfi_tag = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(cfe_wfi_tag)
+import struct
+import tempfile
+import binascii
 
 class TestCfeWfiTag(unittest.TestCase):
-    def setUp(self):
-        self.args = MagicMock()
-        self.args.input_file = "input.bin"
-        self.args.output_file = "output.bin"
-        self.args.tag_version = 0x5732
-        self.args.chip_id = 0x6328
-        self.args.flash_type = 1
-        self.args.flags = 0
+    @classmethod
+    def setUpClass(cls):
+        # Load the module dynamically due to dashes in the filename
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cfe-wfi-tag.py")
+        spec = importlib.util.spec_from_file_location("cfe_wfi_tag", script_path)
+        cls.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.module)
 
-    @patch("shutil.copyfile")
-    @patch("builtins.open")
-    def test_create_output_ioerror(self, mock_open, mock_copyfile):
-        mock_open.side_effect = IOError("Mocked IOError")
-        with self.assertRaises(IOError):
-            cfe_wfi_tag.create_output(self.args)
+    def test_auto_int(self):
+        self.assertEqual(self.module.auto_int("0x10"), 16)
+        self.assertEqual(self.module.auto_int("10"), 10)
 
-    @patch("shutil.copyfile")
-    @patch("builtins.open")
-    def test_create_output_success(self, mock_open, mock_copyfile):
-        mock_file = MagicMock()
-        mock_open.return_value.__enter__.return_value = mock_file
-        mock_file.read.side_effect = [b"dummy data", b""]
+    def test_create_tag(self):
+        class Args:
+            tag_version = 0x00005732
+            chip_id = 0x00006328
+            flash_type = 2
+            flags = 1
 
-        cfe_wfi_tag.create_output(self.args)
+        args = Args()
+        crc = 0x12345678
 
-        mock_file.read.assert_called()
-        mock_file.write.assert_called()
+        tag = self.module.create_tag(args, crc)
 
-    @patch("shutil.copyfile")
-    @patch("builtins.open")
-    def test_create_output_same_file(self, mock_open, mock_copyfile):
-        self.args.input_file = "same.bin"
-        self.args.output_file = "same.bin"
+        expected_crc = ~crc & 0xFFFFFFFF
 
-        mock_file = MagicMock()
-        mock_open.return_value.__enter__.return_value = mock_file
-        mock_file.read.side_effect = [b"dummy data", b""]
+        self.assertEqual(len(tag), 20)
+        unpacked = struct.unpack(">IIIII", tag)
+        self.assertEqual(unpacked[0], expected_crc)
+        self.assertEqual(unpacked[1], args.tag_version)
+        self.assertEqual(unpacked[2], args.chip_id)
+        self.assertEqual(unpacked[3], args.flash_type)
+        self.assertEqual(unpacked[4], args.flags)
 
-        cfe_wfi_tag.create_output(self.args)
+    def test_create_output_same_file(self):
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf.write(b"hello world")
+            tf_name = tf.name
 
-        mock_copyfile.assert_not_called()
+        try:
+            class Args:
+                input_file = tf_name
+                output_file = tf_name
+                tag_version = 0x00005732
+                chip_id = 0x00006328
+                flash_type = 2
+                flags = 1
 
-if __name__ == "__main__":
+            args = Args()
+
+            self.module.create_output(args)
+
+            with open(tf_name, "rb") as f:
+                content = f.read()
+
+            original_data = b"hello world"
+            self.assertTrue(content.startswith(original_data))
+
+            tag = content[len(original_data):]
+            self.assertEqual(len(tag), 20)
+
+            crc = binascii.crc32(original_data, 0)
+            expected_crc = ~crc & 0xFFFFFFFF
+            unpacked = struct.unpack(">IIIII", tag)
+            self.assertEqual(unpacked[0], expected_crc)
+
+        finally:
+            if os.path.exists(tf_name):
+                os.remove(tf_name)
+
+    def test_create_output_different_file(self):
+        with tempfile.NamedTemporaryFile(delete=False) as tf_in:
+            tf_in.write(b"different file test")
+            tf_in_name = tf_in.name
+
+        tf_out_name = tf_in_name + "_out"
+
+        try:
+            class Args:
+                input_file = tf_in_name
+                output_file = tf_out_name
+                tag_version = 0x00005732
+                chip_id = 0x00006328
+                flash_type = 2
+                flags = 1
+
+            args = Args()
+
+            self.module.create_output(args)
+
+            with open(tf_out_name, "rb") as f:
+                content = f.read()
+
+            original_data = b"different file test"
+            self.assertTrue(content.startswith(original_data))
+
+            tag = content[len(original_data):]
+            self.assertEqual(len(tag), 20)
+
+            crc = binascii.crc32(original_data, 0)
+            expected_crc = ~crc & 0xFFFFFFFF
+            unpacked = struct.unpack(">IIIII", tag)
+            self.assertEqual(unpacked[0], expected_crc)
+
+        finally:
+            if os.path.exists(tf_in_name):
+                os.remove(tf_in_name)
+            if os.path.exists(tf_out_name):
+                os.remove(tf_out_name)
+
+if __name__ == '__main__':
     unittest.main()
