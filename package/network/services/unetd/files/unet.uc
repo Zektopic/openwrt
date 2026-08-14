@@ -65,21 +65,24 @@ function network_keygen(pw_file, args, config, out_file, extra_args)
 		out_file = "/dev/fd/" + output.fileno();
 	}
 
-	let cmd = [ "sh", "-c", "unet-tool " + args ];
-	if (extra_args)
-		extra_args = "'" + replace(extra_args, /'/g, "'\\''") + "'";
-	else
-		extra_args = "";
-	let safe_out_file = "'" + replace(out_file, /'/g, "'\\''") + "'";
-	cmd[2] += ` -s ${rounds},${salt} -o ${safe_out_file}`;
+	let cmd = [ "sh", "-c", `exec "$0" "$@" <&${pw_file.fileno()}`, "unet-tool" ];
+	let args_arr = split(args, /[ \t]+/);
+	for (let a in args_arr) {
+		if (length(a) > 0)
+			push(cmd, a);
+	}
+
+	push(cmd, "-s", `${rounds},${salt}`, "-o", out_file);
 
 	if (config.xorkey) {
 		xorkey = network_get_string_file(config.xorkey);
-		cmd[2] += " -x /dev/fd/" + xorkey.fileno();
+		push(cmd, "-x", "/dev/fd/" + xorkey.fileno());
 	}
 
+	if (extra_args)
+		push(cmd, extra_args);
+
 	pw_file.seek();
-	cmd[2] += " <&" + pw_file.fileno() + " " + extra_args;
 	let rc = system(cmd);
 
 	if (xorkey)
