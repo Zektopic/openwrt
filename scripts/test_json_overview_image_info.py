@@ -70,7 +70,8 @@ class TestJsonOverviewImageInfo(unittest.TestCase):
         (self.module.output_dir / artifact_name1).touch()
         (self.module.output_dir / artifact_name2).touch()
 
-        self.module.add_artifact("imagebuilder")
+        dir_files = [f.name for f in self.module.output_dir.iterdir()]
+        self.module.add_artifact("imagebuilder", dir_files)
 
         self.assertIn("imagebuilder", self.module.output)
         self.assertIn("x86_64", self.module.output["imagebuilder"])
@@ -82,14 +83,16 @@ class TestJsonOverviewImageInfo(unittest.TestCase):
         artifact_name = "llvm-bpf-15.0-Linux-x86_64.tar.xz"
         (self.module.output_dir / artifact_name).touch()
 
-        self.module.add_artifact("llvm-bpf", prefix="")
+        dir_files = [f.name for f in self.module.output_dir.iterdir()]
+        self.module.add_artifact("llvm-bpf", dir_files, prefix="")
 
         self.assertIn("llvm-bpf", self.module.output)
         self.assertIn("x86_64", self.module.output["llvm-bpf"])
         self.assertEqual(self.module.output["llvm-bpf"]["x86_64"], artifact_name)
 
     def test_add_artifact_no_match(self):
-        self.module.add_artifact("sdk")
+        dir_files = [f.name for f in self.module.output_dir.iterdir()]
+        self.module.add_artifact("sdk", dir_files)
         self.assertNotIn("sdk", self.module.output)
 
 if __name__ == '__main__':
