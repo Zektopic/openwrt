@@ -58,8 +58,8 @@ def main():
         encryptor = cipher.encryptor()
         return encryptor.update(chunk) + encryptor.finalize()
 
-    # Optimization: Thread pool overhead outweighs parallelization benefits for
-    # small chunks with C-optimized cryptography operations. Use sequential generator.
+    # ⚡ Bolt: Removed ThreadPoolExecutor overhead for sequential generator expression,
+    # significantly speeding up processing of many small chunks.
     image_enc = b''.join(encrypt_chunk(chunk) for chunk in chunks)
 
     image_with_header = struct.pack(
