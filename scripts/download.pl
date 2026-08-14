@@ -86,12 +86,6 @@ sub which($) {
 	return $res;
 }
 
-sub shell_quote {
-	my $str = shift;
-	$str =~ s/'/'\\''/g;
-	return "'$str'";
-}
-
 sub hash_cmd() {
 	my $len = length($file_hash);
 	my $cmd;
