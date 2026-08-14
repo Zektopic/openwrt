@@ -244,3 +244,7 @@
 **Learning:** In Python, when processing numerous small chunks of data (e.g., encrypting 64KB blocks) using C-optimized libraries like `cryptography`, using `concurrent.futures.ThreadPoolExecutor` adds significant threading overhead. The thread pool setup, context switching, and GIL contention outweigh parallelization benefits for such short-lived CPU-bound tasks, making it much slower than sequential processing.
 **Action:** Replace `ThreadPoolExecutor.map()` with a sequential generator expression (e.g., `b''.join(func(c) for c in chunks)`) when iterating through numerous small chunks with highly-optimized C-backend libraries.
 
+## 2024-05-30 - [Python ThreadPoolExecutor Overhead for Small Cryptography Chunks]
+**Learning:** In Python, when processing numerous small chunks of data (e.g., encrypting 64KB blocks) using C-optimized libraries like `cryptography`, using `concurrent.futures.ThreadPoolExecutor` adds significant thread overhead that outweighs the parallelization benefits, due to the Global Interpreter Lock (GIL) and fast C execution.
+**Action:** Replace `ThreadPoolExecutor` mapping with a sequential generator expression (e.g., `b''.join(func(c) for c in chunks)`) for significantly better performance in cryptographic chunk processing loops.
+
