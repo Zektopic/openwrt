@@ -16,7 +16,7 @@ my %replace = (
 	'FEATURE_SH_IS_NONE' => 'FEATURE_SH_IS_ASH'
 );
 
-open FIND, "find \"$PATH\" -name Config.in |";
+open FIND, '-|', 'find', $PATH, '-name', 'Config.in';
 while (<FIND>) {
 	chomp;
 	my $input = $_;
@@ -25,10 +25,10 @@ while (<FIND>) {
 	$output =~ s/^$replace\///g;
 	$output =~ s/sysdeps\/linux\///g;
 	print STDERR "$input => $output\n";
-	$output =~ /^(.+)\/[^\/]+$/ and system("mkdir -p $1");
+	$output =~ /^(.+)\/[^\/]+$/ and system('mkdir', '-p', $1);
 
-	open INPUT, $input;
-	open OUTPUT, ">$output";
+	open INPUT, '<', $input;
+	open OUTPUT, '>', $output;
 	my ($cur, $default_set, $line);
 	while ($line = <INPUT>) {
 		next if $line =~ /^\s*mainmenu/;
