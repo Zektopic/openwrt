@@ -252,3 +252,6 @@
 **Learning:** For CPU-bound tasks in Python, especially those executing quickly (like AES encrypting typical firmware image chunks), multithreading using `ThreadPoolExecutor` often introduces more overhead (thread creation, context switching, GIL contention during Python-level operations) than it saves.
 **Action:** When performing chunked encryption where the AES operation itself is extremely fast, prefer a sequential generator expression (e.g. `b''.join(func(c) for c in chunks)`) over `ThreadPoolExecutor` to eliminate threading overhead and improve performance.
 
+## 2024-05-18 - [Python dict get with default list allocation overhead]
+**Learning:** In Python loops over dictionaries, using `dict.get("key", [])` to iterate over or return a potentially missing list key creates a temporary empty list in memory on every single lookup miss. In tight loops (like nested directory traversals or parsing tens of thousands of JSON entries), this adds massive unnecessary allocation and GC overhead.
+**Action:** Replace `dict.get("key", [])` with `dict.get("key") or []` to bypass the empty list allocation entirely when the key is missing.
