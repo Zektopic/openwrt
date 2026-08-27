@@ -143,9 +143,11 @@ platform_do_upgrade() {
 	bananapi,bpi-r4-2g5|\
 	bananapi,bpi-r4-poe|\
 	bananapi,bpi-r4-lite|\
+	bananapi,bpi-r4-pro-8x|\
 	bazis,ax3000wm|\
 	cmcc,a10-ubootmod|\
 	cmcc,rax3000m|\
+	comfast,cf-wr632ax-ubi|\
 	comfast,cf-wr632ax-ubootmod|\
 	creatlentem,clt-r30b1-ubi|\
 	cudy,m3000-v1-ubootmod|\
@@ -165,8 +167,10 @@ platform_do_upgrade() {
 	konka,komi-a31|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
+	mercusys,mr85x-ubi|\
 	mercusys,mr90x-v1-ubi|\
 	netis,eap930-v1|\
+	netis,n6-v2|\
 	netis,nx30v2|\
 	netis,nx31|\
 	netis,nx32u|\
@@ -179,6 +183,8 @@ platform_do_upgrade() {
 	routerich,ax3000-ubootmod|\
 	routerich,be7200|\
 	snr,snr-cpe-ax2|\
+	teralink,tl3020-256mb|\
+	tplink,be450-ubi|\
 	tplink,tl-xdr4288|\
 	tplink,tl-xdr6086|\
 	tplink,tl-xdr6088|\
@@ -276,7 +282,6 @@ platform_do_upgrade() {
 	kebidumei,ax3000-u22|\
 	totolink,x6000r|\
 	wavlink,wl-wn573hx3|\
-	wavlink,wl-wnt100x3|\
 	widelantech,wap430x|\
 	yuncore,ax835)
 		default_do_upgrade "$1"
@@ -387,9 +392,11 @@ platform_check_image() {
 	bananapi,bpi-r4-2g5|\
 	bananapi,bpi-r4-poe|\
 	bananapi,bpi-r4-lite|\
+	bananapi,bpi-r4-pro-8x|\
 	bazis,ax3000wm|\
 	cmcc,a10-ubootmod|\
 	cmcc,rax3000m|\
+	comfast,cf-wr632ax-ubi|\
 	comfast,cf-wr632ax-ubootmod|\
 	creatlentem,clt-r30b1-ubi|\
 	cudy,m3000-v1-ubootmod|\
@@ -408,15 +415,19 @@ platform_check_image() {
 	konka,komi-a31|\
 	mediatek,mt7981-rfb|\
 	mediatek,mt7988a-rfb|\
+	mercusys,mr85x-ubi|\
 	mercusys,mr90x-v1-ubi|\
 	nokia,ea0326gmp|\
 	netis,eap930-v1|\
+	netis,n6-v2|\
 	netis,nx32u|\
 	openwrt,one|\
 	netcore,n60|\
 	qihoo,360t7|\
 	qihoo,360t7-ubi|\
 	routerich,ax3000-ubootmod|\
+	teralink,tl3020-256mb|\
+	tplink,be450-ubi|\
 	tplink,tl-xdr4288|\
 	tplink,tl-xdr6086|\
 	tplink,tl-xdr6088|\
@@ -460,6 +471,7 @@ platform_copy_config() {
 	bananapi,bpi-r4-2g5|\
 	bananapi,bpi-r4-poe|\
 	bananapi,bpi-r4-lite|\
+	bananapi,bpi-r4-pro-8x|\
 	cmcc,rax3000m|\
 	gatonetworks,gdsp|\
 	mediatek,mt7988a-rfb)
