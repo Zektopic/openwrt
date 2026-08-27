@@ -252,3 +252,8 @@
 **Learning:** For CPU-bound tasks in Python, especially those executing quickly (like AES encrypting typical firmware image chunks), multithreading using `ThreadPoolExecutor` often introduces more overhead (thread creation, context switching, GIL contention during Python-level operations) than it saves.
 **Action:** When performing chunked encryption where the AES operation itself is extremely fast, prefer a sequential generator expression (e.g. `b''.join(func(c) for c in chunks)`) over `ThreadPoolExecutor` to eliminate threading overhead and improve performance.
 
+## 2024-05-18 - Optimized json file discovery
+
+**Learning:** In Python, when checking a directory for files with a specific extension, using `pathlib.Path.glob("*.json")` creates many intermediate `Path` objects, resulting in significant overhead (around 5x slower than using `os.scandir` combined with `str.endswith`). However, when using `os.scandir()`, it is best practice to use it within a `with` context manager to ensure the directory stream is closed immediately and avoid file descriptor leaks.
+
+**Action:** Replace `for file in path.glob("*.json"):` with `with os.scandir(path) as entries: for f in entries: if f.name.endswith(".json"): ...` to achieve a significant performance improvement.
