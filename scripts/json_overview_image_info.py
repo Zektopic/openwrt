@@ -120,6 +120,8 @@ if output:
         filename = add_artifact(artifact, dir_files)
     add_artifact("llvm-bpf", dir_files, prefix="")
 
-    output_path.write_text(json.dumps(output, sort_keys=True, separators=(",", ":")))
+    # ⚡ Bolt: Use json.dump to stream directly to file instead of allocating large string
+    with open(output_path, "w") as f:
+        json.dump(output, f, sort_keys=True, separators=(",", ":"))
 else:
     print("JSON info file script could not find any JSON files for target")

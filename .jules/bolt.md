@@ -257,3 +257,7 @@
 **Learning:** In Python, when checking a directory for files with a specific extension, using `pathlib.Path.glob("*.json")` creates many intermediate `Path` objects, resulting in significant overhead (around 5x slower than using `os.scandir` combined with `str.endswith`). However, when using `os.scandir()`, it is best practice to use it within a `with` context manager to ensure the directory stream is closed immediately and avoid file descriptor leaks.
 
 **Action:** Replace `for file in path.glob("*.json"):` with `with os.scandir(path) as entries: for f in entries: if f.name.endswith(".json"): ...` to achieve a significant performance improvement.
+
+## 2024-05-18 - Optimize JSON writing
+**Learning:** In Python, when writing large JSON payloads to a file, using `pathlib.Path.write_text(json.dumps(obj))` creates a large intermediate string in memory.
+**Action:** Prefer opening the file and using `json.dump(obj, f)` instead to stream directly to the file descriptor and avoid large intermediate strings in memory.
