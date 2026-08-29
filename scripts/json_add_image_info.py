@@ -127,4 +127,6 @@ file_filesystem = getenv("FILE_FILESYSTEM")
 if file_filesystem:
     file_info["profiles"][device_id]["images"][0]["filesystem"] = file_filesystem
 
-json_path.write_text(json.dumps(file_info, separators=(",", ":")))
+# ⚡ Bolt: Stream JSON directly to file to avoid large intermediate string allocation
+with open(json_path, "w") as f:
+    json.dump(file_info, f, separators=(",", ":"))
