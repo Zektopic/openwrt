@@ -49,7 +49,8 @@ class TestJsonOverviewImageInfo(unittest.TestCase):
 
     def test_get_initial_output_existing_file_matching_version(self):
         profiles = {"version_code": "123", "profiles": {"test": {}}}
-        self.module.output_path.write_text(json.dumps(profiles))
+        with open(self.module.output_path, "w") as f:
+            json.dump(profiles, f)
 
         image_info = {"version_code": "123", "data": "test"}
         result = self.module.get_initial_output(image_info)
@@ -57,7 +58,8 @@ class TestJsonOverviewImageInfo(unittest.TestCase):
 
     def test_get_initial_output_existing_file_different_version(self):
         profiles = {"version_code": "456", "profiles": {"test": {}}}
-        self.module.output_path.write_text(json.dumps(profiles))
+        with open(self.module.output_path, "w") as f:
+            json.dump(profiles, f)
 
         image_info = {"version_code": "123", "data": "test"}
         result = self.module.get_initial_output(image_info)
