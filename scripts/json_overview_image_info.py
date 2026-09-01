@@ -24,7 +24,10 @@ output = {}
 def get_initial_output(image_info):
     # preserve existing profiles.json
     if output_path.is_file():
-        profiles = json.loads(output_path.read_text())
+        # ⚡ Bolt: Optimization: Replace json.loads(path.read_text()) with json.load(f)
+        # to stream directly from the file descriptor, avoiding large intermediate strings.
+        with open(output_path, "r") as f:
+            profiles = json.load(f)
         if profiles["version_code"] == image_info["version_code"]:
             return profiles
     return image_info
@@ -53,7 +56,10 @@ with scandir(work_dir) as entries:
         if not f.name.endswith(".json"):
             continue
         json_file = Path(f.path)
-        image_info = json.loads(json_file.read_text())
+        # ⚡ Bolt: Optimization: Replace json.loads(path.read_text()) with json.load(f)
+        # to stream directly from the file descriptor, avoiding large intermediate strings.
+        with open(json_file, "r") as json_f:
+            image_info = json.load(json_f)
 
         if not output:
             output = get_initial_output(image_info)

@@ -260,3 +260,7 @@
 ## 2024-05-18 - [Optimize JSON serialization and file writing]
 **Learning:** In Python, when writing large JSON payloads to a file, using `pathlib.Path.write_text(json.dumps(obj))` creates a massive intermediate string in memory before writing it to disk. Opening the file and using `json.dump(obj, f)` streams the serialized data directly to the file descriptor, resulting in significant memory savings and faster execution times (e.g., up to 5x faster).
 **Action:** Replace `path.write_text(json.dumps(obj, ...))` with `with open(path, "w") as f: json.dump(obj, f, ...)` when serializing and writing large JSON objects.
+
+## 2024-05-18 - [Optimize JSON deserialization and file reading]
+**Learning:** In Python, when reading large JSON payloads from a file, using `json.loads(path.read_text())` creates a massive intermediate string in memory before parsing it. Opening the file and using `json.load(f)` streams the serialized data directly from the file descriptor, resulting in significant memory savings and faster execution times.
+**Action:** Replace `json.loads(path.read_text())` with `with open(path, "r") as f: json.load(f)` when reading and deserializing large JSON objects.
