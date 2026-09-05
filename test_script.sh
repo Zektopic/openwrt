@@ -8,7 +8,7 @@ for commit in $(git rev-list HEAD ^origin/main); do
   fi
 
   author="$(git show -s --format=%aN $commit)"
-  if echo "$author" | grep -qE '\S\+\s\+\S\+|\[bot\]'; then
+  if echo "$author" | grep -qE '\S+\s+\S+|\[bot\]'; then
     success "Author name ($author) seems ok"
   else
     err "Author name ($author) need to be your real name 'firstname lastname'"
