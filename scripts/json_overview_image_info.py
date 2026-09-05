@@ -55,11 +55,8 @@ with scandir(work_dir) as entries:
     for f in entries:
         if not f.name.endswith(".json"):
             continue
-        json_file = Path(f.path)
-        # ⚡ Bolt: Optimization: Replace json.loads(path.read_text()) with json.load(f)
-        # to stream directly from the file descriptor, avoiding large intermediate strings.
-        with open(json_file, "r") as json_f:
-            image_info = json.load(json_f)
+        with open(f.path, "r") as file:
+            image_info = json.load(file)
 
         if not output:
             output = get_initial_output(image_info)
