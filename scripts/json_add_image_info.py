@@ -76,9 +76,8 @@ with open(str(file_path),"rb") as f:
 hash_file = sha256_hash.hexdigest()
 
 if file_path.with_suffix(file_path.suffix + ".sha256sum").exists():
-    hash_unsigned = (
-        file_path.with_suffix(file_path.suffix + ".sha256sum").read_text().strip()
-    )
+    with open(file_path.with_suffix(file_path.suffix + ".sha256sum"), "r") as f_hash:
+        hash_unsigned = f_hash.read().strip()
 else:
     hash_unsigned = hash_file
 
