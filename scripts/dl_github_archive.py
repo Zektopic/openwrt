@@ -369,8 +369,8 @@ class DownloadGitHubTarball(object):
 
     def _init_commit_ts_remote_get(self, url, attrpath):
         resp = self._make_request(url)
-        data = resp.read()
-        date = json.loads(data)
+        # ⚡ Bolt: Optimization: Replace json.loads(resp.read()) with json.load(resp)
+        date = json.load(resp)
         for attr in attrpath:
             date = date[attr]
         date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%SZ')
