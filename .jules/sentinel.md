@@ -199,3 +199,8 @@
 **Vulnerability:** Command injection was possible in `convert_menuconfig.pl` via the `$PATH` variable (passed as the first argument, `$ARGV[0]`) which was unsanitized and directly interpolated into a piped `open(FIND, "find \"$PATH\" -name Config.in |")` call and a `system("mkdir -p $1")` call.
 **Learning:** In Perl, passing a single string to `system()` or using the 2-argument `open()` with a trailing pipe invokes a shell (`/bin/sh -c`) to evaluate the command string. If a variable is interpolated without sanitization, it can lead to shell command injection.
 **Prevention:** Always use the list-form of `open()` (e.g. `open(my $fh, '-|', 'find', $PATH, ...)`) and the list-form of `system()` (e.g. `system('mkdir', '-p', $dir)`) to pass arguments directly to the program, bypassing the shell.
+
+## 2024-05-28 - Command injection in scripts/feeds via system()
+**Vulnerability:** Shell command injection exists in `scripts/feeds` when external data, such as feed paths and names, are interpolated into single-string `system()` calls (e.g., `system("ln -sf ../../../$path ./package/feeds/$feed->[1]/")`).
+**Learning:** In Perl, calling `system("string")` passes the entire string to `/bin/sh -c`, rendering it vulnerable if variables contain shell metacharacters.
+**Prevention:** Always use the list-form of `system(@args)` (e.g., `system("ln", "-sf", "../../$path", $dest)`) to bypass the shell and execute commands directly, which neutralizes shell injection vulnerabilities.
