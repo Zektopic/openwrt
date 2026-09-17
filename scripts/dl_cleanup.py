@@ -184,11 +184,13 @@ class Entry:
         if self.builddir not in Entry.builddir_subdirs_cache:
             cache = collections.defaultdict(list)
             try:
-                subdirs = (d for d in os.scandir(self.builddir) if d.is_dir())
-                for subdir in subdirs:
+                with os.scandir(self.builddir) as subdirs_it:
+                    subdirs = [d.path for d in subdirs_it if d.is_dir()]
+                for subdir_path in subdirs:
                     try:
-                        for pkg in os.scandir(subdir.path):
-                            cache[pkg.name].append(pkg.path)
+                        with os.scandir(subdir_path) as pkgs_it:
+                            for pkg in pkgs_it:
+                                cache[pkg.name].append(pkg.path)
                     except OSError:
                         pass
             except OSError:
@@ -304,19 +306,20 @@ def main(argv):
     # ⚡ Bolt: Combine multiple regex patterns into a single OR-ed pattern for O(N) matching instead of O(N*M)
     combined_blacklist_regex = re.compile('|'.join(f'(?:{regex.pattern})' for name, regex in blacklist)) if blacklist else None
 
-    for direntry in os.scandir(directory):
-        filename = direntry.name
-        if filename == "." or filename == "..":
-            continue
+    with os.scandir(directory) as dir_entries:
+        for direntry in dir_entries:
+            filename = direntry.name
+            if filename == "." or filename == "..":
+                continue
 
-        if combined_blacklist_regex and combined_blacklist_regex.match(filename):
-            if opt_dryrun:
-                print(filename, "is blacklisted")
-            continue
-        try:
-            entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
-        except EntryParseError as e:
-            pass
+            if combined_blacklist_regex and combined_blacklist_regex.match(filename):
+                if opt_dryrun:
+                    print(filename, "is blacklisted")
+                continue
+            try:
+                entries.append(Entry(directory, builddir, filename, is_dir=direntry.is_dir()))
+            except EntryParseError as e:
+                pass
 
     # Create a map of programs
     # Optimization: collections.defaultdict(list) avoids creating an empty list
