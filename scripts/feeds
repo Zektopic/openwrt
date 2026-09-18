@@ -483,7 +483,7 @@ sub do_install_target($) {
 			return 1;
 		};
 
-		system("ln -sf ../../../$path ./target/linux/feeds/");
+		system("ln", "-sf", "../../../$path", "./target/linux/feeds/");
 	} else {
 		warn "Target is not valid\n";
 		return 1;
