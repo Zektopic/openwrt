@@ -33,8 +33,8 @@ def parse_args():
     return args
 
 
-def get_apk_sbom(text: str, installed: set) -> list:
-    packages: dict = json.loads(text)
+def get_apk_sbom(f, installed: set) -> list:
+    packages: dict = json.load(f)
     components: list = []
 
     type_allowed: dict = {
@@ -179,23 +179,21 @@ if __name__ == "__main__":
 
     input = sys.stdin if args.source == "-" else open(args.source, "r")
     with input:
-        text: str = input.read()
+        # Read manifest file (installed packages)
+        packages: set = set()
+        if args.manifest:
+            with open(args.manifest, 'r') as file:
+                for line in file:
+                    packages.add(line.split(' - ', 1)[0].strip())
 
-    # Read manifest file (installed packages)
-    packages: set = set()
-    if args.manifest:
-        with open(args.manifest, 'r') as file:
-            for line in file:
-                packages.add(line.split(' - ', 1)[0].strip())
-
-    components: list = []
-    if args.source_format == "apk":
-        components = get_apk_sbom(text, packages)
-    elif args.source_format == "opkg":
-        components = get_opkg_sbom(text, packages)
-    else:
-        print("Source format unknown")
-        raise SystemExit
+        components: list = []
+        if args.source_format == "apk":
+            components = get_apk_sbom(input, packages)
+        elif args.source_format == "opkg":
+            components = get_opkg_sbom(input.read(), packages)
+        else:
+            print("Source format unknown")
+            raise SystemExit
 
     timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     cyclonedx: dict = {

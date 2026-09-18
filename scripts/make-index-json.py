@@ -39,10 +39,10 @@ def parse_args():
     return args
 
 
-def parse_apk(text: str) -> dict:
+def parse_apk(f) -> dict:
     packages: dict = {}
 
-    data = json.loads(text)
+    data = json.load(f)
     if isinstance(data, dict) and "packages" in data:
         # Extract 'apk adbdump' dict field to 'apk query' package list
         data = data["packages"]
@@ -120,9 +120,10 @@ if __name__ == "__main__":
 
     input = sys.stdin if args.source == "-" else open(args.source, "r")
     with input:
-        text: str = input.read()
-
-    packages = parse_apk(text) if args.source_format == "apk" else parse_opkg(text)
+        if args.source_format == "apk":
+            packages = parse_apk(input)
+        else:
+            packages = parse_opkg(input.read())
     if args.manifest:
         # Emulate the output of 'opkg list' command for compatibility with
         # legacy tooling.

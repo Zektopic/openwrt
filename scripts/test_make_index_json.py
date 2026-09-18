@@ -29,7 +29,7 @@ class TestMakeIndexJson(unittest.TestCase):
             }
         ]
         text = json.dumps(data)
-        result = make_index_json.parse_apk(text)
+        import io; f = io.StringIO(text); result = make_index_json.parse_apk(f)
         self.assertEqual(result, {
             "base-files": "1.2-r3",
             "libssl": "1.1.1-r1",
@@ -47,18 +47,18 @@ class TestMakeIndexJson(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_index_json.parse_apk(text)
+        import io; f = io.StringIO(text); result = make_index_json.parse_apk(f)
         self.assertEqual(result, {
             "test-pkg": "1.0-r1"
         })
 
     def test_parse_apk_empty(self):
         text = json.dumps([])
-        result = make_index_json.parse_apk(text)
+        import io; f = io.StringIO(text); result = make_index_json.parse_apk(f)
         self.assertEqual(result, {})
 
         text2 = json.dumps({"packages": []})
-        result2 = make_index_json.parse_apk(text2)
+        import io; f = io.StringIO(text2); result2 = make_index_json.parse_apk(f)
         self.assertEqual(result2, {})
 
     def test_parse_opkg(self):

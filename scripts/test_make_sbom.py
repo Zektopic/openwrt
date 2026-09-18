@@ -23,7 +23,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        import io; f = io.StringIO(text); result = make_sbom.get_apk_sbom(f, set())
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["name"], "base-files")
         self.assertEqual(result[0]["version"], "1.2-r3")
@@ -45,7 +45,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        import io; f = io.StringIO(text); result = make_sbom.get_apk_sbom(f, set())
         self.assertEqual(len(result), 5)
         self.assertEqual(result[0]["type"], "operating-system")
         self.assertEqual(result[1]["type"], "firmware")
@@ -63,12 +63,12 @@ class TestMakeSbom(unittest.TestCase):
         text = json.dumps(data)
 
         # Test with installed set populated
-        result = make_sbom.get_apk_sbom(text, {"p1"})
+        import io; f = io.StringIO(text); result = make_sbom.get_apk_sbom(f, {"p1"})
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["name"], "p1")
 
         # Test with empty installed set
-        result_empty = make_sbom.get_apk_sbom(text, set())
+        import io; f = io.StringIO(text); result_empty = make_sbom.get_apk_sbom(f, set())
         self.assertEqual(len(result_empty), 2)
 
     def test_get_apk_sbom_missing_fields(self):
@@ -80,7 +80,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        import io; f = io.StringIO(text); result = make_sbom.get_apk_sbom(f, set())
         self.assertEqual(len(result), 1)
         self.assertNotIn("name", result[0])
         self.assertEqual(result[0]["version"], "1.0")
