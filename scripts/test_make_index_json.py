@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import unittest
 import json
+import io
 
 # Import the script with hyphens
 spec = importlib.util.spec_from_file_location("make_index_json", "scripts/make-index-json.py")
@@ -28,7 +29,7 @@ class TestMakeIndexJson(unittest.TestCase):
                 "tags": ["other-tag"]
             }
         ]
-        text = json.dumps(data)
+        text = io.StringIO(json.dumps(data))
         result = make_index_json.parse_apk(text)
         self.assertEqual(result, {
             "base-files": "1.2-r3",
@@ -46,18 +47,18 @@ class TestMakeIndexJson(unittest.TestCase):
                 }
             ]
         }
-        text = json.dumps(data)
+        text = io.StringIO(json.dumps(data))
         result = make_index_json.parse_apk(text)
         self.assertEqual(result, {
             "test-pkg": "1.0-r1"
         })
 
     def test_parse_apk_empty(self):
-        text = json.dumps([])
+        text = io.StringIO(json.dumps([]))
         result = make_index_json.parse_apk(text)
         self.assertEqual(result, {})
 
-        text2 = json.dumps({"packages": []})
+        text2 = io.StringIO(json.dumps({"packages": []}))
         result2 = make_index_json.parse_apk(text2)
         self.assertEqual(result2, {})
 
