@@ -230,10 +230,10 @@ sub update_feed_via($$$$$$$$) {
 	if( $relocate || !$m->{'update'} || !-d "$localpath/$m->{'controldir'}" ) {
 		if (defined $flags->{'root'}) {
 			my $root = $flags->{'root'};
-			$root =~ s/'/'\\''/g;
-			system("rm -rf '$localpath_orig'; ln -s '$safename/$root' '$localpath_orig'");
+				system("rm", "-rf", $localpath_orig);
+				system("ln", "-s", "$safename/$root", $localpath_orig);
 		}
-		system("rm -rf '$localpath'");
+			system("rm", "-rf", $localpath);
 		if ($m->{'init_branch'} and $branch) {
 			my $escaped_branch = $branch;
 			$escaped_branch =~ s/'/'\\''/g;
@@ -813,7 +813,7 @@ sub uninstall {
 			};
 			$pkg->{src} and $name = $pkg->{src}{name};
 			warn "Uninstalling package '$name'\n";
-			system("rm -f ./package/feeds/*/$name");
+				system("rm", "-f", glob("./package/feeds/*/$name"));
 			$uninstall = 1;
 		}
 	}
