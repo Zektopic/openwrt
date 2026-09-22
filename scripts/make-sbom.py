@@ -33,8 +33,8 @@ def parse_args():
     return args
 
 
-def get_apk_sbom(text: str, installed: set) -> list:
-    packages: dict = json.loads(text)
+def get_apk_sbom(file_obj, installed: set) -> list:
+    packages: dict = json.load(file_obj)
     components: list = []
 
     type_allowed: dict = {
@@ -178,8 +178,6 @@ if __name__ == "__main__":
     args = parse_args()
 
     input = sys.stdin if args.source == "-" else open(args.source, "r")
-    with input:
-        text: str = input.read()
 
     # Read manifest file (installed packages)
     packages: set = set()
@@ -189,13 +187,16 @@ if __name__ == "__main__":
                 packages.add(line.split(' - ', 1)[0].strip())
 
     components: list = []
-    if args.source_format == "apk":
-        components = get_apk_sbom(text, packages)
-    elif args.source_format == "opkg":
-        components = get_opkg_sbom(text, packages)
-    else:
-        print("Source format unknown")
-        raise SystemExit
+    with input:
+        if args.source_format == "apk":
+            # ⚡ Bolt: Optimization: Use json.load(f) instead of json.loads(path.read_text())
+            components = get_apk_sbom(input, packages)
+        elif args.source_format == "opkg":
+            text: str = input.read()
+            components = get_opkg_sbom(text, packages)
+        else:
+            print("Source format unknown")
+            raise SystemExit
 
     timestamp: str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     cyclonedx: dict = {
