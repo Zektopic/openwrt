@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import unittest
 import json
+import io
 
 # Import the script with hyphens
 
@@ -23,7 +24,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        result = make_sbom.get_apk_sbom(io.StringIO(text), set())
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["name"], "base-files")
         self.assertEqual(result[0]["version"], "1.2-r3")
@@ -45,7 +46,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        result = make_sbom.get_apk_sbom(io.StringIO(text), set())
         self.assertEqual(len(result), 5)
         self.assertEqual(result[0]["type"], "operating-system")
         self.assertEqual(result[1]["type"], "firmware")
@@ -63,12 +64,12 @@ class TestMakeSbom(unittest.TestCase):
         text = json.dumps(data)
 
         # Test with installed set populated
-        result = make_sbom.get_apk_sbom(text, {"p1"})
+        result = make_sbom.get_apk_sbom(io.StringIO(text), {"p1"})
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["name"], "p1")
 
         # Test with empty installed set
-        result_empty = make_sbom.get_apk_sbom(text, set())
+        result_empty = make_sbom.get_apk_sbom(io.StringIO(text), set())
         self.assertEqual(len(result_empty), 2)
 
     def test_get_apk_sbom_missing_fields(self):
@@ -80,7 +81,7 @@ class TestMakeSbom(unittest.TestCase):
             ]
         }
         text = json.dumps(data)
-        result = make_sbom.get_apk_sbom(text, set())
+        result = make_sbom.get_apk_sbom(io.StringIO(text), set())
         self.assertEqual(len(result), 1)
         self.assertNotIn("name", result[0])
         self.assertEqual(result[0]["version"], "1.0")
