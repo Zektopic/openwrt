@@ -14,8 +14,7 @@ sub get_ts($$) {
 	my $ts = 0;
 	my $fn = "";
 	$path .= "/" if( -d $path);
-	$path =~ s/'/'\\''/g;
-	open FIND, "find '$path' -type f -and -not -path \\*/.svn\\* -and -not -path \\*CVS\\* $options 2>/dev/null |";
+	open FIND, '-|', 'find', $path, '-type', 'f', '-and', '-not', '-path', '*/.svn*', '-and', '-not', '-path', '*CVS*', @$options;
 	while (<FIND>) {
 		chomp;
 		my $file = $_;
@@ -34,14 +33,14 @@ sub get_ts($$) {
 my $ts = 0;
 my $n = ".";
 my %options;
+$options{"findopts"} = [];
 while (@ARGV > 0) {
 	my $path = shift @ARGV;
 	if ($path =~ /^-x/) {
 		my $str = shift @ARGV;
-		$str =~ s/'/'\\''/g;
-		$options{"findopts"} .= " -and -not -path '".$str."'"
+		push @{$options{"findopts"}}, '-and', '-not', '-path', $str;
 	} elsif ($path =~ /^-f/) {
-		$options{"findopts"} .= " -follow";
+		push @{$options{"findopts"}}, '-follow';
 	} elsif ($path =~ /^-n/) {
 		my $arg = $ARGV[0];
 		$options{$path} = $arg;
