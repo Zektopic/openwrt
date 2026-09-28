@@ -8,6 +8,7 @@
 import math
 import sys
 import struct
+import os
 
 FLASH_BLOCK_SIZE = 64 * 1024
 
@@ -21,15 +22,15 @@ if __name__ == '__main__':
         print('Usage: {} <input-image> <output-image>'.format(sys.argv[0]))
         sys.exit(1)
 
-    with open(sys.argv[1], 'rb') as f:
-        data = f.read()
+    file_len = os.path.getsize(sys.argv[1])
 
-    file_len = len(data)
+    with open(sys.argv[1], 'rb') as f:
+        header_data = f.read(256)
 
     # File-len in fdt header at offset 0x4
-    file_len_hdr = read_field(data, 0x4)
+    file_len_hdr = read_field(header_data, 0x4)
     # String offset in fdt header at offset 0xc
-    str_off = read_field(data, 0xc)
+    str_off = read_field(header_data, 0xc)
 
     print("file_len={} hdr_file_len={} str_off={}".format(file_len, file_len_hdr, str_off))
 
@@ -58,11 +59,10 @@ if __name__ == '__main__':
     new_file_len = int(new_dt_strings + FLASH_BLOCK_SIZE - 64)
     print(f"new_file_len={new_file_len} new_hdr_file_len={new_image_len} new_str_offset={new_dt_strings}")
 
-    # Convert data to bytearray
-    data = bytearray(data)
-
-    # Enlarge byte-array to new size
-    data.extend(bytearray(new_file_len - file_len))
+    # ⚡ Bolt: Optimization: pre-allocate a single bytearray to avoid memory reallocation/copies
+    data = bytearray(new_file_len)
+    with open(sys.argv[1], 'rb') as f:
+        f.readinto(memoryview(data)[:file_len])
 
     # Assert that the new and old string-tables are at least 256 bytes apart.
     # We pad by two blocks, but let's be extra sure.
