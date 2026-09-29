@@ -275,3 +275,7 @@
 ## 2024-08-12 - [Python json.load refactoring in tests]
 **Learning:** In Python unit tests, when refactoring a function to accept a file-like object instead of a string (e.g., for `json.load(f)` optimizations), test assertions that previously passed string payloads via `json.dumps(data)` will fail.
 **Action:** You must wrap the string in `io.StringIO(json.dumps(data))` to simulate the file descriptor for the refactored function.
+
+## 2024-05-18 - [Optimize memory allocations during file padding]
+**Learning:** Reading a large file completely into a `bytes` object using `f.read()`, then casting to `bytearray`, and finally appending empty bytes using `.extend(bytearray(new_size - old_size))` incurs heavy memory overhead and performance penalties due to multiple memory allocations and copying.
+**Action:** When appending padding to a large file, pre-calculate the required size, pre-allocate a single bytearray of that size using `data = bytearray(new_size)`, and read the original file contents directly into it using `f.readinto(memoryview(data)[:old_size])`.
