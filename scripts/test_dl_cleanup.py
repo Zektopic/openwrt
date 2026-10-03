@@ -2,18 +2,13 @@ import unittest
 import re
 import sys
 import os
-import shutil
+import tempfile
 import importlib.util
 from unittest.mock import Mock
 
 # Ensure the script directory is in the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dl_cleanup import Entry
-import re
-import sys
-import os
-import importlib.util
-from unittest.mock import Mock
 
 class TestDlCleanupParseVerYmdGitShasum(unittest.TestCase):
     @classmethod
@@ -250,12 +245,12 @@ class TestDlCleanupMainErrorHandling(unittest.TestCase):
 
 class TestEntry(unittest.TestCase):
     def setUp(self):
-        self.mock_dir = "mock_dl_test_dir"
-        os.makedirs(self.mock_dir, exist_ok=True)
+        self.directory = tempfile.TemporaryDirectory()
+        self.mock_dir = self.directory.name
         # We must create physical files so Entry __init__ won't crash when it checks os.path.isdir() or os.stat() for GIT dates
 
     def tearDown(self):
-        shutil.rmtree(self.mock_dir)
+        self.directory.cleanup()
 
     def _create_file(self, filename):
         path = os.path.join(self.mock_dir, filename)

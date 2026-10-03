@@ -45,7 +45,6 @@ import os
 import shutil
 import struct
 import binascii
-import shutil
 
 
 def auto_int(x):

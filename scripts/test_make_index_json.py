@@ -82,11 +82,16 @@ Version: 1.2.3
         })
 
 
+    def test_parse_opkg_crlf_case_and_field_order(self):
+        text = ("version: 1.0\r\npackage: libexample2\r\nabiversion: 2\r\n"
+                "\r\nPackage: second\r\nVersion: 3\r\n")
+        self.assertEqual(make_index_json.parse_opkg(text), {"libexample": "1.0", "second": "3"})
+
     def test_parse_opkg_edge_cases(self):
         # Edge cases:
         # 1. Package without Version
         # 2. Extra newlines between packages
-        # 3. Block not starting with Package:
+        # 3. Package field is not the first field
         # 4. Empty string
         # 5. Missing trailing newline on final Version/ABIVersion
         text = """Package: pkg-no-version
@@ -107,7 +112,8 @@ ABIVersion: 1.1"""
         self.assertEqual(result, {
             "pkg-no-version": "",
             "pkg-no-newline": "1.0",
-            "pkg-missing-abi-newline": "1.0"
+            "pkg-missing-abi-newline": "1.0",
+            "ignored": "2.0"
         })
 
         # Empty string

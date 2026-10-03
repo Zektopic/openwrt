@@ -10,7 +10,9 @@ unusable by the ASU server.  The version 2 format contains package names that
 have been stripped of their ABI version.
 """
 
+import email.parser
 import json
+import re
 
 
 def removesuffix(src, suffix):
@@ -70,45 +72,14 @@ def parse_apk(file_obj) -> dict:
 def parse_opkg(text: str) -> dict:
     packages: dict = {}
 
-    # Optimization: using manual string splitting instead of email.parser.Parser()
-    # is significantly faster (~14x) for large machine-generated opkg index files
-    # as it avoids the overhead of full RFC 822/2822 compliance checks.
-    start = 0
-    text_len = len(text)
-
-    while start < text_len:
-        end = text.find("\n\n", start)
-        if end == -1:
-            end = text_len
-
-        # Optimization: use string find instead of splitting all lines
-        # which provides another ~3x speedup on large index files.
-        # It also avoids allocating an intermediate string list.
-        p_idx = text.find("Package: ", start, end)
-        v_idx = text.find("\nVersion: ", start, end)
-        a_idx = text.find("\nABIVersion: ", start, end)
-
-        if p_idx == start:
-            p_end = text.find("\n", p_idx, end)
-            package_name = text[p_idx+9:p_end if p_end != -1 else end].strip()
-
-            package_version = ""
-            if v_idx != -1:
-                v_end = text.find("\n", v_idx + 1, end)
-                package_version = text[v_idx+10:v_end if v_end != -1 else end].strip()
-
-            if package_name:
-                if a_idx != -1:
-                    a_end = text.find("\n", a_idx + 1, end)
-                    package_abi = text[a_idx+13:a_end if a_end != -1 else end].strip()
-                    package_name = removesuffix(package_name, package_abi)
-                packages[package_name] = package_version
-
-        start = end + 2
-
-        # Skip extra newlines
-        while start < text_len and text[start] == '\n':
-            start += 1
+    parser = email.parser.Parser()
+    for chunk in re.split(r"\r?\n[ \t]*\r?\n", text.strip()):
+        package = parser.parsestr(chunk.lstrip("\r\n"), headersonly=True)
+        name = package.get("Package", "").strip()
+        if not name:
+            continue
+        name = removesuffix(name, package.get("ABIVersion", "").strip())
+        packages[name] = package.get("Version", "").strip()
 
     return packages
 

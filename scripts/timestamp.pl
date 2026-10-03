@@ -22,7 +22,9 @@ sub get_ts($$) {
 	my $ts = 0;
 	my $fn = "";
 	$path .= "/" if( -d $path);
-	open FIND, '-|', 'find', $path, '-type', 'f', '-and', '-not', '-path', '*/.svn*', '-and', '-not', '-path', '*CVS*', @$options;
+	open FIND, '-|', 'find', $path, '-type', 'f', '-and', '-not', '-path', '*/.svn*', '-and', '-not', '-path', '*CVS*', @$options, '-print0'
+		or die "Cannot run find: $!\n";
+	local $/ = "\0";
 	while (<FIND>) {
 		chomp;
 		my $file = $_;
@@ -41,11 +43,13 @@ sub any_newer($$$) {
 	my ($stamp, $paths, $options) = @_;
 	my @list = map { -d $_ ? "$_/" : $_ } @$paths;
 
-	open FIND, '-|', 'find', @list, '-type', 'f', '-and', '-not', '-path', '*/.svn*', '-and', '-not', '-path', '*CVS*', @$options, '-newer', $stamp, '-print', '-quit';
+	open FIND, '-|', 'find', @list, '-type', 'f', '-and', '-not', '-path', '*/.svn*', '-and', '-not', '-path', '*CVS*', @$options, '-newer', $stamp, '-print', '-quit'
+		or die "Cannot run find: $!\n";
 	my $hit = <FIND>;
-	close FIND;
+	my $scanned = close FIND;
 
-	return defined $hit;
+	# A failed scan cannot establish that the dependencies are up to date.
+	return defined($hit) || !$scanned;
 }
 
 (@ARGV > 0) or push @ARGV, ".";

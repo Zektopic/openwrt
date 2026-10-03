@@ -2,20 +2,14 @@ import unittest
 import os
 import fcntl
 import importlib.util
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 import errno
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 import sys
 from io import StringIO
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import call
 
-class TestGitHubCommitTsCacheGet(unittest.TestCase):
-
-    pass
-class TestPathOsFunc(unittest.TestCase):
-
-    pass
-class TestDlGithubArchive(unittest.TestCase):
+class TestCacheLockRelease(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dl_github_archive.py')
@@ -47,11 +41,12 @@ class TestDlGithubArchive(unittest.TestCase):
         mock_lockf.assert_any_call(123, fcntl.LOCK_SH)
         mock_lockf.assert_any_call(123, fcntl.LOCK_UN)
 
-class TestDlGithubArchive(unittest.TestCase):
+class TestArchiveUtilities(unittest.TestCase):
     def setUp(self):
         spec = importlib.util.spec_from_file_location("dl_github_archive", "scripts/dl_github_archive.py")
         self.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.module)
+        self.Path = self.module.Path
 
     @patch('fcntl.lockf')
     @patch('os.open')
@@ -84,9 +79,6 @@ class TestDlGithubArchive(unittest.TestCase):
             cache.set('test_key', 12345)
 
         mock_lockf.assert_any_call(123, self.module.fcntl.LOCK_UN)
-        cls.module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cls.module)
-        cls.Path = cls.module.Path
 
     def test_success(self):
         func = lambda path: f"success {path}"
@@ -119,8 +111,6 @@ class TestDlGithubArchive(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.Path._os_func(func, "test/path", errno.ENOENT)
-        cls.module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cls.module)
 
     @patch('sys.stderr', new_callable=StringIO)
     def test_main_error_handling(self, mock_stderr):

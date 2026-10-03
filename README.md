@@ -9,8 +9,6 @@ For developers, OpenWrt is the framework to build an application without having
 to build a complete firmware around it; for users this means the ability for
 full customization, to use the device in ways never envisioned.
 
-Sunshine!
-
 ## Download
 
 Built firmware images are available for many architectures and come with a
@@ -43,7 +41,7 @@ the [Build System Setup](https://openwrt.org/docs/guide-developer/build-system/i
 documentation.
 
 ```
-binutils bzip2 diff find flex gawk gcc-6+ getopt grep install libc-dev libz-dev
+binutils bzip2 diff find flex gawk gcc-10+ getopt grep install libc-dev libz-dev
 make4.1+ perl python3.8+ rsync subversion unzip which
 ```
 
@@ -62,11 +60,41 @@ make4.1+ perl python3.8+ rsync subversion unzip which
    cross-compile toolchain and then cross-compile the GNU/Linux kernel & all chosen
    applications for your target system.
 
+### Testing this fork
+
+Run the build-script regression suite with Python 3.8 or later, Perl and GNU make:
+
+```sh
+python3 -m pip install 'pytest>=8.3,<10' 'ruff>=0.9,<1'
+python3 -m pytest -q
+ruff check --select F811,F821 scripts
+```
+
+After installing feeds and running `make defconfig`, validate every supported
+target and its available device profiles without changing your `.config`:
+
+```sh
+python3 scripts/check-target-configs.py
+```
+
+The **Build script tests** workflow also runs these configuration checks and
+tests Wi-Fi, WireGuard and provisioning with the ucode revision pinned by this
+tree. Local ucode tests require `UCODE` and, for an uninstalled interpreter,
+`UCODE_LIB`; they report skips when the interpreter is unavailable.
+
+The **Test Build All Devices** workflow accepts `all` or a space-separated list
+such as `x86/64 mediatek/filogic`. It compiles all available device profiles for
+the selected targets, with two target builds running at a time. Configuration
+checks alone do not verify firmware compilation or hardware operation.
+
+See [.zektopic/TEST_SCRIPTS/README.md](.zektopic/TEST_SCRIPTS/README.md) for local
+build helpers and QEMU boot tests.
+
 ### Related Repositories
 
 The main repository uses multiple sub-repositories to manage packages of
 different categories. All packages are installed via the OpenWrt package
-manager called `opkg`. If you're looking to develop the web interface or port
+manager. If you're looking to develop the web interface or port
 packages to OpenWrt, please find the fitting repository below.
 
 * [LuCI Web Interface](https://github.com/openwrt/luci): Modern and modular

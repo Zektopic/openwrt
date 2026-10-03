@@ -3,8 +3,8 @@
 # Usage: ./config_variants.sh <variant>
 #   variant: default | minimal | full | dev | hardened
 
-set -e
-cd /home/manu/openwrt
+set -euo pipefail
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.."
 
 case "${1:-default}" in
   default)
@@ -33,19 +33,19 @@ CONFIG_TARGET_ROOTFS_TARGZ=y
 CONFIG_TARGET_IMAGES_GZIP=y
 # Disable most packages
 # CONFIG_PACKAGE_dnsmasq is not set
-# CONFIG_PACKAGE_firewall is not set
+# CONFIG_PACKAGE_firewall4 is not set
 # CONFIG_PACKAGE_iwinfo is not set
 # CONFIG_PACKAGE_ip6tables is not set
 # CONFIG_PACKAGE_kmod-ipt-offload is not set
-# CONFIG_PACKODE_odhcpd-ipv6only is not set
+# CONFIG_PACKAGE_odhcpd-ipv6only is not set
 # CONFIG_PACKAGE_wpad-basic-mbedtls is not set
 EOF
-    make defconfig 2>/dev/null
+    make defconfig
     # Strip more
-    for pkg in dnsmasq firewall iwinfo ip6tables kmod-ipt-offload odhcpd-ipv6only wpad-basic-mbedtls kmod-usb-core kmod-usb-uhci kmod-usb-ohci kmod-usb-xhci-hcd kmod-usb-storage; do
+    for pkg in dnsmasq firewall4 iwinfo ip6tables kmod-ipt-offload odhcpd-ipv6only wpad-basic-mbedtls kmod-usb-core kmod-usb-uhci kmod-usb-ohci kmod-usb-xhci-hcd kmod-usb-storage; do
       sed -i "s/^CONFIG_PACKAGE_$pkg=y/# CONFIG_PACKAGE_$pkg is not set/" .config 2>/dev/null || true
     done
-    make olddefconfig 2>/dev/null
+    make defconfig
     ;;
 
   full)
@@ -150,6 +150,6 @@ esac
 
 echo ""
 echo "Config applied. Key settings:"
-grep -E "^CONFIG_TARGET|^CONFIG_PACKAGE" .config | sort | head -30
+grep -E "^CONFIG_TARGET|^CONFIG_PACKAGE" .config | sort | sed -n '1,30p'
 echo ""
 echo "Run 'make -j\$(nproc) V=s' to build"

@@ -1,173 +1,45 @@
-#!/bin/bash
-# qemu_test.sh — Universal QEMU boot test for OpenWrt images
-# Tests x86/64, MIPS (malta), ARM, and AArch64 images in QEMU
-# Usage: ./qemu_test.sh <target> [image_dir]
-#   target: x86_64 | malta_be | malta_le | armvirt_32 | armvirt_64
-
-set -e
-
-TARGET="${1:-x86_64}"
-IMGDIR="${2:-bin/targets}"
-TIMEOUT="${TIMEOUT:-60}"
-PASS=0
-FAIL=0
-
-case "$TARGET" in
-  x86_64)
-    TARGET_DIR="$IMGDIR/x86/64"
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-ext4-combined-efi.img.gz 2>/dev/null | head -1)
-    if [ -z "$IMAGE" ]; then
-      echo "ERROR: x86/64 images not found in $TARGET_DIR"
-      exit 1
-    fi
-    echo "=== x86/64 QEMU Test (UEFI/OVMF) ==="
-    echo "Image:  $(basename $IMAGE)"
-
-    # Decompress image
-    IMG="/tmp/qemu_x86_64_$$.img"
-    gunzip -c "$IMAGE" > "$IMG"
-
-    # Find OVMF firmware
-    OVMF="/usr/share/ovmf/OVMF.fd"
-    if [ ! -f "$OVMF" ]; then
-      OVMF=$(find /usr/share -name "OVMF.fd" 2>/dev/null | head -1)
-    fi
-
-    # KVM support
-    KVM=""
-    if [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
-      KVM="-enable-kvm -cpu host"
-    fi
-
-    timeout $TIMEOUT qemu-system-x86_64 \
-      -bios "$OVMF" \
-      $KVM \
-      -drive "file=$IMG,format=raw,if=virtio" \
-      -m 512M \
-      -nographic \
-      -no-reboot \
-      2>&1 | tee /tmp/qemu_${TARGET}_boot.log | tail -30
-
-    rm -f "$IMG"
-    ;;
-
-  malta_be)
-    TARGET_DIR="$IMGDIR/malta/be"
-    # Try initramfs kernel first (malta naming: initramfs-kernel.bin)
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-initramfs-kernel.bin 2>/dev/null | head -1)
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-kernel.bin 2>/dev/null | grep -v initramfs | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux* 2>/dev/null | grep -v initramfs | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      echo "ERROR: malta/be images not found in $TARGET_DIR"
-      exit 1
-    fi
-    echo "=== malta/be (MIPS BE) QEMU Test ==="
-    echo "Image: $(basename $IMAGE)"
-
-    timeout $TIMEOUT qemu-system-mips \
-      -M malta -m 256M \
-      -kernel "$IMAGE" \
-      -nographic \
-      -append "console=ttyS0" \
-      2>&1 | tee /tmp/qemu_${TARGET}_boot.log | tail -30
-    ;;
-
-  malta_le)
-    TARGET_DIR="$IMGDIR/malta/le"
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-initramfs-kernel.bin 2>/dev/null | head -1)
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux-initramfs* 2>/dev/null | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-kernel.bin 2>/dev/null | grep -v initramfs | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-vmlinux* 2>/dev/null | grep -v initramfs | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      echo "ERROR: malta/le images not found in $TARGET_DIR"
-      exit 1
-    fi
-    echo "=== malta/le (MIPS LE) QEMU Test ==="
-    echo "Image: $(basename $IMAGE)"
-
-    timeout $TIMEOUT qemu-system-mipsel \
-      -M malta -m 256M \
-      -kernel "$IMAGE" \
-      -nographic \
-      -append "console=ttyS0" \
-      2>&1 | tee /tmp/qemu_${TARGET}_boot.log | tail -30
-    ;;
-
-  armvirt_32)
-    TARGET_DIR="$IMGDIR/armvirt/32"
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-Image-initramfs* 2>/dev/null | head -1)
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-Image* 2>/dev/null | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      echo "ERROR: armvirt/32 images not found in $TARGET_DIR"
-      exit 1
-    fi
-    echo "=== arm/virt (ARM) QEMU Test ==="
-    echo "Image: $(basename $IMAGE)"
-
-    timeout $TIMEOUT qemu-system-arm \
-      -M virt -m 256M -cpu cortex-a15 \
-      -kernel "$IMAGE" \
-      -nographic \
-      -append "console=ttyAMA0" \
-      2>&1 | tee /tmp/qemu_${TARGET}_boot.log | tail -30
-    ;;
-
-  armvirt_64)
-    TARGET_DIR="$IMGDIR/armvirt/64"
-    IMAGE=$(ls "$TARGET_DIR"/openwrt-*-Image-initramfs* 2>/dev/null | head -1)
-    if [ -z "$IMAGE" ]; then
-      IMAGE=$(ls "$TARGET_DIR"/openwrt-*-Image* 2>/dev/null | head -1)
-    fi
-    if [ -z "$IMAGE" ]; then
-      echo "ERROR: armvirt/64 images not found in $TARGET_DIR"
-      exit 1
-    fi
-    echo "=== aarch64/virt (AArch64) QEMU Test ==="
-    echo "Image: $(basename $IMAGE)"
-
-    timeout $TIMEOUT qemu-system-aarch64 \
-      -M virt -m 256M -cpu cortex-a57 \
-      -kernel "$IMAGE" \
-      -nographic \
-      -append "console=ttyAMA0" \
-      2>&1 | tee /tmp/qemu_${TARGET}_boot.log | tail -30
-    ;;
-
-  *)
-    echo "Usage: $0 <target> [image_dir]"
-    echo "Targets: x86_64, malta_be, malta_le, armvirt_32, armvirt_64"
-    exit 1
-    ;;
-esac
-
-# Analyze boot log
-echo ""
-echo "=== Boot Analysis ==="
-LOG="/tmp/qemu_${TARGET}_boot.log"
-if grep -qE "done|login|openwrt|Ready|init|/ #|ash|BusyBox|initramfs" "$LOG" 2>/dev/null; then
-  echo "[PASS] $TARGET — kernel booted successfully, init started"
-  RESULT="PASS"
-elif grep -qE "Kernel panic|BUG|Error|fatal|segfault" "$LOG" 2>/dev/null; then
-  echo "[FAIL] $TARGET — kernel panic or fatal error during boot"
-  RESULT="FAIL"
-else
-  echo "[WARN] $TARGET — could not determine boot status (timeout or incomplete boot)"
-  RESULT="UNKNOWN"
+#!/usr/bin/env bash
+# Usage: qemu_test.sh <x86_64|malta_be|malta_le|armsr_armv7|armsr_armv8> [image_dir]
+set -euo pipefail
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+source "$SCRIPT_DIR/boot_result.sh"
+ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+TARGET=${1:-x86_64}
+IMGDIR=${2:-$ROOT/bin/targets}
+TIMEOUT=${TIMEOUT:-120}
+if [[ $# -gt 2 || ! $TIMEOUT =~ ^[1-9][0-9]*$ ]]; then
+    echo "Usage: $0 <target> [image_dir]; TIMEOUT must be positive seconds" >&2
+    exit 2
 fi
-
-echo "=== Result: $RESULT ==="
+shopt -s nullglob
+case "$TARGET" in
+    x86_64)
+        images=("$IMGDIR"/x86/64/*-ext4-combined-efi.img{,.gz})
+        [[ ${#images[@]} -gt 0 ]] || { echo "No EFI image in $IMGDIR/x86/64" >&2; exit 1; }
+        exec bash "$SCRIPT_DIR/smoke_test.sh" "${images[0]}"
+        ;;
+    malta_be) target=malta; subtarget=be; emulator=qemu-system-mips ;;
+    malta_le) target=malta; subtarget=le; emulator=qemu-system-mipsel ;;
+    armsr_armv7|armvirt_32) target=armsr; subtarget=armv7; emulator=qemu-system-arm ;;
+    armsr_armv8|armvirt_64) target=armsr; subtarget=armv8; emulator=qemu-system-aarch64 ;;
+    *) echo "Unsupported QEMU target: $TARGET" >&2; exit 2 ;;
+esac
+if ! command -v "$emulator" >/dev/null; then
+    echo "[SKIP] Install $emulator to run this boot test." >&2
+    exit 77
+fi
+images=("$IMGDIR/$target/$subtarget/"*-initramfs-kernel.bin)
+if [[ ${#images[@]} == 0 ]]; then
+    echo "No initramfs kernel found in $IMGDIR/$target/$subtarget" >&2
+    exit 1
+fi
+IMAGE=$(realpath -- "${images[0]}")
+LOG=${LOG:-$ROOT/logs/qemu/$TARGET.log}
+mkdir -p -- "$(dirname -- "$LOG")"
+LOG=$(realpath -- "$LOG")
+cd -- "$ROOT"
+status=0
+timeout --kill-after=5 "$TIMEOUT" bash scripts/qemustart "$target" "$subtarget" \
+    --kernel "$IMAGE" -snapshot -nic none -no-reboot > "$LOG" 2>&1 || status=$?
+tail -40 "$LOG"
+boot_result "$LOG" "$status"

@@ -79,5 +79,5 @@ if __name__ == '__main__':
     struct.pack_into(">I", data, 0x4, new_image_len)
 
     # Write the new file
-    with open(sys.argv[1] + '.new', 'wb') as f:
+    with open(sys.argv[2], 'wb') as f:
         f.write(data)

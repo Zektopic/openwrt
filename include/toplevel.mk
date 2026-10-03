@@ -60,7 +60,6 @@ export PATH:=$(path)
 export STAGING_DIR_HOST:=$(if $(STAGING_DIR),$(abspath $(STAGING_DIR)/../host),$(TOPDIR)/staging_dir/host)
 
 unexport TAR_OPTIONS
-export FORCE
 
 ifeq ($(FORCE),)
   .config scripts/config/conf scripts/config/mconf: $(STAGING_DIR_HOST)/.prereq-build
@@ -210,9 +209,10 @@ kernel_xconfig: prepare_kernel_conf
 
 $(STAGING_DIR_HOST)/.prereq-build: include/prereq-build.mk
 	mkdir -p tmp
-	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prereq-build.mk prereq FORCE="$(FORCE)" 2>/dev/null || \
-		if [ "$(FORCE)" = "1" ] || [ "$$FORCE" = "1" ] || [ -n "$$FORCE" ]; then true; else echo "Prerequisite check failed. Use FORCE=1 to override."; false; fi
-	@touch $@
+	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prereq-build.mk prereq 2>/dev/null || { \
+		echo "Prerequisite check failed. Use FORCE=1 to override."; \
+		false; \
+	}
   ifneq ($(realpath $(TOPDIR)/include/prepare.mk),)
 	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prepare.mk prepare 2>/dev/null || { \
 		echo "Preparation failed."; \

@@ -198,7 +198,7 @@ def make_header(data: bytes, build: str, version: str, oem: str, imageType: int,
     curSum = sum(header_words) + sum(data_words)
 
     # Set checksum
-    checksum = 0x100000000 - (curSum % 0x100000000)
+    checksum = (-curSum) & 0xffffffff
     header = header[:8] + checksum.to_bytes(4, 'big') + header[12:]
 
     return header

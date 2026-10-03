@@ -165,5 +165,25 @@ AnotherHeader: other
         result = make_sbom.get_opkg_sbom(text, set())
         self.assertEqual(len(result), 0)
 
+    def test_get_opkg_sbom_field_order_and_case(self):
+        text = "version: 2.0\npackage: libexample\nsection: libs\nlicense: MIT\n"
+        self.assertEqual(make_sbom.get_opkg_sbom(text, set()), [{
+            "name": "libexample", "version": "2.0", "type": "library",
+            "licenses": [{"license": {"name": "MIT"}}],
+        }])
+
+    def test_get_opkg_sbom_first_field_is_preserved(self):
+        text = "Version: 2.0\nPackage: example\nSection: libs\n"
+        self.assertEqual(make_sbom.get_opkg_sbom(text, set())[0]["version"], "2.0")
+
+    def test_get_opkg_sbom_crlf_and_folded_license(self):
+        text = ("Package: first\r\nVersion: 1\r\nLicense: MIT\r\n GPL-2.0\r\n"
+                "\r\nPackage: second\r\nVersion: 2\r\n")
+        result = make_sbom.get_opkg_sbom(text, set())
+        self.assertEqual([p["name"] for p in result], ["first", "second"])
+        self.assertEqual(result[0]["licenses"], [
+            {"license": {"name": "MIT"}}, {"license": {"name": "GPL-2.0"}},
+        ])
+
 if __name__ == '__main__':
     unittest.main()

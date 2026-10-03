@@ -299,7 +299,7 @@ export function prepare(data, phy, num_global_macaddr, macaddr_base) {
 	}
 
 	if (!data.macaddr) {
-		let pipe = fs.popen([
+		let args = [
 			"ucode",
 			"/usr/share/hostap/wdev.uc",
 			phy,
@@ -308,7 +308,14 @@ export function prepare(data, phy, num_global_macaddr, macaddr_base) {
 			`num_global=${num_global_macaddr}`,
 			`mbssid=${mbssid}`,
 			`macaddr_base=${macaddr_base ?? ""}`
-		]);
+		];
+		// The bundled fs.popen() accepts a shell command string, not an argv array.
+		let command = join(' ', map(args, (arg) => "'" + replace(arg + '', /'/g, "'\\''") + "'"));
+		let pipe = fs.popen(command);
+		if (!pipe) {
+			warn("Failed to generate MAC address for ", phy, "\n");
+			return;
+		}
 
 		data.macaddr = trim(pipe.read("all"), '\n');
 		pipe.close();

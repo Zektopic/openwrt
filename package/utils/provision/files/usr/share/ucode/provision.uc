@@ -40,7 +40,10 @@ const ubi_proto = {
 	commit: function(data) {
 		let len = HDR_LEN + length(data);
 
-		let file = fs.popen([ "ubiupdatevol", this.dev, "-s", len, "-" ], "w");
+		let dev = "'" + replace(this.dev, /'/g, "'\\''") + "'";
+		let file = fs.popen(`ubiupdatevol ${dev} -s ${len} -`, "w");
+		if (!file)
+			return false;
 		file.write(hdr.pack(MAGIC, length(data), 0));
 		file.write(data);
 

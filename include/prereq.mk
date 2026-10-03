@@ -2,15 +2,17 @@
 #
 # Copyright (C) 2006-2020 OpenWrt.org
 
-FORCE?=1
-export FORCE
-
 ifneq ($(__prereq_inc),1)
 __prereq_inc:=1
 
 prereq:
-	@rm -f $(TMP_DIR)/.prereq-error
-	@exit 0
+	if [ -f $(TMP_DIR)/.prereq-error ]; then \
+		echo; \
+		cat $(TMP_DIR)/.prereq-error; \
+		rm -f $(TMP_DIR)/.prereq-error; \
+		echo; \
+		false; \
+	fi
 
 .SILENT: prereq
 endif

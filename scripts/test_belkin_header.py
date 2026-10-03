@@ -1,6 +1,11 @@
 import unittest
 import importlib.util
 import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+from unittest.mock import patch
 
 class TestBelkinHeader(unittest.TestCase):
     @classmethod
@@ -42,9 +47,8 @@ class TestBelkinHeader(unittest.TestCase):
         self.assertEqual(self.belkin_header.encode_model("BKS-RTL93xx"), expected)
 
     def test_create_header(self):
-        from unittest.mock import patch
 
-        with patch('time.time', return_value=1700000000):
+        with patch.dict(os.environ, {"SOURCE_DATE_EPOCH": ""}), patch('time.time', return_value=1700000000):
             # size=1024, crc=0x12345678, belkin_header='0x07800001', belkin_model='BKS-RTL83xx'
             header = self.belkin_header.create_header(1024, 0x12345678, '0x07800001', 'BKS-RTL83xx')
 
@@ -57,6 +61,29 @@ class TestBelkinHeader(unittest.TestCase):
             self.assertEqual(header[28:32], b'\x01\x01\x02\x02') # versions
             self.assertEqual(header[32:46], b'IMG-1.01.02.02') # mod
             self.assertEqual(header[47:57], bytes.fromhex('0c55dfdc796244f3c000')) # model
+
+    def test_reproducible_streamed_image(self):
+        payload = bytes(range(256)) * 8193  # Cross multiple read chunk boundaries.
+        script = Path(__file__).with_name("belkin-header.py")
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.bin"
+            dest = Path(directory) / "image.bin"
+            source.write_bytes(payload)
+            for epoch in [0, 1700000000]:
+                with self.subTest(epoch=epoch):
+                    subprocess.run(
+                        [sys.executable, str(script), str(source), str(dest), "0x07800001", "BKS-RTL83xx"],
+                        env=dict(os.environ, SOURCE_DATE_EPOCH=str(epoch)), check=True,
+                    )
+                    image = dest.read_bytes()
+                    self.assertEqual(image[64:], payload)
+                    header = bytearray(image[:64])
+                    self.assertEqual(int.from_bytes(header[8:12], 'big'), epoch)
+                    self.assertEqual(int.from_bytes(header[12:16], 'big'), len(payload))
+                    self.assertEqual(header[24:28], self.belkin_header.xcrc32(payload))
+                    checksum = header[4:8]
+                    header[4:8] = bytes(4)
+                    self.assertEqual(checksum, self.belkin_header.xcrc32(header))
 
 if __name__ == '__main__':
     unittest.main()

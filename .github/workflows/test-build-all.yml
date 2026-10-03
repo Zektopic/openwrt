@@ -2,59 +2,67 @@ name: Test Build All Devices
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'target/linux/**'
-      - 'package/kernel/**'
-      - 'include/kernel*'
-      - '.github/workflows/**'
+    inputs:
+      targets:
+        description: 'Space-separated target/subtarget pairs, or all'
+        type: string
+        default: 'all'
+        required: true
 
 permissions:
   contents: read
-  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   determine_targets:
-    name: Set targets
     runs-on: ubuntu-latest
     outputs:
-      target: ${{ steps.find_targets.outputs.target }}
-
+      matrix: ${{ steps.targets.outputs.matrix }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set targets
-        id: find_targets
+      - uses: actions/checkout@v4
+      - name: Validate selected targets
+        id: targets
+        env:
+          REQUESTED_TARGETS: ${{ inputs.targets }}
         run: |
-          # Get all unique targets
-          export TARGETS="$(perl ./scripts/dump-target-info.pl targets 2>/dev/null \
-            | sort -u -t '/' -k1,1 \
-            | awk '{ print $1 }')"
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
 
-          JSON='['
-          FIRST=1
-          for TARGET in $TARGETS; do
-            [[ $FIRST -ne 1 ]] && JSON="$JSON"','
-            JSON="$JSON"'"'"${TARGET}"'"'
-            FIRST=0
-          done
-          JSON="$JSON"']'
-
-          echo "target=$JSON" >> $GITHUB_OUTPUT
+          output = subprocess.check_output(
+              ['perl', 'scripts/dump-target-info.pl', 'targets'], text=True
+          )
+          available = {line.split()[0] for line in output.splitlines() if line.strip()}
+          requested = os.environ['REQUESTED_TARGETS'].split()
+          selected = sorted(available if requested == ['all'] else set(requested))
+          if not selected or set(selected) - available:
+              raise SystemExit('Select valid target/subtarget pairs from scripts/dump-target-info.pl targets')
+          matrix = []
+          for pair in selected:
+              target, subtarget = pair.split('/')
+              matrix.append({'target': target, 'subtarget': subtarget})
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('matrix=' + json.dumps({'include': matrix}) + '\n')
+          PY
 
   build:
-    name: Build all devices for target
     needs: determine_targets
+    permissions:
+      contents: read
+      packages: read
+      actions: write
     strategy:
       fail-fast: false
-      matrix:
-        target: ${{ fromJson(needs.determine_targets.outputs.target) }}
-    uses: ./.github/workflows/build.yml
+      max-parallel: 2
+      matrix: ${{ fromJson(needs.determine_targets.outputs.matrix) }}
+    uses: openwrt/actions-shared-workflows/.github/workflows/reusable_build.yml@main
     with:
       target: ${{ matrix.target }}
+      subtarget: ${{ matrix.subtarget }}
       build_full: true
       build_all_boards: true
       include_feeds: true

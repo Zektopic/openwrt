@@ -124,5 +124,12 @@ class TestArubaHeader(unittest.TestCase):
         with self.assertRaises(AssertionError):
             self.aruba_header.make_header(data, 'build', '1.0', 'oem', 0, 0)
 
+    def test_zero_checksum_is_representable(self):
+        initial = self.aruba_header.make_header(bytes(4), 'build', '1.0', 'oem', 0, 0)
+        # A payload equal to the first header checksum makes the new checksum zero.
+        data = initial[8:12]
+        header = self.aruba_header.make_header(data, 'build', '1.0', 'oem', 0, 0)
+        self.assertEqual(header[8:12], bytes(4))
+
 if __name__ == '__main__':
     unittest.main()
