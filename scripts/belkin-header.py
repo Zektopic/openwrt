@@ -72,7 +72,7 @@ def create_header(size, crc, belkin_header, belkin_model):
         ">IIII8s4sBBBB",
         int(belkin_header, 0),
         0, # placeholder for header crc
-        int(time.time()),
+        int(os.environ.get('SOURCE_DATE_EPOCH') or time.time()),
         size,
         b_company + b'\x00' * (8 - len(b_company)),
         xcrc32_val(crc),
