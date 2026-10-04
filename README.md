@@ -62,7 +62,8 @@ make4.1+ perl python3.8+ rsync subversion unzip which
 
 ### Testing this fork
 
-Run the build-script regression suite with Python 3.8 or later, Perl and GNU make:
+Run the regression suite with Python 3.8 or later, Perl and GNU make. Install
+a C compiler and libpcap development headers to include the native NVRAM/EAD tests:
 
 ```sh
 python3 -m pip install 'pytest>=8.3,<10' 'ruff>=0.9,<1'
@@ -89,6 +90,8 @@ checks alone do not verify firmware compilation or hardware operation.
 
 See [.zektopic/TEST_SCRIPTS/README.md](.zektopic/TEST_SCRIPTS/README.md) for local
 build helpers and QEMU boot tests.
+See [.zektopic/REPAIR_REPORT.md](.zektopic/REPAIR_REPORT.md) for the repair scope,
+recorded validation, and hardware coverage limits.
 
 ### Related Repositories
 

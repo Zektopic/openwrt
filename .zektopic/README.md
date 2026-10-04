@@ -2,6 +2,11 @@
 
 This is the Zektopic fork of [OpenWrt](https://github.com/openwrt/openwrt) — the leading open-source Linux distribution for embedded devices and routers.
 
+See [the October 2026 repair report](REPAIR_REPORT.md) for current changes and
+verified results, and [the build helpers](TEST_SCRIPTS/README.md) for usage.
+The PR #75 build, security, and optimization reports below are historical;
+they do not establish test coverage for the current revision.
+
 ## Purpose
 
 This fork maintains the core OpenWrt build system while adding custom security hardening and performance optimizations.
@@ -9,7 +14,7 @@ This fork maintains the core OpenWrt build system while adding custom security h
 ## Key Changes vs Upstream
 
 ### Security Fixes (Sentinel Series)
-- **wireguard.uc** — Command injection fix via array-based exec + regex interface allowlist
+- **wireguard.uc** — Argument-vector execution and validated, quoted pipe commands compatible with the pinned ucode interpreter
 - **ead/button-hotplug** — Buffer overflow fixes (strcpy → strscpy/strncpy)
 - **provision.uc** — Command injection prevention
 - **trelay** — TOCTOU and buffer overflow hardening
@@ -30,7 +35,8 @@ Memory usage reductions across Python build scripts via:
 ```
 .zektopic/
   README.md                         # This file
-  BUILD_REPORT.md                   # Build test results
+  REPAIR_REPORT.md                  # Current repair and validation results
+  BUILD_REPORT.md                   # Historical PR #75 report
   CONFLICT_RESOLUTION.md            # How PR #75 conflicts were resolved
   SECURITY_CHANGES.md               # Security fix details
   OPTIMIZATION_CHANGES.md           # Script optimization details
