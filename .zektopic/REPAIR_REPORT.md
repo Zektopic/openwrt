@@ -66,7 +66,9 @@ subprocesses, and ucode tests use command stubs; neither writes to a real router
 | All supported target/subtarget configurations | 97/97 passed; 2117 selectable device profiles |
 | Host tools build | Passed |
 | Native EAD daemon and client build after autoreconf | Passed |
-| x86/64 firmware build and EFI QEMU boot | Images built; guest reached the OpenWrt console |
+| Final x86/64 firmware build and EFI QEMU boot | Passed, including upstream OpenSSL 3.5.9; final image reached the console |
+| Generated artifact SHA-256 checks | All 14 passed |
+| Services inside the x86 guest | ubus/system board, netifd loopback up, ucode execution, and installed APK database passed |
 
 Build and regression logs are retained locally under `logs/repair/`, and firmware
 artifacts under `bin/targets/x86/64/`. These generated files and signing keys are
