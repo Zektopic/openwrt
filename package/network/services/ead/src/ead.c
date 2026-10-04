@@ -474,41 +474,13 @@ handle_send_auth(struct ead_packet *pkt, int len, int *nstate)
 }
 
 static void
-ead_exec_command(char *cmd)
+ead_exec_command(const char *cmd)
 {
-	char *argv[128];
-	int argc = 0;
-	char *p = cmd;
-	char quote = '\0';
-
-	while (*p && argc < 127) {
-		while (*p == ' ' || *p == '\t') p++;
-		if (!*p) break;
-
-		argv[argc++] = p;
-
-		while (*p) {
-			if (!quote && (*p == '\'' || *p == '"')) {
-				quote = *p;
-				memmove(p, p + 1, strlen(p));
-				continue;
-			} else if (quote && *p == quote) {
-				quote = '\0';
-				memmove(p, p + 1, strlen(p));
-				continue;
-			} else if (!quote && (*p == ' ' || *p == '\t')) {
-				*p = '\0';
-				p++;
-				break;
-			}
-			p++;
-		}
-	}
-	argv[argc] = NULL;
-
-	if (argc > 0) {
-		execvp(argv[0], argv);
-	}
+	/* EAD provides an authenticated administrative shell. Preserve shell
+	 * quoting, pipelines and redirection when executing the command.
+	 */
+	execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
+	_exit(127);
 }
 
 static bool
@@ -529,7 +501,7 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 	datalen = ead_decrypt_message(msg) - sizeof(struct ead_msg_cmd);
 	if (datalen <= 0)
 		return false;
-	if (datalen >= 1024)
+	if (datalen > 1024)
 		return false;
 
 	type = ntohs(cmd->type);
@@ -553,8 +525,7 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(pfd[1], 1);
 				dup2(pfd[1], 2);
 			}
-				ead_exec_command((char *)cmd->data);
-			exit(0);
+			ead_exec_command((char *)cmd->data);
 		} else if (pid > 0) {
 			close(pfd[1]);
 			if (!timeout)
@@ -574,8 +545,7 @@ handle_send_cmd(struct ead_packet *pkt, int len, int *nstate)
 				dup2(fd, 1);
 				dup2(fd, 2);
 			}
-				ead_exec_command((char *)cmd->data);
-			exit(0);
+			ead_exec_command((char *)cmd->data);
 		} else if (pid > 0) {
 			break;
 		}

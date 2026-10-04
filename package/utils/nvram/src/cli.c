@@ -228,7 +228,7 @@ int main( int argc, const char *argv[] )
 
 		nvram_close(nvram);
 
-		if( commit )
+		if( commit && !stat )
 			stat = staging_to_nvram();
 	}
 

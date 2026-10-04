@@ -70,7 +70,7 @@ static void _nvram_free(nvram_handle_t *h)
 static nvram_tuple_t * _nvram_realloc( nvram_handle_t *h, nvram_tuple_t *t,
 	const char *name, const char *value )
 {
-	size_t name_len, value_len;
+	size_t value_len;
 
 	value_len = strlen(value);
 	if ((value_len + 1) > h->length - h->offset)
@@ -95,8 +95,7 @@ static nvram_tuple_t * _nvram_realloc( nvram_handle_t *h, nvram_tuple_t *t,
 		if(!t->value)
 			return NULL;
 
-		strlcpy(t->value, value, value_len + 1);
-		t->value[value_len] = '\0';
+		memcpy(t->value, value, value_len + 1);
 	}
 
 	return t;
@@ -268,11 +267,32 @@ int nvram_commit(nvram_handle_t *h)
 {
 	nvram_header_t *header = nvram_header(h);
 	char *init, *config, *refresh, *ncdl;
-	char *ptr, *end;
+	char *ptr;
+	size_t capacity, length = sizeof(nvram_header_t) + 1;
 	int i;
 	nvram_tuple_t *t;
 	nvram_header_t tmp;
 	uint8_t crc;
+
+	/* Check the complete image before changing the mapped flash contents. */
+	if (h->offset > h->length)
+		return -ENOSPC;
+	capacity = (h->length - h->offset) & ~(size_t)3;
+	if (length > capacity)
+		return -ENOSPC;
+	for (i = 0; i < NVRAM_ARRAYSIZE(h->nvram_hash); i++) {
+		for (t = h->nvram_hash[i]; t; t = t->next) {
+			size_t name_len = strlen(t->name);
+			size_t value_len = strlen(t->value);
+			size_t remaining = capacity - length;
+
+			if (name_len > remaining || value_len > remaining - name_len ||
+			    remaining - name_len - value_len < 2)
+				return -ENOSPC;
+			length += name_len + value_len + 2; /* '=' and NUL */
+		}
+	}
+	length = NVRAM_ROUNDUP(length, 4);
 
 	/* Regenerate header */
 	header->magic = NVRAM_MAGIC;
@@ -294,35 +314,26 @@ int nvram_commit(nvram_handle_t *h)
 
 	/* Clear data area */
 	ptr = (char *) header + sizeof(nvram_header_t);
-	memset(ptr, 0xFF, nvram_part_size - h->offset - sizeof(nvram_header_t));
+	memset(ptr, 0xFF, h->length - h->offset - sizeof(nvram_header_t));
 	memset(&tmp, 0, sizeof(nvram_header_t));
-
-	/* Leave space for a double NUL at the end */
-	end = (char *) header + nvram_part_size - h->offset - 2;
 
 	/* Write out all tuples */
 	for (i = 0; i < NVRAM_ARRAYSIZE(h->nvram_hash); i++) {
 		for (t = h->nvram_hash[i]; t; t = t->next) {
-			int written = snprintf(ptr, end - ptr, "%s=%s", t->name, t->value);
-			if (written < 0 || written >= end - ptr) {
-				/* error or truncation, ignore the rest or break? */
-				break;
-			}
-			ptr += snprintf(ptr, end - ptr, "%s=%s", t->name, t->value) + 1;
+			size_t name_len = strlen(t->name);
+			size_t value_len = strlen(t->value);
+
+			memcpy(ptr, t->name, name_len);
+			ptr += name_len;
+			*ptr++ = '=';
+			memcpy(ptr, t->value, value_len + 1);
+			ptr += value_len + 1;
 		}
 	}
 
-	/* End with a double NULL and pad to 4 bytes */
-	*ptr = '\0';
-	ptr++;
-
-	if( (uintptr_t)ptr % 4 )
-		memset(ptr, 0, 4 - ((uintptr_t)ptr % 4));
-
-	ptr++;
-
-	/* Set new length */
-	header->len = NVRAM_ROUNDUP(ptr - (char *) header, 4);
+	/* End with a double NUL and initialize every byte covered by the CRC. */
+	memset(ptr, 0, length - (ptr - (char *)header));
+	header->len = length;
 
 	/* Little-endian CRC8 over the last 11 bytes of the header */
 	tmp.crc_ver_init   = header->crc_ver_init;

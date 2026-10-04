@@ -155,8 +155,6 @@ handle_pong(void)
 	if (len <= 0 || len >= 1024)
 		return false;
 
-	if (len >= 1024)
-		len = 1023;
 
 	pong->name[len] = 0;
 	auth_type = ntohs(pong->auth_type);
@@ -298,16 +296,17 @@ static int
 send_command(const char *command)
 {
 	struct ead_msg_cmd *cmd = EAD_ENC_DATA(msg, cmd);
-	int cmdlen = strlen(command);
+	size_t cmdlen = strlen(command);
 
-	if (cmdlen >= 1024)
-		cmdlen = 1023;
+	if (cmdlen >= 1024) {
+		fprintf(stderr, "Command exceeds the 1023-byte protocol limit\n");
+		return 0;
+	}
 
 	msg->type = htonl(EAD_TYPE_SEND_CMD);
 	cmd->type = htons(EAD_CMD_NORMAL);
 	cmd->timeout = htons(10);
-	strncpy((char *)cmd->data, command, cmdlen);
-	cmd->data[cmdlen] = '\0';
+	memcpy(cmd->data, command, cmdlen + 1);
 	ead_encrypt_message(msg, sizeof(struct ead_msg_cmd) + cmdlen + 1);
 	return send_packet(EAD_TYPE_RESULT_CMD, handle_cmd_data, 1);
 }
