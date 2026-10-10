@@ -58,7 +58,11 @@ def main():
         results.append({"target": pair, "pass": passed, "profiles": profiles})
         print(f"{'PASS' if passed else 'FAIL'} {pair}: {profiles} device profiles", flush=True)
 
-    (output / "results.json").write_text(json.dumps(results, indent=2) + "\n")
+    # ⚡ Bolt: Optimization: Use json.dump(f) instead of path.write_text(json.dumps())
+    # to stream directly to the file descriptor, saving memory by avoiding large string creation.
+    with open(output / "results.json", "w") as f:
+        json.dump(results, f, indent=2)
+        f.write("\n")
     passed = sum(result["pass"] for result in results)
     print(f"{passed}/{len(results)} configurations passed. Results: {output}")
     return 0 if passed == len(results) else 1
