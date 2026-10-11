@@ -18,6 +18,7 @@
 
 import argparse
 import hashlib
+import os
 import struct
 
 SALT = bytes([0x7a, 0x2b, 0x15, 0xed, 0x9b, 0x98, 0x59, 0x6d,
@@ -55,13 +56,25 @@ def make_entry(name, base, size, field):
     return nm + b'\x00' * (32 - len(nm)) + struct.pack('>III', base, size, field)
 
 
-def build_image(os_data, meta):
-    field0 = len(os_data)                       # rootfs size (ubiformat -S)
-    blob = bytearray(os_data)
+def build_image(rootfs_path, meta):
+    field0 = os.path.getsize(rootfs_path)       # rootfs size (ubiformat -S)
+
+    meta_size = sum(len(s['data']) for s in meta)
+    img_size = DATA_OFF + field0 + meta_size
+    img = bytearray(img_size)
+
+    # ⚡ Bolt: Optimization: Pre-allocate a single bytearray and use readinto()
+    # to load the original file directly into the padded payload.
+    with open(rootfs_path, 'rb') as f:
+        f.readinto(memoryview(img)[DATA_OFF:DATA_OFF + field0])
+
+    # Ensure padding region is filled with 0xff before DATA_OFF
+    img[:DATA_OFF] = b'\xff' * DATA_OFF
+
     bases, cur = [], field0
     for s in meta:
         bases.append(cur)
-        blob += s['data']
+        img[DATA_OFF + cur:DATA_OFF + cur + len(s['data'])] = s['data']
         cur += len(s['data'])
 
     tbl = struct.pack('>III', field0, len(meta), 0)
@@ -69,9 +82,7 @@ def build_image(os_data, meta):
         tbl += make_entry(s['name'], bases[i], len(s['data']), s.get('field', 0))
     tbl += b'\x00' * (TABLE_SZ - len(tbl))
 
-    img = bytearray(b'\xff' * (DATA_OFF + len(blob)))
     img[TABLE_OFF:TABLE_OFF + TABLE_SZ] = tbl
-    img[DATA_OFF:DATA_OFF + len(blob)] = blob
     struct.pack_into('>I', img, 0, len(img))
     img[4:0x14] = hashlib.md5(SALT + bytes(img[0x14:])).digest()
     return bytes(img)
@@ -83,14 +94,12 @@ def main():
     ap.add_argument('-o', '--output', required=True, help='factory image output')
     args = ap.parse_args()
 
-    with open(args.rootfs, 'rb') as f:
-        os_data = f.read()
     meta = [
         {'name': 'support-list', 'data': SUPPORT_LIST, 'field': 0},
         {'name': 'soft-version', 'data': SOFT_VERSION, 'field': 0},
     ]
     with open(args.output, 'wb') as f:
-        f.write(build_image(os_data, meta))
+        f.write(build_image(args.rootfs, meta))
 
 
 if __name__ == '__main__':
