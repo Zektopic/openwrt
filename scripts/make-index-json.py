@@ -10,7 +10,6 @@ unusable by the ASU server.  The version 2 format contains package names that
 have been stripped of their ABI version.
 """
 
-import email.parser
 import json
 import re
 
@@ -72,14 +71,28 @@ def parse_apk(file_obj) -> dict:
 def parse_opkg(text: str) -> dict:
     packages: dict = {}
 
-    parser = email.parser.Parser()
     for chunk in re.split(r"\r?\n[ \t]*\r?\n", text.strip()):
-        package = parser.parsestr(chunk.lstrip("\r\n"), headersonly=True)
-        name = package.get("Package", "").strip()
+        fields = {}
+        last_key = None
+        for line in chunk.splitlines():
+            if not line:
+                continue
+            if line[0].isspace():
+                if last_key:
+                    fields[last_key] += " " + line.strip()
+            else:
+                idx = line.find(":")
+                if idx != -1:
+                    last_key = line[:idx].strip().lower()
+                    fields[last_key] = line[idx+1:].strip()
+                else:
+                    last_key = None
+
+        name = fields.get("package", "")
         if not name:
             continue
-        name = removesuffix(name, package.get("ABIVersion", "").strip())
-        packages[name] = package.get("Version", "").strip()
+        name = removesuffix(name, fields.get("abiversion", ""))
+        packages[name] = fields.get("version", "")
 
     return packages
 

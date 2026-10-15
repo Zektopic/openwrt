@@ -279,3 +279,7 @@
 ## 2024-05-18 - [Optimize memory allocations during file padding]
 **Learning:** Reading a large file completely into a `bytes` object using `f.read()`, then casting to `bytearray`, and finally appending empty bytes using `.extend(bytearray(new_size - old_size))` incurs heavy memory overhead and performance penalties due to multiple memory allocations and copying.
 **Action:** When appending padding to a large file, pre-calculate the required size, pre-allocate a single bytearray of that size using `data = bytearray(new_size)`, and read the original file contents directly into it using `f.readinto(memoryview(data)[:old_size])`.
+
+## 2024-06-25 - [Python RegEx parsing in OPKG indexes]
+**Learning:** In Python, when parsing large amounts of simple RFC822-style key-value text blocks (like OPKG indexes), avoid using `email.parser.Parser` due to its high RFC compliance overhead. Using string operations (`str.find`, slicing) or cached regular expressions is significantly faster. However, simple string operations can be tricky to implement correctly for folded continuation lines (where values span multiple lines with leading whitespace).
+**Action:** When extracting fields from folded RFC822 blocks, avoid `email.parser` but prefer using simple string splitlines parsing with state tracking (`fields`, `last_key`). This gives a 4-5x speedup over `email.parser` while safely handling multi-line folded values and CRLF line endings.

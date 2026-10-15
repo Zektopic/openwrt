@@ -8,7 +8,6 @@
 """
 
 import datetime
-import email.parser
 import json
 import os
 import re
@@ -110,25 +109,44 @@ def get_opkg_sbom(text: str, installed: set) -> list:
         "libs": "library"
     }
 
-    # Package indexes use RFC822 fields: ordering and capitalization are not
-    # significant, and values such as License may span continuation lines.
-    parser = email.parser.Parser()
     for chunk in re.split(r"\r?\n[ \t]*\r?\n", text.strip()):
-        package = parser.parsestr(chunk.lstrip("\r\n"), headersonly=True)
-        name = package.get("Package", "").strip()
+        fields = {}
+        last_key = None
+        for line in chunk.splitlines():
+            if not line:
+                continue
+            if line[0].isspace():
+                if last_key:
+                    fields[last_key] += " " + line.strip()
+            else:
+                idx = line.find(":")
+                if idx != -1:
+                    last_key = line[:idx].strip().lower()
+                    fields[last_key] = line[idx+1:].strip()
+                else:
+                    last_key = None
+
+        name = fields.get("package", "")
         if not name or (installed and name not in installed):
             continue
 
         element = {
             "name": name,
-            "type": type_allowed.get(package.get("Section", "").strip(), "application"),
+            "type": type_allowed.get(fields.get("section", ""), "application"),
         }
-        for field, key in [("Version", "version"), ("CPE-ID", "cpe")]:
-            if field in package:
-                element[key] = package[field].strip()
-        if "License" in package:
+
+        version = fields.get("version")
+        if version:
+            element["version"] = version
+
+        cpe = fields.get("cpe-id")
+        if cpe:
+            element["cpe"] = cpe
+
+        license_str = fields.get("license")
+        if license_str:
             element["licenses"] = [
-                {"license": {"name": license}} for license in package["License"].split()
+                {"license": {"name": license}} for license in license_str.split()
             ]
         components.append(element)
 
