@@ -39,15 +39,25 @@ def record(name, base, next_off, size):
     return name.ljust(0x20, b"\0") + struct.pack(">III", base, next_off, size)
 
 
-def build(rootfs, fw_type, sections):
+def build(rootfs_path, fw_type, sections):
+    import os
     payload = b""
     for i, (name, data) in enumerate(sections):
         base = len(payload) + REC_LEN
         next_off = 0 if i == len(sections) - 1 else base + len(data)
         payload += record(name, base, next_off, len(data)) + data
-    payload += rootfs
 
-    img = bytearray(HDR_LEN) + payload
+    rootfs_size = os.path.getsize(rootfs_path)
+    total_len = HDR_LEN + len(payload) + rootfs_size
+    img = bytearray(total_len)
+
+    # Header region is already zero-initialized
+    img[HDR_LEN:HDR_LEN + len(payload)] = payload
+
+    # Optimization: read the large file directly into the pre-allocated buffer
+    with open(rootfs_path, "rb") as f:
+        f.readinto(memoryview(img)[HDR_LEN + len(payload):])
+
     img[0x14:0x14 + 8 + len(fw_type)] = b"fw-type:" + fw_type
     struct.pack_into(">I", img, 0, len(img))
     img[0x04:0x14] = MD5_SALT
@@ -76,10 +86,7 @@ def main():
         (b"soft-version", ("soft_ver:%s\n\n" % a.soft_ver).encode()),
     ]
 
-    with open(a.rootfs, "rb") as f:
-        rootfs = f.read()
-
-    img = build(rootfs, a.fw_type.encode(), sections)
+    img = build(a.rootfs, a.fw_type.encode(), sections)
     if not MIN_LEN <= len(img) <= MAX_LEN:
         sys.exit("fwup: image length %d out of accepted range" % len(img))
 
