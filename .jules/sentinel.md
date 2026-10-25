@@ -212,3 +212,8 @@
 **Vulnerability:** Shell command injection existed in `scripts/feeds` when the feed `$name` variable (which could be controlled by an attacker via a malicious `feeds.conf` file) was interpolated directly into a single-string `system()` call: `system("$mk -s prepare-mk OPENWRT_BUILD= TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");`.
 **Learning:** In Perl, passing a single string to `system()` passes the entire string to `/bin/sh -c` for execution, exposing the command to shell command injection.
 **Prevention:** Always use the list-form of `system(@args)` (e.g., `system($mk, "-s", "prepare-mk", "OPENWRT_BUILD=", "TMP_DIR=$ENV{TOPDIR}/feeds/$name.tmp");`) to bypass the shell and pass arguments directly via `execvp`, which neutralizes shell injection vulnerabilities.
+
+## 2024-10-25 - Prevent Command Injection in Perl `open`
+**Vulnerability:** 2-argument `open` calls in `scripts/brcmImage.pl` allow command injection if a user provides a filename ending with a pipe (`|`).
+**Learning:** Legacy 2-argument `open` automatically interprets pipes, leading to arbitrary code execution.
+**Prevention:** Always use the 3-argument form of `open` (e.g. `open my $fh, '<', $filename`) to force literal filename interpretation.
