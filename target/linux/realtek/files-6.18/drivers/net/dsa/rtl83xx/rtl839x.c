@@ -2,6 +2,7 @@
 
 #include <asm/mach-rtl-otto/mach-rtl-otto.h>
 #include <linux/etherdevice.h>
+#include <linux/regmap.h>
 
 #include "lag.h"
 #include "l2.h"
@@ -51,6 +52,7 @@
 
 #define RTL839X_SPCL_TRAP_EAPOL_CTRL		(0x105C)
 #define RTL839X_SPCL_TRAP_SWITCH_MAC_CTRL	(0x1068)
+#define RTL839X_VLAN_PORT_AFT			(0x2600)
 
 #define RTL839X_IMR_GLB				(0x0064)
 #define RTL839X_IMR_PORT_LINK_STS_CHG		(0x0068)
@@ -79,10 +81,15 @@ static inline int rtl839x_port_iso_ctrl(int p)
 	return RTL839X_PORT_ISO_CTRL(p);
 }
 
-inline void rtl839x_exec_tbl2_cmd(u32 cmd)
+void rtl839x_exec_tbl2_cmd(struct otto_dsa_priv *priv, u32 cmd)
 {
-	sw_w32(cmd, RTL839X_TBL_ACCESS_CTRL_2);
-	do { } while (sw_r32(RTL839X_TBL_ACCESS_CTRL_2) & (1 << 9));
+	u32 val;
+
+	if (regmap_write(priv->map, RTL839X_TBL_ACCESS_CTRL_2, cmd))
+		return;
+
+	regmap_read_poll_timeout(priv->map, RTL839X_TBL_ACCESS_CTRL_2,
+				val, !(val & BIT(9)), 0, 0);
 }
 
 static inline int rtl839x_mac_force_mode_ctrl(int p)
@@ -210,6 +217,7 @@ const struct rtldsa_config rtldsa_839x_cfg = {
 	.stat_rst = RTL839X_STAT_RST,
 	.stat_port_std_mib = RTL839X_STAT_PORT_STD_MIB,
 	.mib_desc = &otto_stats_839x_mib_desc,
+	.drop_desc = &otto_stats_839x_drop_desc,
 	.stat_counters_lock = otto_stats_counters_lock_register,
 	.stat_counters_unlock = otto_stats_counters_unlock_register,
 	.stat_update_counters_atomically = otto_stats_update_counters_atomically,
@@ -231,6 +239,7 @@ const struct rtldsa_config rtldsa_839x_cfg = {
 	.n_counters = 1024,
 	.n_pie_blocks = 18,
 	.pie_cls_flower = true,
+	.pie_mirror_group = true,
 	.port_ignore = 0x3f,
 	.vlan_tables_read = otto_vlan_839x_tables_read,
 	.vlan_set_tagged = otto_vlan_839x_set_tagged,
@@ -238,8 +247,10 @@ const struct rtldsa_config rtldsa_839x_cfg = {
 	.vlan_profile_get = otto_vlan_839x_profile_get,
 	.vlan_profile_dump = otto_vlan_839x_profile_dump,
 	.vlan_profile_setup = otto_vlan_839x_profile_setup,
+	.vlan_port_aft = RTL839X_VLAN_PORT_AFT,
 	.vlan_fwd_on_inner = otto_vlan_839x_port_forward_on_inner,
 	.vlan_port_keep_tag_set = otto_vlan_839x_port_keep_tag_set,
+	.vlan_port_qinq_set = otto_vlan_839x_port_qinq_set,
 	.vlan_port_pvidmode_set = otto_vlan_839x_port_pvid_mode_set,
 	.vlan_port_pvid_set = otto_vlan_839x_port_pvid_set,
 	.set_vlan_igr_filter = rtl839x_set_igr_filter,
@@ -292,9 +303,9 @@ const struct rtldsa_config rtldsa_839x_cfg = {
 	.packet_cntr_read = otto_stats_839x_packet_cntr_read,
 	.packet_cntr_clear = otto_stats_839x_packet_cntr_clear,
 	.set_receive_management_action = rtl839x_set_receive_management_action,
-	.get_egress_rate = rtldsa_839x_get_egress_rate,
-	.set_egress_rate = rtldsa_839x_set_egress_rate,
-	.qos_init = rtldsa_839x_qos_init,
+	.get_egress_rate = otto_qos_839x_get_egress_rate,
+	.set_egress_rate = otto_qos_839x_set_egress_rate,
+	.qos_init = otto_qos_839x_init,
 	.lag_set_distribution_algorithm = otto_lag_839x_set_distribution_algorithm,
 	.lag_set_port_members = otto_lag_839x_set_port_members,
 	.lag_setup_algomask = otto_lag_83xx_setup_algomask,
