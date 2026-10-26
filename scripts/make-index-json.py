@@ -13,6 +13,11 @@ have been stripped of their ABI version.
 import json
 import re
 
+# ⚡ Bolt: Optimization: Pre-compile regex at the module level.
+# Repeatedly compiling regular expressions inside loops or frequently called functions
+# introduces significant overhead. Caching the compiled regex improves execution speed.
+CHUNK_SPLIT_REGEX = re.compile(r"\r?\n[ \t]*\r?\n")
+
 
 def removesuffix(src, suffix):
     # For compatibility with Python < 3.9.
@@ -71,7 +76,7 @@ def parse_apk(file_obj) -> dict:
 def parse_opkg(text: str) -> dict:
     packages: dict = {}
 
-    for chunk in re.split(r"\r?\n[ \t]*\r?\n", text.strip()):
+    for chunk in CHUNK_SPLIT_REGEX.split(text.strip()):
         fields = {}
         last_key = None
         for line in chunk.splitlines():

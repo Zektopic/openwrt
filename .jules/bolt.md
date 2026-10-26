@@ -283,3 +283,6 @@
 ## 2024-06-25 - [Python RegEx parsing in OPKG indexes]
 **Learning:** In Python, when parsing large amounts of simple RFC822-style key-value text blocks (like OPKG indexes), avoid using `email.parser.Parser` due to its high RFC compliance overhead. Using string operations (`str.find`, slicing) or cached regular expressions is significantly faster. However, simple string operations can be tricky to implement correctly for folded continuation lines (where values span multiple lines with leading whitespace).
 **Action:** When extracting fields from folded RFC822 blocks, avoid `email.parser` but prefer using simple string splitlines parsing with state tracking (`fields`, `last_key`). This gives a 4-5x speedup over `email.parser` while safely handling multi-line folded values and CRLF line endings.
+## 2024-06-25 - [Optimize Python RegEx compilation overhead]
+**Learning:** In Python performance optimizations, repeatedly compiling regular expressions using `re.compile()` inside loops or frequently called functions introduces significant overhead. Always cache compiled regexes (e.g., in a global dictionary or at the module level) to maximize execution speed.
+**Action:** Extract inline `re.split(r'...', ...)` calls into module-level `COMPILED_REGEX = re.compile(r'...)` constants and use `COMPILED_REGEX.split(...)`.
