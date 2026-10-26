@@ -74,7 +74,7 @@ EXAMPLES:
 
 sub Read_Image
 {
-	open my $fh, $_[0] or die "open $_[0]: $!";
+	open my $fh, '<', $_[0] or die "open $_[0]: $!";
 	local $/;	# Set input to "slurp" mode.
 	my $buf = <$fh>;
 	close $fh;
@@ -133,7 +133,7 @@ sub bcmImage
 	printf "rootfs at 0x%x length 0x%x(%u)\n", $fa, length($f), length($f)
 		if $arg{v};
 
-	open(FO, ">$arg{o}");
+	open(FO, '>', $arg{o});
 	print FO $hdr;
 	print FO $img;
 	close FO;
