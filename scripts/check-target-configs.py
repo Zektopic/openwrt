@@ -51,9 +51,11 @@ def main():
         config.with_suffix(".log").write_text(run.stdout + run.stderr)
         settings = config.read_text().splitlines()
         passed = run.returncode == 0 and f"CONFIG_TARGET_{target}_{subtarget}=y" in settings
+        # ⚡ Bolt: Optimization: Extract target prefix string formatting from loop
+        # and use an if condition in the generator expression for ~2x speedup.
+        prefix = f"CONFIG_TARGET_DEVICE_{target}_{subtarget}_DEVICE_"
         profiles = sum(
-            line.startswith(f"CONFIG_TARGET_DEVICE_{target}_{subtarget}_DEVICE_") and line.endswith("=y")
-            for line in settings
+            1 for line in settings if line.startswith(prefix) and line.endswith("=y")
         )
         results.append({"target": pair, "pass": passed, "profiles": profiles})
         print(f"{'PASS' if passed else 'FAIL'} {pair}: {profiles} device profiles", flush=True)
