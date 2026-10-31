@@ -286,3 +286,11 @@
 ## 2024-06-25 - [Optimize Python RegEx compilation overhead]
 **Learning:** In Python performance optimizations, repeatedly compiling regular expressions using `re.compile()` inside loops or frequently called functions introduces significant overhead. Always cache compiled regexes (e.g., in a global dictionary or at the module level) to maximize execution speed.
 **Action:** Extract inline `re.split(r'...', ...)` calls into module-level `COMPILED_REGEX = re.compile(r'...)` constants and use `COMPILED_REGEX.split(...)`.
+
+## 2024-05-19 - [Optimize string formatting inside loops]
+**Learning:** In Python, repeatedly evaluating f-strings or constructing constant strings inside the condition of a loop or generator expression (e.g., `sum(line.startswith(f"PREFIX_{var}") for line in lines)`) introduces significant overhead.
+**Action:** Always extract loop-invariant string constructions into a variable before the loop to avoid redundant evaluations.
+
+## 2024-05-19 - [Optimize boolean summing in Python]
+**Learning:** In Python, when counting elements that match a condition using `sum()`, prefer `sum(1 for item in iterable if condition)` over summing boolean expressions (e.g., `sum(condition for item in iterable)`), as it is generally faster and avoids unnecessary boolean evaluations.
+**Action:** Use `sum(1 for item in iterable if condition)` when counting matches.
