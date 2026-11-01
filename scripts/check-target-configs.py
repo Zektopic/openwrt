@@ -57,6 +57,7 @@ def main():
             1 for line in settings
             if line.startswith(prefix) and line.endswith("=y")
         )
+        )
         results.append({"target": pair, "pass": passed, "profiles": profiles})
         print(f"{'PASS' if passed else 'FAIL'} {pair}: {profiles} device profiles", flush=True)
 
