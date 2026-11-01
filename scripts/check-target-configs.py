@@ -56,9 +56,8 @@ def main():
         # to avoid redundant string evaluations and improve execution speed.
         prefix = f"CONFIG_TARGET_DEVICE_{target}_{subtarget}_DEVICE_"
         profiles = sum(
-            1
-            for line in settings
-            if line.startswith(prefix) and line.endswith("=y")
+            1 for line in settings if line.startswith(prefix) and line.endswith("=y")
+        )
         )
         results.append({"target": pair, "pass": passed, "profiles": profiles})
         print(f"{'PASS' if passed else 'FAIL'} {pair}: {profiles} device profiles", flush=True)
