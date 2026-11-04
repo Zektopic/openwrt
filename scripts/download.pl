@@ -216,10 +216,9 @@ sub download
 
 		$hash_cmd and do {
 			my $path = "$target/$filename.dl";
-			$path =~ s/'/'\\''/g;
 			my $hash_path = "$target/$filename.hash";
-			$hash_path =~ s/'/'\\''/g;
-			if (system("$hash_cmd < '$path' > '$hash_path'")) {
+			my @hash_cmd_list = split(" ", $hash_cmd);
+			if (system("sh", "-c", 'in="$1"; out="$2"; shift 2; exec "$0" "$@" < "$in" > "$out"', $hash_cmd_list[0], $path, $hash_path, @hash_cmd_list[1..$#hash_cmd_list])) {
 				print("Failed to generate hash for $filename\n");
 				return;
 			}
@@ -234,8 +233,8 @@ sub download
 		open(FETCH_FD, '-|', @cmd) or die "Cannot launch aria2c, curl or wget.\n";
 		$hash_cmd and do {
 			my $hash_path = "$target/$filename.hash";
-			$hash_path =~ s/'/'\\''/g;
-			open MD5SUM, "| $hash_cmd > '$hash_path'" or die "Cannot launch $hash_cmd.\n";
+			my @hash_cmd_list = split(" ", $hash_cmd);
+			open MD5SUM, '|-', "sh", "-c", 'out="$1"; shift; exec "$0" "$@" > "$out"', $hash_cmd_list[0], $hash_path, @hash_cmd_list[1..$#hash_cmd_list] or die "Cannot launch $hash_cmd.\n";
 		};
 		open OUTPUT, "> $target/$filename.dl" or die "Cannot create file $target/$filename.dl: $!\n";
 		my $buffer;
@@ -256,8 +255,9 @@ sub download
 
 	$hash_cmd and do {
 		my $hash_path = "$target/$filename.hash";
-		$hash_path =~ s/'/'\\''/g;
-		my $sum = `cat < '$hash_path'`;
+		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n";
+		my $sum = <$fh>;
+		close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
@@ -324,14 +324,15 @@ projectsmirrors '@OPENWRT';
 if (-f "$target/$filename") {
 	$hash_cmd and do {
 		my $path = "$target/$filename";
-		$path =~ s/'/'\\''/g;
 		my $hash_path = "$target/$filename.hash";
-		$hash_path =~ s/'/'\\''/g;
-		if (system("$hash_cmd < '$path' > '$hash_path'")) {
+		my @hash_cmd_list = split(" ", $hash_cmd);
+		if (system("sh", "-c", 'in="$1"; out="$2"; shift 2; exec "$0" "$@" < "$in" > "$out"', $hash_cmd_list[0], $path, $hash_path, @hash_cmd_list[1..$#hash_cmd_list])) {
 			die "Failed to generate hash for $filename\n";
 		}
 
-		my $sum = `cat < '$hash_path'`;
+		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n";
+		my $sum = <$fh>;
+		close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
