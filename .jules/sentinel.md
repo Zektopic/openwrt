@@ -217,3 +217,7 @@
 **Vulnerability:** 2-argument `open` calls in `scripts/brcmImage.pl` allow command injection if a user provides a filename ending with a pipe (`|`).
 **Learning:** Legacy 2-argument `open` automatically interprets pipes, leading to arbitrary code execution.
 **Prevention:** Always use the 3-argument form of `open` (e.g. `open my $fh, '<', $filename`) to force literal filename interpretation.
+## 2024-11-04 - Command Injection in scripts/download.pl
+**Vulnerability:** Shell variables (`$path`, `$hash_path`) were used in system() and open() and backtick commands with shell redirection, which is a command injection risk. Manual shell-escaping logic was used.
+**Learning:** Manual shell-escaping logic is brittle. Even with `s/''/''\\'''/g`, constructing shell commands via string interpolation is risky.
+**Prevention:** Always use the list form of `system` and `open` to bypass the shell. When shell redirection is necessary, use a secure POSIX shell wrapper that passes variables as positional arguments to `exec`.
