@@ -217,3 +217,7 @@
 **Vulnerability:** 2-argument `open` calls in `scripts/brcmImage.pl` allow command injection if a user provides a filename ending with a pipe (`|`).
 **Learning:** Legacy 2-argument `open` automatically interprets pipes, leading to arbitrary code execution.
 **Prevention:** Always use the 3-argument form of `open` (e.g. `open my $fh, '<', $filename`) to force literal filename interpretation.
+## 2024-11-06 - Prevent command injection in scripts/download.pl file hashing
+**Vulnerability:** The Perl script `scripts/download.pl` used `system("$hash_cmd < '$path' > '$hash_path'")` to generate file hashes. Since `$path` (derived from the downloaded filename) was interpolated into the shell command string, a maliciously crafted filename could lead to arbitrary shell command injection.
+**Learning:** Using `system()` with a single string argument invokes the shell (`/bin/sh -c`). When incorporating variables containing untrusted input (like downloaded filenames), string interpolation and shell quoting are notoriously fragile and error-prone.
+**Prevention:** Avoid shell invocations for file operations whenever possible. Use the list form of `system()` which executes the command directly via `execvp`, bypassing the shell. If shell redirection (`<`, `>`) is strictly required, use a safe POSIX shell wrapper that passes variables as positional arguments to `exec` rather than interpolating them into the command string: `system("sh", "-c", 'in="$1"; out="$2"; shift 2; exec "$0" "$@" < "$in" > "$out"', $cmd, $in_file, $out_file, @args)`.
