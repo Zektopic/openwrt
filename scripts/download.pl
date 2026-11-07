@@ -216,10 +216,9 @@ sub download
 
 		$hash_cmd and do {
 			my $path = "$target/$filename.dl";
-			$path =~ s/'/'\\''/g;
 			my $hash_path = "$target/$filename.hash";
-			$hash_path =~ s/'/'\\''/g;
-			if (system("$hash_cmd < '$path' > '$hash_path'")) {
+			my @cmd = split(" ", $hash_cmd);
+			if (system("sh", "-c", 'in="$1"; out="$2"; shift 2; exec "$0" "$@" < "$in" > "$out"', $cmd[0], $path, $hash_path, @cmd[1..$#cmd])) {
 				print("Failed to generate hash for $filename\n");
 				return;
 			}
@@ -256,8 +255,7 @@ sub download
 
 	$hash_cmd and do {
 		my $hash_path = "$target/$filename.hash";
-		$hash_path =~ s/'/'\\''/g;
-		my $sum = `cat < '$hash_path'`;
+		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n"; local $/; my $sum = <$fh>; close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
@@ -324,14 +322,13 @@ projectsmirrors '@OPENWRT';
 if (-f "$target/$filename") {
 	$hash_cmd and do {
 		my $path = "$target/$filename";
-		$path =~ s/'/'\\''/g;
 		my $hash_path = "$target/$filename.hash";
-		$hash_path =~ s/'/'\\''/g;
-		if (system("$hash_cmd < '$path' > '$hash_path'")) {
+			my @cmd = split(" ", $hash_cmd);
+			if (system("sh", "-c", 'in="$1"; out="$2"; shift 2; exec "$0" "$@" < "$in" > "$out"', $cmd[0], $path, $hash_path, @cmd[1..$#cmd])) {
 			die "Failed to generate hash for $filename\n";
 		}
 
-		my $sum = `cat < '$hash_path'`;
+			open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n"; local $/; my $sum = <$fh>; close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
