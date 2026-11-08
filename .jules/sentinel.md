@@ -217,6 +217,10 @@
 **Vulnerability:** 2-argument `open` calls in `scripts/brcmImage.pl` allow command injection if a user provides a filename ending with a pipe (`|`).
 **Learning:** Legacy 2-argument `open` automatically interprets pipes, leading to arbitrary code execution.
 **Prevention:** Always use the 3-argument form of `open` (e.g. `open my $fh, '<', $filename`) to force literal filename interpretation.
+## 2024-11-03 - Command Injection in scripts/download.pl via system/open
+**Vulnerability:** Command injection vulnerability in `scripts/download.pl`. The script passes user-controlled variables (like `$path` and `$hash_path`) into `system()` and `open()` calls by concatenating strings instead of using the list form, making it susceptible to shell command injection even when attempting to escape them using `s/'/'\''/g`.
+**Learning:** Perl's 1-argument `system` and `open` (e.g., `open(..., "| cmd")`) executes through the shell (`/bin/sh -c`), parsing metacharacters. If shell escape sequences are bypassed or constructed improperly (which happens here since they're passed into a string with `<` and `>`), it allows arbitrary code execution.
+**Prevention:** Always use the list form of `system` (`system("cmd", @args)`) and `open` (`open(..., "|-", "cmd", @args)`). When shell indirection (e.g., `<` or `>`) is strictly necessary and the command is dynamic, invoke the shell safely by passing the unexpanded variables through positional arguments using `sh -c 'exec "$0" "$@" < "$in" > "$out"'`.
 ## 2024-11-04 - Command Injection in scripts/download.pl
 **Vulnerability:** Shell variables (`$path`, `$hash_path`) were used in system() and open() and backtick commands with shell redirection, which is a command injection risk. Manual shell-escaping logic was used.
 **Learning:** Manual shell-escaping logic is brittle. Even with `s/''/''\\'''/g`, constructing shell commands via string interpolation is risky.
