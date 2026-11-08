@@ -255,9 +255,7 @@ sub download
 
 	$hash_cmd and do {
 		my $hash_path = "$target/$filename.hash";
-		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n";
-		my $sum = <$fh>;
-		close($fh);
+		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n"; local $/; my $sum = <$fh>; close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
@@ -330,9 +328,7 @@ if (-f "$target/$filename") {
 			die "Failed to generate hash for $filename\n";
 		}
 
-		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n";
-		my $sum = <$fh>;
-		close($fh);
+		open(my $fh, '<', $hash_path) or die "Cannot open $hash_path: $!\n"; local $/; my $sum = <$fh>; close($fh);
 		$sum =~ /^(\w+)\s*/ or die "Could not generate file hash\n";
 		$sum = $1;
 
